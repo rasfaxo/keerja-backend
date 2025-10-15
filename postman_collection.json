@@ -1,0 +1,226 @@
+{
+  "info": {
+    "name": "Keerja Backend API",
+    "description": "Collection untuk testing Keerja Backend API endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/health",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "health"]
+        }
+      }
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\",\n  \"phone\": \"081234567890\",\n  \"user_type\": \"jobseeker\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users"]
+            }
+          }
+        },
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/users?page=1&per_page=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "1"]
+            }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"John Doe Updated\",\n  \"phone\": \"081234567891\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Companies",
+      "item": [
+        {
+          "name": "Create Company",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"company_name\": \"Tech Innovators\",\n  \"legal_name\": \"PT Tech Innovators Indonesia\",\n  \"industry\": \"Technology\",\n  \"company_type\": \"startup\",\n  \"size_category\": \"11-50\",\n  \"website_url\": \"https://techinnovators.com\",\n  \"city\": \"Jakarta\",\n  \"province\": \"DKI Jakarta\",\n  \"about\": \"We are a technology startup focused on innovation.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/companies",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "companies"]
+            }
+          }
+        },
+        {
+          "name": "Get All Companies",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/companies?page=1&per_page=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "companies"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Company by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/companies/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "companies", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get Company by Slug",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/companies/slug/tech-innovators",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "companies", "slug", "tech-innovators"]
+            }
+          }
+        },
+        {
+          "name": "Update Company",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"company_name\": \"Tech Innovators Pro\",\n  \"about\": \"We are a leading technology startup.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/companies/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "companies", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Company",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/companies/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "companies", "1"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ]
+}

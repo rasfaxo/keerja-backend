@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: keerja-postgres
+    environment:
+      POSTGRES_USER: bekerja
+      POSTGRES_PASSWORD: bekerja123
+      POSTGRES_DB: keerja_db
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=C"
+      TZ: Asia/Jakarta
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./Keerja.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - keerja-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bekerja -d keerja_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Keerja Backend API
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: keerja-api
+    environment:
+      APP_ENV: development
+      APP_PORT: 8080
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: bekerja
+      DB_PASSWORD: bekerja123
+      DB_NAME: keerja_db
+      DB_SSLMODE: disable
+      DB_TIMEZONE: Asia/Jakarta
+      LOG_LEVEL: info
+      LOG_FORMAT: json
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - keerja-network
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  keerja-network:
+    driver: bridge
