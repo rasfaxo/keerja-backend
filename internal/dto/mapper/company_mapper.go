@@ -15,25 +15,25 @@ func ToCompanyResponse(c *company.Company) *response.CompanyResponse {
 	}
 
 	resp := &response.CompanyResponse{
-		ID           : c.ID,
-		UUID         : c.UUID.String(),
-		CompanyName  : c.CompanyName,
-		Slug         : c.Slug,
-		Industry     : PtrToString(c.Industry),
-		CompanyType  : PtrToString(c.CompanyType),
-		SizeCategory : PtrToString(c.SizeCategory),
-		WebsiteURL   : PtrToString(c.WebsiteURL),
-		Phone        : PtrToString(c.Phone),
-		City         : PtrToString(c.City),
-		Province     : PtrToString(c.Province),
-		Country      : c.Country,
-		LogoURL      : PtrToString(c.LogoURL),
-		BannerURL    : PtrToString(c.BannerURL),
-		About        : PtrToString(c.About),
-		Verified     : c.Verified,
-		VerifiedAt   : c.VerifiedAt,
-		IsActive     : c.IsActive,
-		CreatedAt    : c.CreatedAt,
+		ID:           c.ID,
+		UUID:         c.UUID.String(),
+		CompanyName:  c.CompanyName,
+		Slug:         c.Slug,
+		Industry:     PtrToString(c.Industry),
+		CompanyType:  PtrToString(c.CompanyType),
+		SizeCategory: PtrToString(c.SizeCategory),
+		WebsiteURL:   PtrToString(c.WebsiteURL),
+		Phone:        PtrToString(c.Phone),
+		City:         PtrToString(c.City),
+		Province:     PtrToString(c.Province),
+		Country:      c.Country,
+		LogoURL:      PtrToString(c.LogoURL),
+		BannerURL:    PtrToString(c.BannerURL),
+		About:        PtrToString(c.About),
+		Verified:     c.Verified,
+		VerifiedAt:   c.VerifiedAt,
+		IsActive:     c.IsActive,
+		CreatedAt:    c.CreatedAt,
 	}
 
 	return resp
@@ -46,34 +46,34 @@ func ToCompanyDetailResponse(c *company.Company) *response.CompanyDetailResponse
 	}
 
 	resp := &response.CompanyDetailResponse{
-		ID                 : c.ID,
-		UUID               : c.UUID.String(),
-		CompanyName        : c.CompanyName,
-		Slug               : c.Slug,
-		LegalName          : PtrToString(c.LegalName),
-		RegistrationNumber : PtrToString(c.RegistrationNumber),
-		Industry           : PtrToString(c.Industry),
-		CompanyType        : PtrToString(c.CompanyType),
-		SizeCategory       : PtrToString(c.SizeCategory),
-		WebsiteURL         : PtrToString(c.WebsiteURL),
-		EmailDomain        : PtrToString(c.EmailDomain),
-		Phone              : PtrToString(c.Phone),
-		Address            : PtrToString(c.Address),
-		City               : PtrToString(c.City),
-		Province           : PtrToString(c.Province),
-		Country            : c.Country,
-		PostalCode         : PtrToString(c.PostalCode),
-		Latitude           : c.Latitude,
-		Longitude          : c.Longitude,
-		LogoURL            : PtrToString(c.LogoURL),
-		BannerURL          : PtrToString(c.BannerURL),
-		About              : PtrToString(c.About),
-		Culture            : PtrToString(c.Culture),
-		Verified           : c.Verified,
-		VerifiedAt         : c.VerifiedAt,
-		IsActive           : c.IsActive,
-		CreatedAt          : c.CreatedAt,
-		UpdatedAt          : c.UpdatedAt,
+		ID:                 c.ID,
+		UUID:               c.UUID.String(),
+		CompanyName:        c.CompanyName,
+		Slug:               c.Slug,
+		LegalName:          PtrToString(c.LegalName),
+		RegistrationNumber: PtrToString(c.RegistrationNumber),
+		Industry:           PtrToString(c.Industry),
+		CompanyType:        PtrToString(c.CompanyType),
+		SizeCategory:       PtrToString(c.SizeCategory),
+		WebsiteURL:         PtrToString(c.WebsiteURL),
+		EmailDomain:        PtrToString(c.EmailDomain),
+		Phone:              PtrToString(c.Phone),
+		Address:            PtrToString(c.Address),
+		City:               PtrToString(c.City),
+		Province:           PtrToString(c.Province),
+		Country:            c.Country,
+		PostalCode:         PtrToString(c.PostalCode),
+		Latitude:           c.Latitude,
+		Longitude:          c.Longitude,
+		LogoURL:            PtrToString(c.LogoURL),
+		BannerURL:          PtrToString(c.BannerURL),
+		About:              PtrToString(c.About),
+		Culture:            PtrToString(c.Culture),
+		Verified:           c.Verified,
+		VerifiedAt:         c.VerifiedAt,
+		IsActive:           c.IsActive,
+		CreatedAt:          c.CreatedAt,
+		UpdatedAt:          c.UpdatedAt,
 	}
 
 	// Map profile
@@ -102,11 +102,11 @@ func ToCompanyProfileResponse(p *company.CompanyProfile) *response.CompanyProfil
 	}
 
 	return &response.CompanyProfileResponse{
-		ID          : p.ID,
-		Description : PtrToString(p.LongDescription),
-		Mission     : PtrToString(p.Mission),
-		Vision      : PtrToString(p.Vision),
-		UpdatedAt   : p.UpdatedAt,
+		ID:          p.ID,
+		Description: PtrToString(p.LongDescription),
+		Mission:     PtrToString(p.Mission),
+		Vision:      PtrToString(p.Vision),
+		UpdatedAt:   p.UpdatedAt,
 		// Note: Other fields need to be mapped manually or use entity fields differently
 	}
 }
@@ -120,10 +120,10 @@ func ToCompanyReviewResponse(r *company.CompanyReview) *response.CompanyReviewRe
 
 	// Basic mapping - handlers should fill in remaining fields from related data
 	return &response.CompanyReviewResponse{
-		ID          : r.ID,
-		IsAnonymous : r.IsAnonymous,
-		CreatedAt   : r.CreatedAt,
-		UpdatedAt   : r.UpdatedAt,
+		ID:          r.ID,
+		IsAnonymous: r.IsAnonymous,
+		CreatedAt:   r.CreatedAt,
+		UpdatedAt:   r.UpdatedAt,
 	}
 }
 
@@ -136,8 +136,8 @@ func ToCompanyEmployeeResponse(e *company.CompanyEmployee) *response.CompanyEmpl
 
 	// Basic mapping - handlers should fill in remaining fields
 	return &response.CompanyEmployeeResponse{
-		ID        : e.ID,
-		CreatedAt : e.CreatedAt,
+		ID:        e.ID,
+		CreatedAt: e.CreatedAt,
 	}
 }
 
@@ -149,8 +149,8 @@ func ToCompanyVerificationResponse(v *company.CompanyVerification) *response.Com
 
 	// Basic mapping - handler should fill remaining fields
 	return &response.CompanyVerificationResponse{
-		ID             : v.ID,
-		Status         : v.Status,
+		ID:              v.ID,
+		Status:          v.Status,
 		RejectionReason: PtrToString(v.RejectionReason),
 	}
 }
@@ -163,8 +163,8 @@ func ToCompanyDocumentResponse(d *company.CompanyDocument) *response.CompanyDocu
 
 	// Basic mapping - handler should fill remaining fields
 	return &response.CompanyDocumentResponse{
-		ID           : d.ID,
-		DocumentType : d.DocumentType,
+		ID:           d.ID,
+		DocumentType: d.DocumentType,
 	}
 }
 
@@ -176,9 +176,9 @@ func ToCompanyFollowerResponse(f *company.CompanyFollower) *response.CompanyFoll
 
 	// Basic mapping - handler should fill remaining fields
 	return &response.CompanyFollowerResponse{
-		ID         : f.ID,
-		UserID     : f.UserID,
-		FollowedAt : f.FollowedAt,
+		ID:         f.ID,
+		UserID:     f.UserID,
+		FollowedAt: f.FollowedAt,
 	}
 }
 
@@ -191,24 +191,21 @@ func RegisterCompanyRequestToEntity(req *request.RegisterCompanyRequest) *compan
 	}
 
 	c := &company.Company{
-		CompanyName        : req.CompanyName,
-		LegalName          : &req.LegalName,
-		RegistrationNumber : &req.RegistrationNumber,
-		Industry           : &req.Industry,
-		CompanyType        : &req.CompanyType,
-		SizeCategory       : &req.SizeCategory,
-		WebsiteURL         : &req.WebsiteURL,
-		EmailDomain        : &req.EmailDomain,
-		Phone              : &req.Phone,
-		Address            : &req.Address,
-		City               : &req.City,
-		Province           : &req.Province,
-		Country            : "Indonesia",
-		About              : &req.About,
-	}
-
-	if req.PostalCode != "" {
-		c.PostalCode = &req.PostalCode
+		CompanyName:        req.CompanyName,
+		LegalName:          req.LegalName,
+		RegistrationNumber: req.RegistrationNumber,
+		Industry:           req.Industry,
+		CompanyType:        req.CompanyType,
+		SizeCategory:       req.SizeCategory,
+		WebsiteURL:         req.WebsiteURL,
+		EmailDomain:        req.EmailDomain,
+		Phone:              req.Phone,
+		Address:            req.Address,
+		City:               req.City,
+		Province:           req.Province,
+		PostalCode:         req.PostalCode,
+		Country:            "Indonesia",
+		About:              req.About,
 	}
 
 	return c

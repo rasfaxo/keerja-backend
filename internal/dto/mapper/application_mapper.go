@@ -13,20 +13,24 @@ func ToApplicationResponse(a *application.JobApplication) *response.ApplicationR
 		return nil
 	}
 
-	var matchScore *float64
-	if a.MatchScore > 0 {
-		matchScore = &a.MatchScore
-	}
-
 	return &response.ApplicationResponse{
-		ID:         a.ID,
-		JobID:      a.JobID,
-		UserID:     a.UserID,
-		Status:     a.Status,
-		ResumeURL:  a.ResumeURL,
-		AppliedAt:  a.AppliedAt,
-		IsViewed:   a.ViewedByEmployer,
-		MatchScore: matchScore,
+		ID:               a.ID,
+		JobID:            a.JobID,
+		CompanyID:        a.CompanyID,
+		UserID:           a.UserID,
+		AppliedAt:        a.AppliedAt,
+		Status:           a.Status,
+		Source:           a.Source,
+		MatchScore:       a.MatchScore,
+		ViewedByEmployer: a.ViewedByEmployer,
+		IsBookmarked:     a.IsBookmarked,
+		ResumeURL:        a.ResumeURL,
+		CreatedAt:        a.CreatedAt,
+		UpdatedAt:        a.UpdatedAt,
+		// Computed fields (set externally if needed)
+		NotesCount:      len(a.ApplicationNotes),
+		InterviewsCount: len(a.Interviews),
+		DocumentsCount:  len(a.Documents),
 	}
 }
 
@@ -36,22 +40,21 @@ func ToApplicationDetailResponse(a *application.JobApplication) *response.Applic
 		return nil
 	}
 
-	var matchScore *float64
-	if a.MatchScore > 0 {
-		matchScore = &a.MatchScore
-	}
-
 	resp := &response.ApplicationDetailResponse{
-		ID:         a.ID,
-		JobID:      a.JobID,
-		UserID:     a.UserID,
-		Status:     a.Status,
-		ResumeURL:  a.ResumeURL,
-		AppliedAt:  a.AppliedAt,
-		IsViewed:   a.ViewedByEmployer,
-		MatchScore: matchScore,
-		CreatedAt:  a.CreatedAt,
-		UpdatedAt:  a.UpdatedAt,
+		ID:               a.ID,
+		JobID:            a.JobID,
+		CompanyID:        a.CompanyID,
+		UserID:           a.UserID,
+		AppliedAt:        a.AppliedAt,
+		Status:           a.Status,
+		Source:           a.Source,
+		MatchScore:       a.MatchScore,
+		NotesText:        a.NotesText,
+		ViewedByEmployer: a.ViewedByEmployer,
+		IsBookmarked:     a.IsBookmarked,
+		ResumeURL:        a.ResumeURL,
+		CreatedAt:        a.CreatedAt,
+		UpdatedAt:        a.UpdatedAt,
 	}
 
 	// Map stages
@@ -98,12 +101,14 @@ func ToApplicationStageResponse(s *application.JobApplicationStage) *response.Ap
 	return &response.ApplicationStageResponse{
 		ID:          s.ID,
 		StageName:   s.StageName,
-		StageOrder:  0, // Calculate based on stage name
 		Description: s.Description,
-		EnteredAt:   s.StartedAt,
-		CompletedAt: s.CompletedAt,
-		Notes:       s.Notes,
 		HandledBy:   s.HandledBy,
+		StartedAt:   s.StartedAt,
+		CompletedAt: s.CompletedAt,
+		Duration:    s.Duration,
+		Notes:       s.Notes,
+		CreatedAt:   s.CreatedAt,
+		UpdatedAt:   s.UpdatedAt,
 	}
 }
 
@@ -116,11 +121,17 @@ func ToApplicationDocumentResponse(d *application.ApplicationDocument) *response
 	return &response.ApplicationDocumentResponse{
 		ID:           d.ID,
 		DocumentType: d.DocumentType,
-		DocumentURL:  d.FileURL,
 		FileName:     d.FileName,
+		FileURL:      d.FileURL,
+		FileType:     d.FileType,
 		FileSize:     d.FileSize,
-		Description:  d.Notes,
 		UploadedAt:   d.UploadedAt,
+		IsVerified:   d.IsVerified,
+		VerifiedBy:   d.VerifiedBy,
+		VerifiedAt:   d.VerifiedAt,
+		Notes:        d.Notes,
+		CreatedAt:    d.CreatedAt,
+		UpdatedAt:    d.UpdatedAt,
 	}
 }
 
@@ -132,9 +143,13 @@ func ToApplicationNoteResponse(n *application.ApplicationNote) *response.Applica
 
 	return &response.ApplicationNoteResponse{
 		ID:         n.ID,
+		StageID:    n.StageID,
+		AuthorID:   n.AuthorID,
+		NoteType:   n.NoteType,
 		NoteText:   n.NoteText,
-		IsInternal: n.IsInternal(),
-		CreatedBy:  n.AuthorID,
+		Visibility: n.Visibility,
+		Sentiment:  n.Sentiment,
+		IsPinned:   n.IsPinned,
 		CreatedAt:  n.CreatedAt,
 		UpdatedAt:  n.UpdatedAt,
 	}
@@ -147,23 +162,23 @@ func ToInterviewResponse(i *application.Interview) *response.InterviewResponse {
 	}
 
 	return &response.InterviewResponse{
-		ID:             i.ID,
-		ApplicationID:  i.ApplicationID,
-		InterviewType:  i.InterviewType,
-		InterviewStage: "", // Not in entity, handler should set
-		ScheduledAt:    i.ScheduledAt,
-		Duration:       0, // Not in entity, calculate from ScheduledAt and EndedAt
-		Location:       i.Location,
-		MeetingURL:     i.MeetingLink,
-		Status:         i.Status,
-		Rating:         nil, // Use OverallScore if needed
-		Feedback:       i.FeedbackSummary,
-		Result:         "", // Not in entity, handler should set
-		Notes:          i.Remarks,
-		ConductedBy:    i.InterviewerID,
-		CreatedAt:      i.CreatedAt,
-		UpdatedAt:      i.UpdatedAt,
-		CompletedAt:    i.EndedAt,
-		CancelledAt:    nil, // Not directly in entity
+		ID:                 i.ID,
+		ApplicationID:      i.ApplicationID,
+		StageID:            i.StageID,
+		InterviewerID:      i.InterviewerID,
+		ScheduledAt:        i.ScheduledAt,
+		EndedAt:            i.EndedAt,
+		InterviewType:      i.InterviewType,
+		MeetingLink:        i.MeetingLink,
+		Location:           i.Location,
+		Status:             i.Status,
+		OverallScore:       i.OverallScore,
+		TechnicalScore:     i.TechnicalScore,
+		CommunicationScore: i.CommunicationScore,
+		PersonalityScore:   i.PersonalityScore,
+		Remarks:            i.Remarks,
+		FeedbackSummary:    i.FeedbackSummary,
+		CreatedAt:          i.CreatedAt,
+		UpdatedAt:          i.UpdatedAt,
 	}
 }

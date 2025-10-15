@@ -71,7 +71,7 @@ func ToJobDetailResponse(j *job.Job) *response.JobDetailResponse {
 		JobLevel:          j.JobLevel,
 		EmploymentType:    j.EmploymentType,
 		Description:       j.Description,
-		Requirements:      j.RequirementsText,
+		RequirementsText:  j.RequirementsText,
 		Responsibilities:  j.Responsibilities,
 		Location:          j.Location,
 		City:              j.City,
@@ -121,9 +121,9 @@ func ToJobDetailResponse(j *job.Job) *response.JobDetailResponse {
 
 	// Map requirements
 	if len(j.JobRequirements) > 0 {
-		resp.Requirements_ = make([]response.JobRequirementResponse, len(j.JobRequirements))
+		resp.JobRequirements = make([]response.JobRequirementResponse, len(j.JobRequirements))
 		for i, req := range j.JobRequirements {
-			resp.Requirements_[i] = *ToJobRequirementResponse(&req)
+			resp.JobRequirements[i] = *ToJobRequirementResponse(&req)
 		}
 	}
 
@@ -137,10 +137,10 @@ func ToJobSkillResponse(s *job.JobSkill) *response.JobSkillResponse {
 	}
 
 	return &response.JobSkillResponse{
-		ID:          s.ID,
-		SkillID:     s.SkillID,
-		IsRequired:  s.IsRequired(),
-		MinYearsExp: nil, // Not available in entity
+		ID:              s.ID,
+		SkillID:         s.SkillID,
+		ImportanceLevel: s.ImportanceLevel,
+		Weight:          s.Weight,
 	}
 }
 
@@ -150,16 +150,12 @@ func ToJobBenefitResponse(b *job.JobBenefit) *response.JobBenefitResponse {
 		return nil
 	}
 
-	var benefitID int64
-	if b.BenefitID != nil {
-		benefitID = *b.BenefitID
-	}
-
 	return &response.JobBenefitResponse{
 		ID:          b.ID,
-		BenefitID:   benefitID,
+		BenefitID:   b.BenefitID,
 		BenefitName: b.BenefitName,
 		Description: b.Description,
+		IsHighlight: b.IsHighlight,
 	}
 }
 
@@ -170,13 +166,18 @@ func ToJobLocationResponse(l *job.JobLocation) *response.JobLocationResponse {
 	}
 
 	return &response.JobLocationResponse{
-		ID:        l.ID,
-		City:      l.City,
-		Province:  l.Province,
-		Address:   l.Address,
-		IsRemote:  l.IsRemote(),
-		Latitude:  l.Latitude,
-		Longitude: l.Longitude,
+		ID:            l.ID,
+		LocationType:  l.LocationType,
+		Address:       l.Address,
+		City:          l.City,
+		Province:      l.Province,
+		PostalCode:    l.PostalCode,
+		Country:       l.Country,
+		Latitude:      l.Latitude,
+		Longitude:     l.Longitude,
+		GooglePlaceID: l.GooglePlaceID,
+		MapURL:        l.MapURL,
+		IsPrimary:     l.IsPrimary,
 	}
 }
 
@@ -189,8 +190,14 @@ func ToJobRequirementResponse(r *job.JobRequirement) *response.JobRequirementRes
 	return &response.JobRequirementResponse{
 		ID:              r.ID,
 		RequirementType: r.RequirementType,
-		Description:     r.RequirementText,
-		IsRequired:      r.IsMandatory,
+		RequirementText: r.RequirementText,
+		SkillID:         r.SkillID,
+		MinExperience:   r.MinExperience,
+		MaxExperience:   r.MaxExperience,
+		EducationLevel:  r.EducationLevel,
+		Language:        r.Language,
+		IsMandatory:     r.IsMandatory,
+		Priority:        r.Priority,
 	}
 }
 

@@ -51,7 +51,7 @@ type JobDetailResponse struct {
 	JobLevel          string                   `json:"job_level,omitempty"`
 	EmploymentType    string                   `json:"employment_type"`
 	Description       string                   `json:"description"`
-	Requirements      string                   `json:"requirements,omitempty"`
+	RequirementsText  string                   `json:"requirements_text,omitempty"`
 	Responsibilities  string                   `json:"responsibilities,omitempty"`
 	Location          string                   `json:"location,omitempty"`
 	City              string                   `json:"city,omitempty"`
@@ -76,45 +76,57 @@ type JobDetailResponse struct {
 	Skills            []JobSkillResponse       `json:"skills,omitempty"`
 	Benefits          []JobBenefitResponse     `json:"benefits,omitempty"`
 	Locations         []JobLocationResponse    `json:"locations,omitempty"`
-	Requirements_     []JobRequirementResponse `json:"job_requirements,omitempty"`
+	JobRequirements   []JobRequirementResponse `json:"job_requirements,omitempty"`
 	HasApplied        bool                     `json:"has_applied,omitempty"` // For authenticated users
 	IsSaved           bool                     `json:"is_saved,omitempty"`    // For authenticated users
 }
 
 // JobSkillResponse represents job skill response
 type JobSkillResponse struct {
-	ID          int64  `json:"id"`
-	SkillID     int64  `json:"skill_id"`
-	SkillName   string `json:"skill_name"`
-	IsRequired  bool   `json:"is_required"`
-	MinYearsExp *int16 `json:"min_years_exp,omitempty"`
+	ID              int64   `json:"id"`
+	SkillID         int64   `json:"skill_id"`
+	SkillName       string  `json:"skill_name"`
+	ImportanceLevel string  `json:"importance_level"`
+	Weight          float64 `json:"weight"`
 }
 
 // JobBenefitResponse represents job benefit response
 type JobBenefitResponse struct {
 	ID          int64  `json:"id"`
-	BenefitID   int64  `json:"benefit_id"`
+	BenefitID   *int64 `json:"benefit_id,omitempty"`
 	BenefitName string `json:"benefit_name"`
 	Description string `json:"description,omitempty"`
+	IsHighlight bool   `json:"is_highlight"`
 }
 
 // JobLocationResponse represents job location response
 type JobLocationResponse struct {
-	ID        int64    `json:"id"`
-	City      string   `json:"city"`
-	Province  string   `json:"province"`
-	Address   string   `json:"address,omitempty"`
-	IsRemote  bool     `json:"is_remote"`
-	Latitude  *float64 `json:"latitude,omitempty"`
-	Longitude *float64 `json:"longitude,omitempty"`
+	ID            int64    `json:"id"`
+	LocationType  string   `json:"location_type"`
+	Address       string   `json:"address,omitempty"`
+	City          string   `json:"city,omitempty"`
+	Province      string   `json:"province,omitempty"`
+	PostalCode    string   `json:"postal_code,omitempty"`
+	Country       string   `json:"country"`
+	Latitude      *float64 `json:"latitude,omitempty"`
+	Longitude     *float64 `json:"longitude,omitempty"`
+	GooglePlaceID string   `json:"google_place_id,omitempty"`
+	MapURL        string   `json:"map_url,omitempty"`
+	IsPrimary     bool     `json:"is_primary"`
 }
 
 // JobRequirementResponse represents job requirement response
 type JobRequirementResponse struct {
 	ID              int64  `json:"id"`
 	RequirementType string `json:"requirement_type"`
-	Description     string `json:"description"`
-	IsRequired      bool   `json:"is_required"`
+	RequirementText string `json:"requirement_text"`
+	SkillID         *int64 `json:"skill_id,omitempty"`
+	MinExperience   *int16 `json:"min_experience,omitempty"`
+	MaxExperience   *int16 `json:"max_experience,omitempty"`
+	EducationLevel  string `json:"education_level,omitempty"`
+	Language        string `json:"language,omitempty"`
+	IsMandatory     bool   `json:"is_mandatory"`
+	Priority        int16  `json:"priority"`
 }
 
 // JobCategoryResponse represents job category response

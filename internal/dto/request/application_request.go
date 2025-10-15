@@ -7,20 +7,21 @@ import (
 
 // ApplyJobRequest represents apply for job request
 type ApplyJobRequest struct {
-	JobID               int64                      `json:"job_id" validate:"required"`
-	ResumeURL           string                     `json:"resume_url" validate:"required,url"`
-	CoverLetter         string                     `json:"cover_letter" validate:"max=2000"`
-	ExpectedSalary      *float64                   `json:"expected_salary" validate:"omitempty,gt=0"`
-	Currency            string                     `json:"currency" validate:"required_with=ExpectedSalary,len=3"`
-	AvailableStartDate  *time.Time                 `json:"available_start_date" validate:"omitempty"`
-	Answers             []ApplicationAnswerRequest `json:"answers" validate:"omitempty,dive"`
-	AdditionalDocuments []string                   `json:"additional_documents" validate:"omitempty,dive,url"`
+	JobID       int64                        `json:"job_id" validate:"required"`
+	ResumeURL   string                       `json:"resume_url" validate:"omitempty,url"`
+	CoverLetter string                       `json:"cover_letter" validate:"max=2000"`
+	Source      string                       `json:"source" validate:"omitempty,max=100"`
+	Documents   []ApplicationDocumentRequest `json:"documents" validate:"omitempty,dive"`
 }
 
-// ApplicationAnswerRequest represents answer to screening question
-type ApplicationAnswerRequest struct {
-	QuestionID int64  `json:"question_id" validate:"required"`
-	Answer     string `json:"answer" validate:"required,max=1000"`
+// ApplicationDocumentRequest represents document upload in application
+type ApplicationDocumentRequest struct {
+	DocumentType string `json:"document_type" validate:"required,oneof='cv' 'cover_letter' 'portfolio' 'certificate' 'transcript' 'other'"`
+	FileName     string `json:"file_name" validate:"omitempty,max=255"`
+	FileURL      string `json:"file_url" validate:"required,url"`
+	FileType     string `json:"file_type" validate:"omitempty,max=50"`
+	FileSize     int64  `json:"file_size" validate:"omitempty,min=0"`
+	Notes        string `json:"notes" validate:"omitempty,max=500"`
 }
 
 // WithdrawApplicationRequest represents withdraw application request
@@ -47,61 +48,56 @@ type UpdateApplicationStageRequest struct {
 
 // AddApplicationNoteRequest represents add note to application request
 type AddApplicationNoteRequest struct {
+	NoteType   string `json:"note_type" validate:"omitempty,oneof='evaluation' 'feedback' 'reminder' 'internal'"`
 	NoteText   string `json:"note_text" validate:"required,min=5,max=2000"`
-	IsInternal bool   `json:"is_internal"` // Internal notes visible only to company
+	Visibility string `json:"visibility" validate:"omitempty,oneof='internal' 'public'"`
+	Sentiment  string `json:"sentiment" validate:"omitempty,oneof='positive' 'neutral' 'negative'"`
+	IsPinned   bool   `json:"is_pinned"`
 }
 
 // UpdateApplicationNoteRequest represents update note request
 type UpdateApplicationNoteRequest struct {
-	NoteText   string `json:"note_text" validate:"required,min=5,max=2000"`
-	IsInternal bool   `json:"is_internal"`
+	NoteText   string `json:"note_text" validate:"omitempty,min=5,max=2000"`
+	Visibility string `json:"visibility" validate:"omitempty,oneof='internal' 'public'"`
+	Sentiment  string `json:"sentiment" validate:"omitempty,oneof='positive' 'neutral' 'negative'"`
+	IsPinned   *bool  `json:"is_pinned"`
 }
 
 // ScheduleInterviewRequest represents schedule interview request
 type ScheduleInterviewRequest struct {
-	ApplicationID   int64     `json:"application_id" validate:"required"`
-	InterviewType   string    `json:"interview_type" validate:"required,oneof=phone video onsite technical hr final"`
-	InterviewStage  string    `json:"interview_stage" validate:"required,max=100"`
-	ScheduledAt     time.Time `json:"scheduled_at" validate:"required,gtfield=Now"`
-	Duration        int16     `json:"duration" validate:"required,min=15,max=480"` // in minutes
-	Location        string    `json:"location" validate:"omitempty,max=200"`
-	MeetingURL      string    `json:"meeting_url" validate:"omitempty,url"`
-	Interviewers    []int64   `json:"interviewers" validate:"omitempty,dive,gt=0"`
-	Notes           string    `json:"notes" validate:"max=1000"`
-	NotifyCandidate bool      `json:"notify_candidate"`
+	ApplicationID int64     `json:"application_id" validate:"required"`
+	ScheduledAt   time.Time `json:"scheduled_at" validate:"required,gtfield=Now"`
+	InterviewType string    `json:"interview_type" validate:"omitempty,oneof='online' 'onsite' 'hybrid'"`
+	MeetingLink   string    `json:"meeting_link" validate:"omitempty,url"`
+	Location      string    `json:"location" validate:"omitempty,max=200"`
+	Notes         string    `json:"notes" validate:"max=1000"`
 }
 
 // UpdateInterviewRequest represents update interview request
 type UpdateInterviewRequest struct {
-	InterviewType   *string    `json:"interview_type" validate:"omitempty,oneof=phone video onsite technical hr final"`
-	InterviewStage  *string    `json:"interview_stage" validate:"omitempty,max=100"`
-	ScheduledAt     *time.Time `json:"scheduled_at" validate:"omitempty"`
-	Duration        *int16     `json:"duration" validate:"omitempty,min=15,max=480"`
-	Location        *string    `json:"location" validate:"omitempty,max=200"`
-	MeetingURL      *string    `json:"meeting_url" validate:"omitempty,url"`
-	Status          *string    `json:"status" validate:"omitempty,oneof=scheduled rescheduled completed cancelled no_show"`
-	Notes           *string    `json:"notes" validate:"omitempty,max=1000"`
-	NotifyCandidate *bool      `json:"notify_candidate"`
-}
-
-// CompleteInterviewRequest represents complete interview with feedback request
-type CompleteInterviewRequest struct {
-	Status         string `json:"status" validate:"required,oneof=completed cancelled no_show"`
-	Rating         *int16 `json:"rating" validate:"omitempty,min=1,max=5"`
-	Feedback       string `json:"feedback" validate:"max=2000"`
-	Result         string `json:"result" validate:"required,oneof=pass fail pending"`
-	Recommendation string `json:"recommendation" validate:"max=1000"`
-	ConductedBy    *int64 `json:"conducted_by" validate:"omitempty"`
+	InterviewType *string    `json:"interview_type" validate:"omitempty,oneof='online' 'onsite' 'hybrid'"`
+	ScheduledAt   *time.Time `json:"scheduled_at" validate:"omitempty"`
+	MeetingLink   *string    `json:"meeting_link" validate:"omitempty,url"`
+	Location      *string    `json:"location" validate:"omitempty,max=200"`
+	Notes         *string    `json:"notes" validate:"omitempty,max=1000"`
 }
 
 // RescheduleInterviewRequest represents reschedule interview request
 type RescheduleInterviewRequest struct {
-	ScheduledAt     time.Time `json:"scheduled_at" validate:"required,gtfield=Now"`
-	Duration        int16     `json:"duration" validate:"required,min=15,max=480"`
-	Reason          string    `json:"reason" validate:"required,min=10,max=500"`
-	Location        string    `json:"location" validate:"omitempty,max=200"`
-	MeetingURL      string    `json:"meeting_url" validate:"omitempty,url"`
-	NotifyCandidate bool      `json:"notify_candidate"`
+	ScheduledAt time.Time `json:"scheduled_at" validate:"required,gtfield=Now"`
+	Reason      string    `json:"reason" validate:"omitempty,max=500"`
+	MeetingLink string    `json:"meeting_link" validate:"omitempty,url"`
+	Location    string    `json:"location" validate:"omitempty,max=200"`
+}
+
+// CompleteInterviewRequest represents complete interview with feedback request
+type CompleteInterviewRequest struct {
+	OverallScore       *float64 `json:"overall_score" validate:"omitempty,min=0,max=100"`
+	TechnicalScore     *float64 `json:"technical_score" validate:"omitempty,min=0,max=100"`
+	CommunicationScore *float64 `json:"communication_score" validate:"omitempty,min=0,max=100"`
+	PersonalityScore   *float64 `json:"personality_score" validate:"omitempty,min=0,max=100"`
+	Remarks            string   `json:"remarks" validate:"omitempty,max=2000"`
+	FeedbackSummary    string   `json:"feedback_summary" validate:"omitempty,max=1000"`
 }
 
 // BulkUpdateApplicationsRequest represents bulk update applications request

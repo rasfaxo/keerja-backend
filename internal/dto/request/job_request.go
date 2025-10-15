@@ -2,53 +2,82 @@ package request
 
 // CreateJobRequest represents job creation request
 type CreateJobRequest struct {
-	CompanyID           int64                      `json:"company_id" validate:"required,min=1"`
-	EmployerUserID      int64                      `json:"employer_user_id" validate:"required,min=1"`
-	CategoryID          *int64                     `json:"category_id" validate:"omitempty,min=1"`
-	Title               string                     `json:"title" validate:"required,min=3,max=200"`
-	JobLevel            string                     `json:"job_level" validate:"omitempty,oneof='Internship' 'Entry Level' 'Mid Level' 'Senior Level' 'Manager' 'Director'"`
-	EmploymentType      string                     `json:"employment_type" validate:"required,oneof='Full-Time' 'Part-Time' 'Contract' 'Internship' 'Freelance'"`
-	Description         string                     `json:"description" validate:"required,min=50"`
-	Requirements        string                     `json:"requirements" validate:"omitempty"`
-	Responsibilities    string                     `json:"responsibilities" validate:"omitempty"`
-	Location            string                     `json:"location" validate:"omitempty,max=150"`
-	City                string                     `json:"city" validate:"omitempty,max=100"`
-	Province            string                     `json:"province" validate:"omitempty,max=100"`
-	RemoteOption        bool                       `json:"remote_option"`
-	SalaryMin           *float64                   `json:"salary_min" validate:"omitempty,min=0"`
-	SalaryMax           *float64                   `json:"salary_max" validate:"omitempty,min=0,gtefield=SalaryMin"`
-	Currency            string                     `json:"currency" validate:"omitempty,len=3"`
-	ExperienceMin       *int16                     `json:"experience_min" validate:"omitempty,min=0"`
-	ExperienceMax       *int16                     `json:"experience_max" validate:"omitempty,min=0,gtefield=ExperienceMin"`
-	EducationLevel      string                     `json:"education_level" validate:"omitempty"`
-	TotalHires          int16                      `json:"total_hires" validate:"omitempty,min=1"`
-	ExpiredAt           *string                    `json:"expired_at" validate:"omitempty"`
-	Skills              []int64                    `json:"skills" validate:"omitempty"`
-	Benefits            []int64                    `json:"benefits" validate:"omitempty"`
-	AdditionalLocations []CreateJobLocationRequest `json:"additional_locations" validate:"omitempty"`
+	CompanyID        int64                      `json:"company_id" validate:"required,min=1"`
+	EmployerUserID   int64                      `json:"employer_user_id" validate:"required,min=1"`
+	CategoryID       *int64                     `json:"category_id" validate:"omitempty,min=1"`
+	Title            string                     `json:"title" validate:"required,min=3,max=200"`
+	JobLevel         string                     `json:"job_level" validate:"omitempty,oneof='Internship' 'Entry Level' 'Mid Level' 'Senior Level' 'Manager' 'Director'"`
+	EmploymentType   string                     `json:"employment_type" validate:"required,oneof='Full-Time' 'Part-Time' 'Contract' 'Internship' 'Freelance'"`
+	Description      string                     `json:"description" validate:"required,min=50"`
+	RequirementsText string                     `json:"requirements_text" validate:"omitempty"`
+	Responsibilities string                     `json:"responsibilities" validate:"omitempty"`
+	RemoteOption     bool                       `json:"remote_option"`
+	SalaryMin        *float64                   `json:"salary_min" validate:"omitempty,min=0"`
+	SalaryMax        *float64                   `json:"salary_max" validate:"omitempty,min=0,gtefield=SalaryMin"`
+	Currency         string                     `json:"currency" validate:"omitempty,len=3"`
+	ExperienceMin    *int16                     `json:"experience_min" validate:"omitempty,min=0"`
+	ExperienceMax    *int16                     `json:"experience_max" validate:"omitempty,min=0,gtefield=ExperienceMin"`
+	EducationLevel   string                     `json:"education_level" validate:"omitempty"`
+	TotalHires       int16                      `json:"total_hires" validate:"omitempty,min=1"`
+	ExpiredAt        *string                    `json:"expired_at" validate:"omitempty"`
+	Locations        []CreateJobLocationRequest `json:"locations" validate:"omitempty"`
+	Skills           []AddSkillRequest          `json:"skills" validate:"omitempty"`
+	Benefits         []AddBenefitRequest        `json:"benefits" validate:"omitempty"`
+	JobRequirements  []AddRequirementRequest    `json:"job_requirements" validate:"omitempty"`
 }
 
 // CreateJobLocationRequest represents additional job location
 type CreateJobLocationRequest struct {
-	City      string   `json:"city" validate:"required,max=100"`
-	Province  string   `json:"province" validate:"required,max=100"`
-	Address   string   `json:"address" validate:"omitempty"`
-	IsRemote  bool     `json:"is_remote"`
-	Latitude  *float64 `json:"latitude" validate:"omitempty"`
-	Longitude *float64 `json:"longitude" validate:"omitempty"`
+	LocationType  string   `json:"location_type" validate:"omitempty,oneof='onsite' 'hybrid' 'remote'"`
+	City          string   `json:"city" validate:"required,max=100"`
+	Province      string   `json:"province" validate:"required,max=100"`
+	Address       string   `json:"address" validate:"omitempty"`
+	PostalCode    string   `json:"postal_code" validate:"omitempty,max=10"`
+	Country       string   `json:"country" validate:"omitempty,max=100"`
+	Latitude      *float64 `json:"latitude" validate:"omitempty"`
+	Longitude     *float64 `json:"longitude" validate:"omitempty"`
+	GooglePlaceID string   `json:"google_place_id" validate:"omitempty"`
+	MapURL        string   `json:"map_url" validate:"omitempty,url"`
+	IsPrimary     bool     `json:"is_primary"`
+}
+
+// AddSkillRequest represents add skill to job request
+type AddSkillRequest struct {
+	SkillID         int64   `json:"skill_id" validate:"required"`
+	ImportanceLevel string  `json:"importance_level" validate:"omitempty,oneof='required' 'preferred' 'optional'"`
+	Weight          float64 `json:"weight" validate:"omitempty,min=0,max=1"`
+}
+
+// AddBenefitRequest represents add benefit to job request
+type AddBenefitRequest struct {
+	BenefitID   *int64 `json:"benefit_id" validate:"omitempty"`
+	BenefitName string `json:"benefit_name" validate:"required,max=150"`
+	Description string `json:"description" validate:"omitempty"`
+	IsHighlight bool   `json:"is_highlight"`
+}
+
+// AddRequirementRequest represents add requirement to job request
+type AddRequirementRequest struct {
+	RequirementType string `json:"requirement_type" validate:"omitempty,oneof='education' 'experience' 'skill' 'language' 'certification' 'other'"`
+	RequirementText string `json:"requirement_text" validate:"required"`
+	SkillID         *int64 `json:"skill_id" validate:"omitempty"`
+	MinExperience   *int16 `json:"min_experience" validate:"omitempty"`
+	MaxExperience   *int16 `json:"max_experience" validate:"omitempty"`
+	EducationLevel  string `json:"education_level" validate:"omitempty"`
+	Language        string `json:"language" validate:"omitempty"`
+	IsMandatory     bool   `json:"is_mandatory"`
+	Priority        int16  `json:"priority" validate:"omitempty,min=1"`
 }
 
 // UpdateJobRequest represents job update request
 type UpdateJobRequest struct {
+	CategoryID       *int64   `json:"category_id" validate:"omitempty,min=1"`
 	Title            *string  `json:"title" validate:"omitempty,min=3,max=200"`
 	JobLevel         *string  `json:"job_level" validate:"omitempty,oneof='Internship' 'Entry Level' 'Mid Level' 'Senior Level' 'Manager' 'Director'"`
 	EmploymentType   *string  `json:"employment_type" validate:"omitempty,oneof='Full-Time' 'Part-Time' 'Contract' 'Internship' 'Freelance'"`
 	Description      *string  `json:"description" validate:"omitempty,min=50"`
-	Requirements     *string  `json:"requirements" validate:"omitempty"`
+	RequirementsText *string  `json:"requirements_text" validate:"omitempty"`
 	Responsibilities *string  `json:"responsibilities" validate:"omitempty"`
-	Location         *string  `json:"location" validate:"omitempty,max=150"`
-	City             *string  `json:"city" validate:"omitempty,max=100"`
-	Province         *string  `json:"province" validate:"omitempty,max=100"`
 	RemoteOption     *bool    `json:"remote_option"`
 	SalaryMin        *float64 `json:"salary_min" validate:"omitempty,min=0"`
 	SalaryMax        *float64 `json:"salary_max" validate:"omitempty,min=0"`

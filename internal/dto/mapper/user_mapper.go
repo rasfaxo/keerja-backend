@@ -142,75 +142,87 @@ func ToUserProfileResponse(p *user.UserProfile) *response.UserProfileResponse {
 	}
 
 	return &response.UserProfileResponse{
-		ID:                  p.ID,
-		Headline:            PtrToString(p.Headline),
-		Summary:             PtrToString(p.Bio),
-		DateOfBirth:         p.BirthDate,
-		Gender:              PtrToString(p.Gender),
-		City:                PtrToString(p.LocationCity),
-		Country:             PtrToString(p.LocationCountry),
-		ProfilePictureURL:   PtrToString(p.AvatarURL),
-		CoverImageURL:       PtrToString(p.CoverURL),
-		ProfileCompleteness: 0, // Calculate in handler
-		UpdatedAt:           p.UpdatedAt,
+		ID:                 p.ID,
+		UserID:             p.UserID,
+		Headline:           p.Headline,
+		Bio:                p.Bio,
+		Gender:             p.Gender,
+		BirthDate:          p.BirthDate,
+		LocationCity:       p.LocationCity,
+		LocationCountry:    p.LocationCountry,
+		DesiredPosition:    p.DesiredPosition,
+		DesiredSalaryMin:   p.DesiredSalaryMin,
+		DesiredSalaryMax:   p.DesiredSalaryMax,
+		ExperienceLevel:    p.ExperienceLevel,
+		IndustryInterest:   p.IndustryInterest,
+		AvailabilityStatus: p.AvailabilityStatus,
+		ProfileVisibility:  p.ProfileVisibility,
+		Slug:               p.Slug,
+		AvatarURL:          p.AvatarURL,
+		CoverURL:           p.CoverURL,
+		CreatedAt:          p.CreatedAt,
+		UpdatedAt:          p.UpdatedAt,
 	}
 }
 
 // ToUserEducationResponse converts UserEducation entity to UserEducationResponse DTO
-func ToUserEducationResponse(e *user.UserEducation) *response.UserEducationResponse {
+func ToEducationResponse(e *user.UserEducation) *response.UserEducationResponse {
 	if e == nil {
 		return nil
-	}
-
-	// Convert int years to dates
-	var startDate time.Time
-	if e.StartYear != nil {
-		startDate = time.Date(*e.StartYear, 1, 1, 0, 0, 0, 0, time.UTC)
-	}
-	var endDatePtr *time.Time
-	if e.EndYear != nil {
-		endDateValue := time.Date(*e.EndYear, 1, 1, 0, 0, 0, 0, time.UTC)
-		endDatePtr = &endDateValue
-	}
-
-	// Convert GPA to string
-	var grade string
-	if e.GPA != nil {
-		grade = Float64ToString(*e.GPA)
 	}
 
 	return &response.UserEducationResponse{
-		ID:                  e.ID,
-		InstitutionName:     e.InstitutionName,
-		Degree:              PtrToString(e.DegreeLevel),
-		FieldOfStudy:        PtrToString(e.Major),
-		StartDate:           startDate,
-		EndDate:             endDatePtr,
-		Grade:               grade,
-		Description:         PtrToString(e.Description),
-		IsCurrentlyStudying: e.IsCurrent,
-		CreatedAt:           e.CreatedAt,
+		ID:              e.ID,
+		InstitutionName: e.InstitutionName,
+		Major:           e.Major,
+		DegreeLevel:     e.DegreeLevel,
+		StartYear:       e.StartYear,
+		EndYear:         e.EndYear,
+		GPA:             e.GPA,
+		Activities:      e.Activities,
+		Description:     e.Description,
+		IsCurrent:       e.IsCurrent,
+		CreatedAt:       e.CreatedAt.Format(time.RFC3339),
 	}
 }
 
+// ToUserEducationResponse is an alias for ToEducationResponse for backward compatibility
+func ToUserEducationResponse(e *user.UserEducation) *response.UserEducationResponse {
+	return ToEducationResponse(e)
+}
+
 // ToUserExperienceResponse converts UserExperience entity to UserExperienceResponse DTO
-func ToUserExperienceResponse(e *user.UserExperience) *response.UserExperienceResponse {
+func ToExperienceResponse(e *user.UserExperience) *response.UserExperienceResponse {
 	if e == nil {
 		return nil
 	}
 
-	return &response.UserExperienceResponse{
-		ID:                 e.ID,
-		CompanyName:        e.CompanyName,
-		JobTitle:           e.PositionTitle,
-		EmploymentType:     PtrToString(e.EmploymentType),
-		Location:           PtrToString(e.LocationCity),
-		StartDate:          e.StartDate,
-		EndDate:            e.EndDate,
-		IsCurrentlyWorking: e.IsCurrent,
-		Description:        PtrToString(e.Description),
-		CreatedAt:          e.CreatedAt,
+	var endDate *string
+	if e.EndDate != nil {
+		endDateStr := e.EndDate.Format("2006-01-02")
+		endDate = &endDateStr
 	}
+
+	return &response.UserExperienceResponse{
+		ID:              e.ID,
+		CompanyName:     e.CompanyName,
+		PositionTitle:   e.PositionTitle,
+		Industry:        e.Industry,
+		EmploymentType:  e.EmploymentType,
+		StartDate:       e.StartDate.Format("2006-01-02"),
+		EndDate:         endDate,
+		IsCurrent:       e.IsCurrent,
+		Description:     e.Description,
+		Achievements:    e.Achievements,
+		LocationCity:    e.LocationCity,
+		LocationCountry: e.LocationCountry,
+		CreatedAt:       e.CreatedAt.Format(time.RFC3339),
+	}
+}
+
+// ToUserExperienceResponse is an alias for ToExperienceResponse for backward compatibility
+func ToUserExperienceResponse(e *user.UserExperience) *response.UserExperienceResponse {
+	return ToExperienceResponse(e)
 }
 
 // ToUserSkillResponse converts UserSkill entity to UserSkillResponse DTO

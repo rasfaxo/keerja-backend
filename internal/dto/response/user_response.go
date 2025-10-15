@@ -19,26 +19,26 @@ type UserResponse struct {
 
 // UserProfileResponse represents user profile response
 type UserProfileResponse struct {
-	ID                  int64      `json:"id"`
-	Headline            string     `json:"headline,omitempty"`
-	Summary             string     `json:"summary,omitempty"`
-	DateOfBirth         *time.Time `json:"date_of_birth,omitempty"`
-	Gender              string     `json:"gender,omitempty"`
-	Nationality         string     `json:"nationality,omitempty"`
-	Address             string     `json:"address,omitempty"`
-	City                string     `json:"city,omitempty"`
-	Province            string     `json:"province,omitempty"`
-	Country             string     `json:"country,omitempty"`
-	PostalCode          string     `json:"postal_code,omitempty"`
-	ProfilePictureURL   string     `json:"profile_picture_url,omitempty"`
-	CoverImageURL       string     `json:"cover_image_url,omitempty"`
-	LinkedinURL         string     `json:"linkedin_url,omitempty"`
-	PortfolioURL        string     `json:"portfolio_url,omitempty"`
-	GithubURL           string     `json:"github_url,omitempty"`
-	ResumeURL           string     `json:"resume_url,omitempty"`
-	TotalExperience     int16      `json:"total_experience"`
-	ProfileCompleteness int16      `json:"profile_completeness"`
-	UpdatedAt           time.Time  `json:"updated_at"`
+	ID                 int64      `json:"id"`
+	UserID             int64      `json:"user_id"`
+	Headline           *string    `json:"headline,omitempty"`
+	Bio                *string    `json:"bio,omitempty"`
+	Gender             *string    `json:"gender,omitempty"`
+	BirthDate          *time.Time `json:"birth_date,omitempty"`
+	LocationCity       *string    `json:"location_city,omitempty"`
+	LocationCountry    *string    `json:"location_country,omitempty"`
+	DesiredPosition    *string    `json:"desired_position,omitempty"`
+	DesiredSalaryMin   *float64   `json:"desired_salary_min,omitempty"`
+	DesiredSalaryMax   *float64   `json:"desired_salary_max,omitempty"`
+	ExperienceLevel    *string    `json:"experience_level,omitempty"`
+	IndustryInterest   *string    `json:"industry_interest,omitempty"`
+	AvailabilityStatus string     `json:"availability_status"`
+	ProfileVisibility  bool       `json:"profile_visibility"`
+	Slug               *string    `json:"slug,omitempty"`
+	AvatarURL          *string    `json:"avatar_url,omitempty"`
+	CoverURL           *string    `json:"cover_url,omitempty"`
+	CreatedAt          time.Time  `json:"created_at"`
+	UpdatedAt          time.Time  `json:"updated_at"`
 }
 
 // UserDetailResponse represents detailed user response with all relations
@@ -66,31 +66,34 @@ type UserDetailResponse struct {
 
 // UserEducationResponse represents education response
 type UserEducationResponse struct {
-	ID                  int64      `json:"id"`
-	InstitutionName     string     `json:"institution_name"`
-	Degree              string     `json:"degree"`
-	FieldOfStudy        string     `json:"field_of_study"`
-	StartDate           time.Time  `json:"start_date"`
-	EndDate             *time.Time `json:"end_date,omitempty"`
-	Grade               string     `json:"grade,omitempty"`
-	Description         string     `json:"description,omitempty"`
-	IsCurrentlyStudying bool       `json:"is_currently_studying"`
-	CreatedAt           time.Time  `json:"created_at"`
+	ID              int64    `json:"id"`
+	InstitutionName string   `json:"institution_name"`
+	Major           *string  `json:"major,omitempty"`
+	DegreeLevel     *string  `json:"degree_level,omitempty"`
+	StartYear       *int     `json:"start_year,omitempty"`
+	EndYear         *int     `json:"end_year,omitempty"`
+	GPA             *float64 `json:"gpa,omitempty"`
+	Activities      *string  `json:"activities,omitempty"`
+	Description     *string  `json:"description,omitempty"`
+	IsCurrent       bool     `json:"is_current"`
+	CreatedAt       string   `json:"created_at"`
 }
 
 // UserExperienceResponse represents experience response
 type UserExperienceResponse struct {
-	ID                 int64      `json:"id"`
-	CompanyName        string     `json:"company_name"`
-	JobTitle           string     `json:"job_title"`
-	EmploymentType     string     `json:"employment_type"`
-	Location           string     `json:"location,omitempty"`
-	StartDate          time.Time  `json:"start_date"`
-	EndDate            *time.Time `json:"end_date,omitempty"`
-	IsCurrentlyWorking bool       `json:"is_currently_working"`
-	Description        string     `json:"description,omitempty"`
-	Duration           string     `json:"duration,omitempty"`
-	CreatedAt          time.Time  `json:"created_at"`
+	ID              int64   `json:"id"`
+	CompanyName     string  `json:"company_name"`
+	PositionTitle   string  `json:"position_title"`
+	Industry        *string `json:"industry,omitempty"`
+	EmploymentType  *string `json:"employment_type,omitempty"`
+	StartDate       string  `json:"start_date"`
+	EndDate         *string `json:"end_date,omitempty"`
+	IsCurrent       bool    `json:"is_current"`
+	Description     *string `json:"description,omitempty"`
+	Achievements    *string `json:"achievements,omitempty"`
+	LocationCity    *string `json:"location_city,omitempty"`
+	LocationCountry string  `json:"location_country"`
+	CreatedAt       string  `json:"created_at"`
 }
 
 // UserSkillResponse represents skill response
