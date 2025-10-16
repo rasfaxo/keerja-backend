@@ -2,49 +2,159 @@ package main
 
 import (
 	"fmt"
-	"keerja-backend/internal/config"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"keerja-backend/internal/config"
+	"keerja-backend/internal/handler/http"
+	"keerja-backend/internal/middleware"
+	"keerja-backend/internal/repository/postgres"
+	"keerja-backend/internal/routes"
+	"keerja-backend/internal/service"
+	"keerja-backend/internal/utils"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/joho/godotenv"
 )
 
 func main() {
+	// Load environment variables
 	if err := godotenv.Load(); err != nil {
-		log.Println("Warning: .env file not found")
+		log.Println("Warning: .env file not found, using system environment variables")
 	}
 
+	// Initialize logger
 	config.InitLogger()
 	appLogger := config.GetLogger()
 	appLogger.Info("Starting Keerja Backend API...")
 
+	// Load configuration
+	cfg := config.LoadConfig()
+	appLogger.Info(fmt.Sprintf("Environment: %s", cfg.AppEnv))
+
+	// Initialize database
+	appLogger.Info("Initializing database connection...")
 	if err := config.InitDatabase(); err != nil {
 		appLogger.WithError(err).Fatal("Failed to initialize database")
 	}
 	defer config.CloseDatabase()
+	db := config.GetDB()
+	appLogger.Info(" Database connected successfully")
 
-	app := fiber.New()
-	app.Use(recover.New())
-	app.Use(cors.New())
-	app.Use(logger.New())
+	// Initialize validator
+	utils.InitValidator()
 
-	app.Get("/health", func(c *fiber.Ctx) error {
-		return c.JSON(fiber.Map{"status": "ok"})
+	// Initialize repositories
+	appLogger.Info("Initializing repositories...")
+	userRepo := postgres.NewUserRepository(db)
+	emailRepo := postgres.NewEmailRepository(db)
+
+	// Initialize services
+	appLogger.Info("Initializing services...")
+	tokenStore := service.NewInMemoryTokenStore()
+
+	// Initialize email service
+	emailService := service.NewEmailService(emailRepo)
+
+	// Initialize upload service
+	uploadConfig := service.UploadServiceConfig{
+		StorageProvider: "local",
+		UploadPath:      "./uploads",
+		BaseURL:         "http://localhost:8080", // TODO: Get from config
+	}
+	uploadService := service.NewUploadService(uploadConfig)
+
+	authServiceConfig := service.AuthServiceConfig{
+		JWTSecret:   cfg.JWTSecret,
+		JWTDuration: time.Duration(cfg.JWTExpirationHours) * time.Hour,
+	}
+
+	// Create auth service with email service
+	authService := service.NewAuthService(userRepo, emailService, tokenStore, authServiceConfig)
+	userService := service.NewUserService(userRepo, uploadService)
+
+	// Initialize handlers
+	appLogger.Info("🎮 Initializing handlers...")
+	authHandler := http.NewAuthHandler(authService, userRepo)
+	userHandler := http.NewUserHandler(userService)
+
+	// Setup Fiber app
+	app := fiber.New(fiber.Config{
+		AppName:               cfg.AppName,
+		ServerHeader:          "Keerja",
+		StrictRouting:         false,
+		CaseSensitive:         false,
+		ErrorHandler:          nil, // Will be set by middleware
+		DisableStartupMessage: false,
 	})
 
-	port := os.Getenv("APP_PORT")
+	// Setup global middleware (order matters!)
+	appLogger.Info("🛡️  Setting up middleware...")
+
+	// 1. Panic recovery (must be first)
+	app.Use(middleware.RecoverPanic(cfg.AppEnv == "development"))
+
+	// 2. Request logging
+	if cfg.AppEnv == "development" {
+		app.Use(middleware.DetailedLogger())
+	} else {
+		app.Use(middleware.RequestLogger())
+	}
+
+	// 3. CORS
+	app.Use(middleware.CORSConfig(cfg))
+
+	// 4. Security headers
+	app.Use(middleware.SecurityHeaders())
+
+	// 5. Rate limiting
+	app.Use(middleware.RateLimiter(cfg))
+
+	// 6. Error handler
+	app.Use(middleware.ErrorHandler(cfg.AppEnv == "development"))
+
+	// Setup routes
+	appLogger.Info("Setting up routes...")
+	deps := &routes.Dependencies{
+		Config:      cfg,
+		AuthHandler: authHandler,
+		UserHandler: userHandler,
+	}
+	routes.SetupRoutes(app, deps)
+
+	// 404 handler (must be last)
+	app.Use(middleware.NotFoundHandler())
+
+	// Start server in a goroutine
+	port := cfg.ServerPort
 	if port == "" {
 		port = "8080"
 	}
+	addr := fmt.Sprintf("%s:%s", cfg.ServerHost, port)
 
-	addr := fmt.Sprintf(":", port)
-	appLogger.Info("Server running on " + addr)
+	go func() {
+		appLogger.Info(fmt.Sprintf("Server listening on %s", addr))
+		appLogger.Info(fmt.Sprintf("API Documentation: http://%s/api/v1/health", addr))
+		if err := app.Listen(addr); err != nil {
+			appLogger.WithError(err).Fatal("Failed to start server")
+		}
+	}()
 
-	if err := app.Listen(addr); err != nil {
-		appLogger.WithError(err).Fatal("Failed to start")
+	// Wait for interrupt signal for graceful shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	appLogger.Info("🛑 Shutting down server gracefully...")
+
+	// Graceful shutdown with timeout
+	if err := app.ShutdownWithTimeout(10 * time.Second); err != nil {
+		appLogger.WithError(err).Error("❌ Server forced to shutdown")
 	}
+
+	appLogger.Info("✅ Server stopped successfully")
 }
+
