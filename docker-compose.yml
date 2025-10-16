@@ -8,18 +8,19 @@ services:
     environment:
       POSTGRES_USER: bekerja
       POSTGRES_PASSWORD: bekerja123
-      POSTGRES_DB: keerja_db
+      POSTGRES_DB: keerja
       POSTGRES_INITDB_ARGS: "-E UTF8 --locale=C"
       TZ: Asia/Jakarta
     ports:
-      - "5432:5432"
+      - "5434:5432"  # Changed to avoid conflict with local PostgreSQL
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./Keerja.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./docker-init-db.sh:/docker-entrypoint-initdb.d/00-init-users.sh
+      - ./Keerja.sql:/docker-entrypoint-initdb.d/01-schema.sql
     networks:
       - keerja-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U bekerja -d keerja_db"]
+      test: ["CMD-SHELL", "pg_isready -U bekerja -d keerja"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -37,9 +38,10 @@ services:
       DB_PORT: 5432
       DB_USER: bekerja
       DB_PASSWORD: bekerja123
-      DB_NAME: keerja_db
+      DB_NAME: keerja
       DB_SSLMODE: disable
       DB_TIMEZONE: Asia/Jakarta
+      JWT_SECRET: keerja_jwt_secret_key_minimum_32_characters_long_for_security
       LOG_LEVEL: info
       LOG_FORMAT: json
     ports:
@@ -51,6 +53,7 @@ services:
       - keerja-network
     volumes:
       - ./logs:/app/logs
+      - ./uploads:/app/uploads
     restart: unless-stopped
 
 volumes:

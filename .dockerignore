@@ -1,0 +1,60 @@
+# Git
+.git
+.gitignore
+.github
+
+# Documentation
+*.md
+docs/
+SETUP_PROGRESS.md
+DATABASE_FIX_REPORT.md
+
+# Development
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+tests/
+coverage.out
+coverage.html
+*.test
+
+# Build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+main
+keerja-backend
+
+# Logs
+logs/
+*.log
+
+# Uploads
+uploads/
+
+# Environment
+.env.local
+.env.*.local
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Temporary
+tmp/
+temp/
+*.tmp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dependencies (will be downloaded in container)
+vendor/
