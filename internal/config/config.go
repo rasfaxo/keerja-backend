@@ -27,8 +27,8 @@ type Config struct {
 	DBSSLMode  string
 
 	// JWT Configuration
-	JWTSecret           string
-	JWTExpirationHours  int
+	JWTSecret                string
+	JWTExpirationHours       int
 	JWTRefreshExpirationDays int
 
 	// Email Configuration
@@ -64,6 +64,13 @@ type Config struct {
 	// Pagination
 	DefaultPageSize int
 	MaxPageSize     int
+
+	// Frontend URLs
+	FrontendURL      string
+	VerifyEmailURL   string
+	ResetPasswordURL string
+	DashboardURL     string
+	SupportEmail     string
 }
 
 var globalConfig *Config
@@ -91,8 +98,8 @@ func LoadConfig() *Config {
 		DBSSLMode:  getEnv("DB_SSLMODE", "disable"),
 
 		// JWT Configuration
-		JWTSecret:           getEnv("JWT_SECRET", "your-secret-key-change-this"),
-		JWTExpirationHours:  getEnvAsInt("JWT_EXPIRATION_HOURS", 24),
+		JWTSecret:                getEnv("JWT_SECRET", "your-secret-key-change-this"),
+		JWTExpirationHours:       getEnvAsInt("JWT_EXPIRATION_HOURS", 24),
 		JWTRefreshExpirationDays: getEnvAsInt("JWT_REFRESH_EXPIRATION_DAYS", 7),
 
 		// Email Configuration
@@ -123,11 +130,18 @@ func LoadConfig() *Config {
 		RateLimitWindow:  time.Duration(getEnvAsInt("RATE_LIMIT_WINDOW_SECONDS", 60)) * time.Second,
 
 		// CORS Configuration
-		AllowedOrigins: getEnvAsSlice("ALLOWED_ORIGINS", []string{"*"}),
+		AllowedOrigins: getEnvAsSlice("ALLOWED_ORIGINS", []string{"http://localhost:3000", "http://localhost:5173"}),
 
 		// Pagination
 		DefaultPageSize: getEnvAsInt("DEFAULT_PAGE_SIZE", 10),
 		MaxPageSize:     getEnvAsInt("MAX_PAGE_SIZE", 100),
+
+		// Frontend URLs
+		FrontendURL:      getEnv("FRONTEND_URL", "http://localhost:3000"),
+		VerifyEmailURL:   getEnv("VERIFY_EMAIL_URL", "http://localhost:3000/verify-email"),
+		ResetPasswordURL: getEnv("RESET_PASSWORD_URL", "http://localhost:3000/reset-password"),
+		DashboardURL:     getEnv("DASHBOARD_URL", "http://localhost:3000/dashboard"),
+		SupportEmail:     getEnv("SUPPORT_EMAIL", "support@keerja.com"),
 	}
 
 	// Validate required configurations
