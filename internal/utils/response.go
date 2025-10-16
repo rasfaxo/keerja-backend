@@ -38,11 +38,18 @@ func CreatedResponse(c *fiber.Ctx, message string, data interface{}) error {
 	})
 }
 
-func ErrorResponse(c *fiber.Ctx, statusCode int, message string) error {
-	return c.Status(statusCode).JSON(Response{
+func ErrorResponse(c *fiber.Ctx, statusCode int, message string, details ...string) error {
+	resp := Response{
 		Success: false,
 		Message: message,
-	})
+	}
+
+	// Add error details if provided
+	if len(details) > 0 {
+		resp.Errors = details[0]
+	}
+
+	return c.Status(statusCode).JSON(resp)
 }
 
 func ErrorResponseWithErrors(c *fiber.Ctx, statusCode int, message string, errors interface{}) error {
@@ -53,10 +60,13 @@ func ErrorResponseWithErrors(c *fiber.Ctx, statusCode int, message string, error
 	})
 }
 
-func ValidationErrorResponse(c *fiber.Ctx, errors interface{}) error {
+func ValidationErrorResponse(c *fiber.Ctx, message string, errors interface{}) error {
+	if message == "" {
+		message = "Validation failed"
+	}
 	return c.Status(fiber.StatusBadRequest).JSON(Response{
 		Success: false,
-		Message: "Validation failed",
+		Message: message,
 		Errors:  errors,
 	})
 }
