@@ -24,12 +24,12 @@ func CORSConfig(cfg *config.Config) fiber.Handler {
 			}
 		} else {
 			// In production, must specify allowed origins
-			allowedOrigins = []string{}
+			allowedOrigins = []string{"https://yourdomain.com"}
 		}
 	}
 
 	return cors.New(cors.Config{
-		AllowOrigins: strings.Join(allowedOrigins, ", "),
+		AllowOrigins: strings.Join(allowedOrigins, ","),
 		AllowMethods: strings.Join([]string{
 			fiber.MethodGet,
 			fiber.MethodPost,
@@ -37,7 +37,7 @@ func CORSConfig(cfg *config.Config) fiber.Handler {
 			fiber.MethodPatch,
 			fiber.MethodDelete,
 			fiber.MethodOptions,
-		}, ", "),
+		}, ","),
 		AllowHeaders: strings.Join([]string{
 			"Origin",
 			"Content-Type",
@@ -45,7 +45,7 @@ func CORSConfig(cfg *config.Config) fiber.Handler {
 			"Authorization",
 			"X-Requested-With",
 			"X-CSRF-Token",
-		}, ", "),
+		}, ","),
 		AllowCredentials: true,
 		ExposeHeaders: strings.Join([]string{
 			"Content-Length",
