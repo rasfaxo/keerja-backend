@@ -2,21 +2,27 @@ package request
 
 // UpdateProfileRequest represents user profile update request
 type UpdateProfileRequest struct {
-	FullName        *string `json:"full_name" validate:"omitempty,min=3,max=150"`
-	Phone           *string `json:"phone" validate:"omitempty,min=10,max=20"`
-	Headline        *string `json:"headline" validate:"omitempty,max=150"`
-	Bio             *string `json:"bio" validate:"omitempty"`
-	BirthDate       *string `json:"birth_date" validate:"omitempty"`
-	Gender          *string `json:"gender" validate:"omitempty,oneof=male female other"`
-	Nationality     *string `json:"nationality" validate:"omitempty,max=100"`
-	Address         *string `json:"address" validate:"omitempty"`
-	LocationCity    *string `json:"location_city" validate:"omitempty,max=100"`
-	LocationState   *string `json:"location_state" validate:"omitempty,max=100"`
-	LocationCountry *string `json:"location_country" validate:"omitempty,max=100"`
-	PostalCode      *string `json:"postal_code" validate:"omitempty,max=10"`
-	LinkedinURL     *string `json:"linkedin_url" validate:"omitempty,url"`
-	PortfolioURL    *string `json:"portfolio_url" validate:"omitempty,url"`
-	GithubURL       *string `json:"github_url" validate:"omitempty,url"`
+	FullName           *string  `json:"full_name" validate:"omitempty,min=3,max=150"`
+	Phone              *string  `json:"phone" validate:"omitempty,min=10,max=20"`
+	Headline           *string  `json:"headline" validate:"omitempty,max=150"`
+	Bio                *string  `json:"bio" validate:"omitempty"`
+	BirthDate          *string  `json:"birth_date" validate:"omitempty"`
+	Gender             *string  `json:"gender" validate:"omitempty,oneof=male female other"`
+	Nationality        *string  `json:"nationality" validate:"omitempty,max=100"`
+	Address            *string  `json:"address" validate:"omitempty"`
+	LocationCity       *string  `json:"location_city" validate:"omitempty,max=100"`
+	LocationState      *string  `json:"location_state" validate:"omitempty,max=100"`
+	LocationCountry    *string  `json:"location_country" validate:"omitempty,max=100"`
+	PostalCode         *string  `json:"postal_code" validate:"omitempty,max=10"`
+	LinkedinURL        *string  `json:"linkedin_url" validate:"omitempty,url"`
+	PortfolioURL       *string  `json:"portfolio_url" validate:"omitempty,url"`
+	GithubURL          *string  `json:"github_url" validate:"omitempty,url"`
+	DesiredPosition    *string  `json:"desired_position" validate:"omitempty,max=150"`
+	DesiredSalaryMin   *float64 `json:"desired_salary_min" validate:"omitempty,min=0"`
+	DesiredSalaryMax   *float64 `json:"desired_salary_max" validate:"omitempty,min=0"`
+	ExperienceLevel    *string  `json:"experience_level" validate:"omitempty,oneof=internship junior mid senior lead"`
+	IndustryInterest   *string  `json:"industry_interest" validate:"omitempty,max=100"`
+	AvailabilityStatus *string  `json:"availability_status" validate:"omitempty,oneof=open looking_actively not_looking"`
 }
 
 // AddEducationRequest represents add education request
