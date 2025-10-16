@@ -120,7 +120,7 @@ type EmailService interface {
 }
 
 // AuthService handles authentication business logic
-type authService struct {
+type AuthService struct {
 	userRepo     user.UserRepository
 	emailService EmailService
 	tokenStore   TokenStore
@@ -135,8 +135,8 @@ type AuthServiceConfig struct {
 }
 
 // NewAuthService creates a new auth service instance
-func NewAuthService(userRepo user.UserRepository, emailService EmailService, tokenStore TokenStore, cfg AuthServiceConfig) *authService {
-	return &authService{
+func NewAuthService(userRepo user.UserRepository, emailService EmailService, tokenStore TokenStore, cfg AuthServiceConfig) *AuthService {
+	return &AuthService{
 		userRepo:     userRepo,
 		emailService: emailService,
 		tokenStore:   tokenStore,
@@ -146,7 +146,7 @@ func NewAuthService(userRepo user.UserRepository, emailService EmailService, tok
 }
 
 // Register registers a new user
-func (s *authService) Register(ctx context.Context, req *user.RegisterRequest) (*user.User, string, error) {
+func (s *AuthService) Register(ctx context.Context, req *user.RegisterRequest) (*user.User, string, error) {
 	// Check if email already exists
 	existingUser, err := s.userRepo.FindByEmail(ctx, req.Email)
 	if err == nil && existingUser != nil {
@@ -208,7 +208,7 @@ func (s *authService) Register(ctx context.Context, req *user.RegisterRequest) (
 }
 
 // Login authenticates a user and returns JWT token
-func (s *authService) Login(ctx context.Context, email, password string) (*user.User, string, error) {
+func (s *AuthService) Login(ctx context.Context, email, password string) (*user.User, string, error) {
 	// Find user by email
 	usr, err := s.userRepo.FindByEmail(ctx, email)
 	if err != nil || usr == nil {
@@ -251,7 +251,7 @@ func (s *authService) Login(ctx context.Context, email, password string) (*user.
 }
 
 // VerifyEmail verifies user's email with token
-func (s *authService) VerifyEmail(ctx context.Context, token string) error {
+func (s *AuthService) VerifyEmail(ctx context.Context, token string) error {
 	// Get email from token store
 	email, err := s.tokenStore.GetVerificationToken(token)
 	if err != nil {
@@ -290,7 +290,7 @@ func (s *authService) VerifyEmail(ctx context.Context, token string) error {
 }
 
 // ResendVerificationEmail resends verification email
-func (s *authService) ResendVerificationEmail(ctx context.Context, email string) error {
+func (s *AuthService) ResendVerificationEmail(ctx context.Context, email string) error {
 	// Find user by email
 	usr, err := s.userRepo.FindByEmail(ctx, email)
 	if err != nil || usr == nil {
@@ -322,7 +322,7 @@ func (s *authService) ResendVerificationEmail(ctx context.Context, email string)
 }
 
 // ForgotPassword initiates password reset process
-func (s *authService) ForgotPassword(ctx context.Context, email string) error {
+func (s *AuthService) ForgotPassword(ctx context.Context, email string) error {
 	// Find user by email
 	usr, err := s.userRepo.FindByEmail(ctx, email)
 	if err != nil || usr == nil {
@@ -350,7 +350,7 @@ func (s *authService) ForgotPassword(ctx context.Context, email string) error {
 }
 
 // ResetPassword resets user password with token
-func (s *authService) ResetPassword(ctx context.Context, token, newPassword string) error {
+func (s *AuthService) ResetPassword(ctx context.Context, token, newPassword string) error {
 	// Get email from token store
 	email, err := s.tokenStore.GetResetToken(token)
 	if err != nil {
@@ -383,7 +383,7 @@ func (s *authService) ResetPassword(ctx context.Context, token, newPassword stri
 }
 
 // ChangePassword changes user password (requires current password)
-func (s *authService) ChangePassword(ctx context.Context, userID int64, currentPassword, newPassword string) error {
+func (s *AuthService) ChangePassword(ctx context.Context, userID int64, currentPassword, newPassword string) error {
 	// Find user
 	usr, err := s.userRepo.FindByID(ctx, userID)
 	if err != nil || usr == nil {
@@ -412,7 +412,7 @@ func (s *authService) ChangePassword(ctx context.Context, userID int64, currentP
 }
 
 // RefreshToken generates a new access token
-func (s *authService) RefreshToken(ctx context.Context, userID int64) (string, error) {
+func (s *AuthService) RefreshToken(ctx context.Context, userID int64) (string, error) {
 	// Find user
 	usr, err := s.userRepo.FindByID(ctx, userID)
 	if err != nil || usr == nil {
@@ -434,7 +434,7 @@ func (s *authService) RefreshToken(ctx context.Context, userID int64) (string, e
 }
 
 // ValidateToken validates JWT token and returns user
-func (s *authService) ValidateToken(ctx context.Context, tokenString string) (*user.User, error) {
+func (s *AuthService) ValidateToken(ctx context.Context, tokenString string) (*user.User, error) {
 	// Validate and parse token
 	claims, err := utils.ValidateToken(tokenString, s.jwtSecret)
 	if err != nil {
@@ -456,9 +456,9 @@ func (s *authService) ValidateToken(ctx context.Context, tokenString string) (*u
 }
 
 // Logout handles user logout (in stateless JWT, this is mainly for cleanup)
-func (s *authService) Logout(ctx context.Context, userID int64) error {
+func (s *AuthService) Logout(ctx context.Context, userID int64) error {
 	// In JWT-based auth, logout is typically handled client-side
-	// nanti disini bisa implement token blacklist pake redis 
+	// nanti disini bisa implement token blacklist pake redis
 
 	// For now, just verify user exists
 	usr, err := s.userRepo.FindByID(ctx, userID)
@@ -466,7 +466,7 @@ func (s *authService) Logout(ctx context.Context, userID int64) error {
 		return ErrUserNotFound
 	}
 
-	// bisa implement token blacklist disini kalo diperlukan 
+	// bisa implement token blacklist disini kalo diperlukan
 	// e.g., redis.Set(tokenHash, "blacklisted", expirationTime)
 
 	return nil
@@ -475,7 +475,7 @@ func (s *authService) Logout(ctx context.Context, userID int64) error {
 // Helper functions
 
 // ensureUniqueSlug ensures slug is unique by appending number if needed
-func (s *authService) ensureUniqueSlug(ctx context.Context, baseSlug string) string {
+func (s *AuthService) ensureUniqueSlug(ctx context.Context, baseSlug string) string {
 	slug := baseSlug
 	counter := 1
 
