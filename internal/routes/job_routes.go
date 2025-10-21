@@ -8,79 +8,96 @@ import (
 
 // SetupJobRoutes configures job routes
 // Routes: /api/v1/jobs/*
+//
+// Public Endpoints (3):
+//   - GET    /                   List all jobs with filters & pagination
+//   - GET    /:id                Get job details by ID
+//   - POST   /search             Advanced job search
+//
+// Employer Endpoints (6):
+//   - POST   /                   Create new job posting
+//   - PUT    /:id                Update existing job
+//   - DELETE /:id                Delete job posting
+//   - GET    /my-jobs            List employer's own jobs
+//   - PATCH  /:id/publish        Publish draft job
+//   - PATCH  /:id/close          Close active job
+//
+// Total: 9 endpoints
 func SetupJobRoutes(api fiber.Router, deps *Dependencies, authMw *middleware.AuthMiddleware) {
 	jobs := api.Group("/jobs")
 
-	// Public routes
-	jobs.Get("/", func(c *fiber.Ctx) error {
-		// TODO: Implement ListJobs handler
-		// deps.JobHandler.ListJobs(c)
-		return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{
-			"message": "Job listing endpoint - Coming soon",
-		})
-	})
+	// ============================================
+	// PUBLIC ROUTES (3 endpoints)
+	// ============================================
 
-	jobs.Get("/:id", func(c *fiber.Ctx) error {
-		// TODO: Implement GetJob handler
-		// deps.JobHandler.GetJob(c)
-		return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{
-			"message": "Get job details endpoint - Coming soon",
-		})
-	})
-
-	jobs.Post("/search",
+	// GET /api/v1/jobs - List all jobs
+	// Query params: page, limit, company_id, location, type, level, etc.
+	// Rate limit: 30 requests/minute (search rate)
+	jobs.Get("/",
 		middleware.SearchRateLimiter(),
-		func(c *fiber.Ctx) error {
-			// TODO: Implement SearchJobs handler
-			// deps.JobHandler.SearchJobs(c)
-			return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{
-				"message": "Job search endpoint - Coming soon",
-			})
-		},
+		deps.JobHandler.ListJobs,
 	)
 
-	// Protected routes - employer only
+	// GET /api/v1/jobs/:id - Get job details
+	// Returns: Job details with company info
+	jobs.Get("/:id",
+		deps.JobHandler.GetJob,
+	)
+
+	// POST /api/v1/jobs/search - Advanced job search
+	// Body: { query, location, filters, pagination }
+	// Rate limit: 30 requests/minute
+	jobs.Post("/search",
+		middleware.SearchRateLimiter(),
+		deps.JobHandler.SearchJobs,
+	)
+
+	// ============================================
+	// PROTECTED ROUTES - EMPLOYER ONLY (6 endpoints)
+	// ============================================
 	protected := jobs.Group("")
 	protected.Use(authMw.AuthRequired())
 	protected.Use(authMw.EmployerOnly())
 
-	protected.Post("/", func(c *fiber.Ctx) error {
-		// TODO: Implement CreateJob handler
-		// deps.JobHandler.CreateJob(c)
-		return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{
-			"message": "Create job endpoint - Coming soon",
-		})
-	})
+	// POST /api/v1/jobs - Create new job posting
+	// Body: { title, description, requirements, company_id, ... }
+	// Rate limit: 100 requests/minute (default)
+	protected.Post("/",
+		middleware.ApplicationRateLimiter(),
+		deps.JobHandler.CreateJob,
+	)
 
-	protected.Put("/:id", func(c *fiber.Ctx) error {
-		// TODO: Implement UpdateJob handler
-		// deps.JobHandler.UpdateJob(c)
-		return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{
-			"message": "Update job endpoint - Coming soon",
-		})
-	})
+	// PUT /api/v1/jobs/:id - Update job posting
+	// Body: { title, description, requirements, ... }
+	// Rate limit: 100 requests/minute
+	protected.Put("/:id",
+		middleware.ApplicationRateLimiter(),
+		deps.JobHandler.UpdateJob,
+	)
 
-	protected.Delete("/:id", func(c *fiber.Ctx) error {
-		// TODO: Implement DeleteJob handler
-		// deps.JobHandler.DeleteJob(c)
-		return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{
-			"message": "Delete job endpoint - Coming soon",
-		})
-	})
+	// DELETE /api/v1/jobs/:id - Delete job posting
+	// Only owner can delete
+	protected.Delete("/:id",
+		deps.JobHandler.DeleteJob,
+	)
 
-	protected.Get("/my-jobs", func(c *fiber.Ctx) error {
-		// TODO: Implement GetMyJobs handler
-		// deps.JobHandler.GetMyJobs(c)
-		return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{
-			"message": "Get my jobs endpoint - Coming soon",
-		})
-	})
+	// GET /api/v1/jobs/my-jobs - List employer's jobs
+	// Query params: page, limit, status
+	// Rate limit: 30 requests/minute
+	protected.Get("/my-jobs",
+		middleware.SearchRateLimiter(),
+		deps.JobHandler.GetMyJobs,
+	)
 
-	protected.Get("/:id/applications", func(c *fiber.Ctx) error {
-		// TODO: Implement GetJobApplications handler
-		// deps.JobHandler.GetJobApplications(c)
-		return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{
-			"message": "Get job applications endpoint - Coming soon",
-		})
-	})
+	// PATCH /api/v1/jobs/:id/publish - Publish draft job
+	// Changes status from draft to published
+	protected.Patch("/:id/publish",
+		deps.JobHandler.PublishJob,
+	)
+
+	// PATCH /api/v1/jobs/:id/close - Close active job
+	// Changes status from published to closed
+	protected.Patch("/:id/close",
+		deps.JobHandler.CloseJob,
+	)
 }
