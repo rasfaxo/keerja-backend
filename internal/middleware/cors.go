@@ -44,7 +44,6 @@ func CORSConfig(cfg *config.Config) fiber.Handler {
 			"Accept",
 			"Authorization",
 			"X-Requested-With",
-			"X-CSRF-Token",
 		}, ","),
 		AllowCredentials: true,
 		ExposeHeaders: strings.Join([]string{
