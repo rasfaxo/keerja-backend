@@ -50,6 +50,13 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 		return utils.ValidationErrorResponse(c, "Validation failed", errors)
 	}
 
+	// Sanitize text input fields
+	req.FullName = utils.SanitizeString(req.FullName)
+	req.Email = utils.SanitizeString(req.Email)
+	if req.Phone != "" {
+		req.Phone = utils.SanitizeString(req.Phone)
+	}
+
 	// Convert to domain request
 	phone := &req.Phone
 	if req.Phone == "" {
@@ -106,6 +113,9 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 		return utils.ValidationErrorResponse(c, "Validation failed", errors)
 	}
 
+	// Sanitize input
+	req.Email = utils.SanitizeString(req.Email)
+
 	// Login user
 	usr, accessToken, err := h.authService.Login(ctx, req.Email, req.Password)
 	if err != nil {
@@ -150,6 +160,9 @@ func (h *AuthHandler) VerifyEmail(c *fiber.Ctx) error {
 		return utils.ValidationErrorResponse(c, "Validation failed", errors)
 	}
 
+	// Sanitize input
+	req.Token = utils.SanitizeString(req.Token)
+
 	// Verify email
 	if err := h.authService.VerifyEmail(ctx, req.Token); err != nil {
 		if err == service.ErrInvalidVerificationToken {
@@ -190,6 +203,9 @@ func (h *AuthHandler) ForgotPassword(c *fiber.Ctx) error {
 		return utils.ValidationErrorResponse(c, "Validation failed", errors)
 	}
 
+	// Sanitize input
+	req.Email = utils.SanitizeString(req.Email)
+
 	// Request password reset
 	if err := h.authService.ForgotPassword(ctx, req.Email); err != nil {
 		// Don't expose whether user exists or not
@@ -224,6 +240,9 @@ func (h *AuthHandler) ResetPassword(c *fiber.Ctx) error {
 		errors := utils.FormatValidationErrors(err)
 		return utils.ValidationErrorResponse(c, "Validation failed", errors)
 	}
+
+	// Sanitize input
+	req.Token = utils.SanitizeString(req.Token)
 
 	// Reset password
 	if err := h.authService.ResetPassword(ctx, req.Token, req.NewPassword); err != nil {
@@ -324,6 +343,9 @@ func (h *AuthHandler) ResendVerification(c *fiber.Ctx) error {
 		errors := utils.FormatValidationErrors(err)
 		return utils.ValidationErrorResponse(c, "Validation failed", errors)
 	}
+
+	// Sanitize input
+	req.Email = utils.SanitizeString(req.Email)
 
 	// Resend verification email
 	if err := h.authService.ResendVerificationEmail(ctx, req.Email); err != nil {
