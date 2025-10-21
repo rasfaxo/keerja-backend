@@ -78,6 +78,32 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 		return utils.ValidationErrorResponse(c, "Validation failed", errors)
 	}
 
+	// Sanitize text input fields
+	if req.Headline != nil {
+		sanitized := utils.SanitizeString(*req.Headline)
+		req.Headline = &sanitized
+	}
+	if req.Bio != nil {
+		sanitized := utils.SanitizeString(*req.Bio)
+		req.Bio = &sanitized
+	}
+	if req.LocationCity != nil {
+		sanitized := utils.SanitizeString(*req.LocationCity)
+		req.LocationCity = &sanitized
+	}
+	if req.LocationCountry != nil {
+		sanitized := utils.SanitizeString(*req.LocationCountry)
+		req.LocationCountry = &sanitized
+	}
+	if req.DesiredPosition != nil {
+		sanitized := utils.SanitizeString(*req.DesiredPosition)
+		req.DesiredPosition = &sanitized
+	}
+	if req.IndustryInterest != nil {
+		sanitized := utils.SanitizeString(*req.IndustryInterest)
+		req.IndustryInterest = &sanitized
+	}
+
 	// Convert to domain request
 	domainReq := &user.UpdateProfileRequest{
 		Headline:           req.Headline,
@@ -127,6 +153,25 @@ func (h *UserHandler) AddEducation(c *fiber.Ctx) error {
 	if err := utils.ValidateStruct(&req); err != nil {
 		errors := utils.FormatValidationErrors(err)
 		return utils.ValidationErrorResponse(c, "Validation failed", errors)
+	}
+
+	// Sanitize text input fields
+	req.InstitutionName = utils.SanitizeString(req.InstitutionName)
+	if req.Major != nil {
+		sanitized := utils.SanitizeString(*req.Major)
+		req.Major = &sanitized
+	}
+	if req.DegreeLevel != nil {
+		sanitized := utils.SanitizeString(*req.DegreeLevel)
+		req.DegreeLevel = &sanitized
+	}
+	if req.Activities != nil {
+		sanitized := utils.SanitizeString(*req.Activities)
+		req.Activities = &sanitized
+	}
+	if req.Description != nil {
+		sanitized := utils.SanitizeString(*req.Description)
+		req.Description = &sanitized
 	}
 
 	// Convert to domain request
@@ -183,6 +228,28 @@ func (h *UserHandler) UpdateEducation(c *fiber.Ctx) error {
 	if err := utils.ValidateStruct(&req); err != nil {
 		errors := utils.FormatValidationErrors(err)
 		return utils.ValidationErrorResponse(c, "Validation failed", errors)
+	}
+
+	// Sanitize text input fields
+	if req.InstitutionName != nil {
+		sanitized := utils.SanitizeString(*req.InstitutionName)
+		req.InstitutionName = &sanitized
+	}
+	if req.Major != nil {
+		sanitized := utils.SanitizeString(*req.Major)
+		req.Major = &sanitized
+	}
+	if req.DegreeLevel != nil {
+		sanitized := utils.SanitizeString(*req.DegreeLevel)
+		req.DegreeLevel = &sanitized
+	}
+	if req.Activities != nil {
+		sanitized := utils.SanitizeString(*req.Activities)
+		req.Activities = &sanitized
+	}
+	if req.Description != nil {
+		sanitized := utils.SanitizeString(*req.Description)
+		req.Description = &sanitized
 	}
 
 	// Convert to domain request
@@ -262,6 +329,34 @@ func (h *UserHandler) AddExperience(c *fiber.Ctx) error {
 		return utils.ValidationErrorResponse(c, "Validation failed", errors)
 	}
 
+	// Sanitize text input fields
+	req.CompanyName = utils.SanitizeString(req.CompanyName)
+	req.PositionTitle = utils.SanitizeString(req.PositionTitle)
+	if req.Industry != nil {
+		sanitized := utils.SanitizeString(*req.Industry)
+		req.Industry = &sanitized
+	}
+	if req.EmploymentType != nil {
+		sanitized := utils.SanitizeString(*req.EmploymentType)
+		req.EmploymentType = &sanitized
+	}
+	if req.Description != nil {
+		sanitized := utils.SanitizeString(*req.Description)
+		req.Description = &sanitized
+	}
+	if req.Achievements != nil {
+		sanitized := utils.SanitizeString(*req.Achievements)
+		req.Achievements = &sanitized
+	}
+	if req.LocationCity != nil {
+		sanitized := utils.SanitizeString(*req.LocationCity)
+		req.LocationCity = &sanitized
+	}
+	if req.LocationCountry != nil {
+		sanitized := utils.SanitizeString(*req.LocationCountry)
+		req.LocationCountry = &sanitized
+	}
+
 	// Convert to domain request
 	domainReq := &user.AddExperienceRequest{
 		CompanyName:     req.CompanyName,
@@ -318,6 +413,40 @@ func (h *UserHandler) UpdateExperience(c *fiber.Ctx) error {
 	if err := utils.ValidateStruct(&req); err != nil {
 		errors := utils.FormatValidationErrors(err)
 		return utils.ValidationErrorResponse(c, "Validation failed", errors)
+	}
+
+	// Sanitize text input fields
+	if req.CompanyName != nil {
+		sanitized := utils.SanitizeString(*req.CompanyName)
+		req.CompanyName = &sanitized
+	}
+	if req.PositionTitle != nil {
+		sanitized := utils.SanitizeString(*req.PositionTitle)
+		req.PositionTitle = &sanitized
+	}
+	if req.Industry != nil {
+		sanitized := utils.SanitizeString(*req.Industry)
+		req.Industry = &sanitized
+	}
+	if req.EmploymentType != nil {
+		sanitized := utils.SanitizeString(*req.EmploymentType)
+		req.EmploymentType = &sanitized
+	}
+	if req.Description != nil {
+		sanitized := utils.SanitizeString(*req.Description)
+		req.Description = &sanitized
+	}
+	if req.Achievements != nil {
+		sanitized := utils.SanitizeString(*req.Achievements)
+		req.Achievements = &sanitized
+	}
+	if req.LocationCity != nil {
+		sanitized := utils.SanitizeString(*req.LocationCity)
+		req.LocationCity = &sanitized
+	}
+	if req.LocationCountry != nil {
+		sanitized := utils.SanitizeString(*req.LocationCountry)
+		req.LocationCountry = &sanitized
 	}
 
 	// Convert to domain request
@@ -401,6 +530,11 @@ func (h *UserHandler) AddSkill(c *fiber.Ctx) error {
 		return utils.ValidationErrorResponse(c, "Validation failed", errors)
 	}
 
+	// Sanitize skill names
+	for i := range req.SkillNames {
+		req.SkillNames[i] = utils.SanitizeString(req.SkillNames[i])
+	}
+
 	// Add skills
 	if err := h.userService.AddSkills(ctx, userID, req.SkillNames); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to add skills", err.Error())
@@ -476,6 +610,13 @@ func (h *UserHandler) UploadDocument(c *fiber.Ctx) error {
 		documentName = file.Filename
 	}
 	description := c.FormValue("description")
+
+	// Sanitize text input fields
+	documentType = utils.SanitizeString(documentType)
+	documentName = utils.SanitizeString(documentName)
+	if description != "" {
+		description = utils.SanitizeString(description)
+	}
 
 	// Convert to domain request
 	var descPtr *string
