@@ -2,13 +2,12 @@ package http
 
 import (
 	"strconv"
-	"strings"
-	"time"
 
 	"keerja-backend/internal/domain/job"
 	"keerja-backend/internal/dto/mapper"
 	"keerja-backend/internal/dto/request"
 	"keerja-backend/internal/dto/response"
+	"keerja-backend/internal/helpers"
 	"keerja-backend/internal/middleware"
 	"keerja-backend/internal/utils"
 
@@ -35,60 +34,16 @@ func (h *JobHandler) ListJobs(c *fiber.Ctx) error {
 
 	var q request.JobSearchRequest
 	if err := c.QueryParser(&q); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid query params", err.Error())
+		return utils.BadRequestResponse(c, ErrInvalidQueryParams)
 	}
 	if err := utils.ValidateStruct(&q); err != nil {
 		errs := utils.FormatValidationErrors(err)
-		return utils.ValidationErrorResponse(c, "Validation failed", errs)
+		return utils.ValidationErrorResponse(c, ErrValidationFailed, errs)
 	}
 	q.Page, q.Limit = utils.ValidatePagination(q.Page, q.Limit, 100)
 
-	// Build domain filter for public listing (published jobs by default)
-	f := job.JobFilter{
-		Status:         "published",
-		City:           q.City,
-		Province:       q.Province,
-		JobLevel:       q.JobLevel,
-		EmploymentType: q.EmploymentType,
-		EducationLevel: q.EducationLevel,
-	}
-	// Sorting mapping
-	switch q.SortBy {
-	case "posted_date":
-		f.SortBy = "latest"
-	case "salary":
-		if strings.ToLower(q.SortOrder) == "asc" {
-			f.SortBy = "salary_asc"
-		} else {
-			f.SortBy = "salary_desc"
-		}
-	case "views":
-		f.SortBy = "views"
-	case "applications":
-		f.SortBy = "applications"
-	}
-	if q.RemoteOnly {
-		b := true
-		f.RemoteOption = &b
-	}
-	if q.SalaryMin != nil {
-		f.MinSalary = q.SalaryMin
-	}
-	if q.SalaryMax != nil {
-		f.MaxSalary = q.SalaryMax
-	}
-	if q.ExperienceMin != nil {
-		f.MinExperience = q.ExperienceMin
-	}
-	if q.ExperienceMax != nil {
-		f.MaxExperience = q.ExperienceMax
-	}
-	if q.CategoryID != nil {
-		f.CategoryID = *q.CategoryID
-	}
-	if q.CompanyID != nil {
-		f.CompanyID = *q.CompanyID
-	}
+	// Build domain filter using helper
+	f := helpers.BuildJobFilter(q)
 
 	jobs, total, err := h.jobService.ListJobs(ctx, f, q.Page, q.Limit)
 	if err != nil {
@@ -105,7 +60,7 @@ func (h *JobHandler) ListJobs(c *fiber.Ctx) error {
 
 	meta := utils.GetPaginationMeta(q.Page, q.Limit, total)
 	payload := response.JobListResponse{Jobs: respJobs}
-	return utils.SuccessResponseWithMeta(c, "Jobs retrieved successfully", payload, meta)
+	return utils.SuccessResponseWithMeta(c, MsgFetchedSuccess, payload, meta)
 }
 
 // GET /jobs/:id
@@ -113,17 +68,17 @@ func (h *JobHandler) GetJob(c *fiber.Ctx) error {
 	ctx := c.Context()
 	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
 	if err != nil || id <= 0 {
-		return utils.BadRequestResponse(c, "Invalid job ID")
+		return utils.BadRequestResponse(c, ErrInvalidID)
 	}
 
 	j, err := h.jobService.GetJob(ctx, id)
 	if err != nil {
 		// domain layer returns not found error when missing
-		return utils.NotFoundResponse(c, "Job not found")
+		return utils.NotFoundResponse(c, ErrJobNotFound)
 	}
 
 	resp := mapper.ToJobDetailResponse(j)
-	return utils.SuccessResponse(c, "Job retrieved successfully", resp)
+	return utils.SuccessResponse(c, MsgFetchedSuccess, resp)
 }
 
 // POST /jobs/search
@@ -132,43 +87,20 @@ func (h *JobHandler) SearchJobs(c *fiber.Ctx) error {
 
 	var q request.JobSearchRequest
 	if err := c.BodyParser(&q); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body", err.Error())
+		return utils.BadRequestResponse(c, ErrInvalidRequest)
 	}
 	if err := utils.ValidateStruct(&q); err != nil {
 		errs := utils.FormatValidationErrors(err)
-		return utils.ValidationErrorResponse(c, "Validation failed", errs)
+		return utils.ValidationErrorResponse(c, ErrValidationFailed, errs)
 	}
 	q.Page, q.Limit = utils.ValidatePagination(q.Page, q.Limit, 100)
 
-	// Build domain search filter
-	f := job.JobSearchFilter{
-		Keyword:      q.Query,
-		Location:     q.Location,
-		RemoteOnly:   q.RemoteOnly,
-		MinSalary:    q.SalaryMin,
-		MaxSalary:    q.SalaryMax,
-		MinExperience: q.ExperienceMin,
-		MaxExperience: q.ExperienceMax,
-		PostedWithin: q.PostedWithin,
-	}
-	if q.CategoryID != nil {
-		f.CategoryIDs = []int64{*q.CategoryID}
-	}
-	if len(q.SkillIDs) > 0 {
-		f.SkillIDs = q.SkillIDs
-	}
-	if q.EmploymentType != "" {
-		f.EmploymentTypes = []string{q.EmploymentType}
-	}
-	if q.JobLevel != "" {
-		f.JobLevels = []string{q.JobLevel}
-	}
-	if q.EducationLevel != "" {
-		f.EducationLevels = []string{q.EducationLevel}
-	}
-	if q.CompanyID != nil {
-		f.CompanyIDs = []int64{*q.CompanyID}
-	}
+	// Sanitize search inputs
+	q.Query = utils.SanitizeString(q.Query)
+	q.Location = utils.SanitizeString(q.Location)
+
+	// Build domain search filter using helper
+	f := helpers.BuildJobSearchFilter(q)
 
 	result, err := h.jobService.SearchJobs(ctx, f, q.Page, q.Limit)
 	if err != nil {
@@ -184,7 +116,7 @@ func (h *JobHandler) SearchJobs(c *fiber.Ctx) error {
 	}
 	meta := utils.GetPaginationMeta(result.Page, result.Limit, result.Total)
 	payload := response.JobListResponse{Jobs: respJobs}
-	return utils.SuccessResponseWithMeta(c, "Jobs searched successfully", payload, meta)
+	return utils.SuccessResponseWithMeta(c, MsgFetchedSuccess, payload, meta)
 }
 
 // POST /jobs
@@ -194,20 +126,34 @@ func (h *JobHandler) CreateJob(c *fiber.Ctx) error {
 
 	var req request.CreateJobRequest
 	if err := c.BodyParser(&req); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body", err.Error())
+		return utils.BadRequestResponse(c, ErrInvalidRequest)
 	}
 	if err := utils.ValidateStruct(&req); err != nil {
 		errs := utils.FormatValidationErrors(err)
-		return utils.ValidationErrorResponse(c, "Validation failed", errs)
+		return utils.ValidationErrorResponse(c, ErrValidationFailed, errs)
 	}
 
-	// Parse optional expired_at
-	var expiredAt *time.Time
-	if req.ExpiredAt != nil && *req.ExpiredAt != "" {
-		if t, err := time.Parse(time.RFC3339, *req.ExpiredAt); err == nil {
-			expiredAt = &t
-		} else {
-			return utils.BadRequestResponse(c, "expired_at must be RFC3339 format")
+	// Sanitize text inputs
+	req.Title = utils.SanitizeString(req.Title)
+	req.Description = utils.SanitizeHTML(req.Description)
+	req.RequirementsText = utils.SanitizeHTML(req.RequirementsText)
+	req.Responsibilities = utils.SanitizeHTML(req.Responsibilities)
+
+	// Security validation
+	if !utils.ValidateNoXSS(req.Title) || !utils.ValidateNoXSS(req.Description) {
+		return utils.BadRequestResponse(c, ErrPotentialXSS)
+	}
+
+	// Parse optional expired_at using datetime helper
+	expiredAt, err := utils.ParseOptionalDateTime(req.ExpiredAt)
+	if err != nil {
+		return utils.BadRequestResponse(c, ErrInvalidDateFormat)
+	}
+
+	// Validate future date if provided
+	if expiredAt != nil {
+		if err := utils.MustBeFutureTime(*expiredAt); err != nil {
+			return utils.BadRequestResponse(c, ErrFutureDateRequired)
 		}
 	}
 
@@ -295,7 +241,7 @@ func (h *JobHandler) CreateJob(c *fiber.Ctx) error {
 	}
 
 	resp := mapper.ToJobDetailResponse(created)
-	return utils.CreatedResponse(c, "Job created successfully", resp)
+	return utils.CreatedResponse(c, MsgCreatedSuccess, resp)
 }
 
 // PUT /jobs/:id
@@ -305,24 +251,37 @@ func (h *JobHandler) UpdateJob(c *fiber.Ctx) error {
 
 	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
 	if err != nil || id <= 0 {
-		return utils.BadRequestResponse(c, "Invalid job ID")
+		return utils.BadRequestResponse(c, ErrInvalidID)
 	}
 
 	var req request.UpdateJobRequest
 	if err := c.BodyParser(&req); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body", err.Error())
+		return utils.BadRequestResponse(c, ErrInvalidRequest)
 	}
 	if err := utils.ValidateStruct(&req); err != nil {
 		errs := utils.FormatValidationErrors(err)
-		return utils.ValidationErrorResponse(c, "Validation failed", errs)
+		return utils.ValidationErrorResponse(c, ErrValidationFailed, errs)
 	}
 
-	var expiredAt *time.Time
-	if req.ExpiredAt != nil && *req.ExpiredAt != "" {
-		if t, err := time.Parse(time.RFC3339, *req.ExpiredAt); err == nil {
-			expiredAt = &t
-		} else {
-			return utils.BadRequestResponse(c, "expired_at must be RFC3339 format")
+	// CRITICAL FIX: Check ownership before allowing updates
+	existingJob, err := h.jobService.GetJob(ctx, id)
+	if err != nil {
+		return utils.NotFoundResponse(c, ErrJobNotFound)
+	}
+	if existingJob.EmployerUserID == nil || *existingJob.EmployerUserID != employerID {
+		return utils.ForbiddenResponse(c, ErrNotJobOwner)
+	}
+
+	// Parse optional expired_at using datetime helper
+	expiredAt, err := utils.ParseOptionalDateTime(req.ExpiredAt)
+	if err != nil {
+		return utils.BadRequestResponse(c, ErrInvalidDateFormat)
+	}
+
+	// Validate future date if provided
+	if expiredAt != nil {
+		if err := utils.MustBeFutureTime(*expiredAt); err != nil {
+			return utils.BadRequestResponse(c, ErrFutureDateRequired)
 		}
 	}
 
@@ -332,7 +291,11 @@ func (h *JobHandler) UpdateJob(c *fiber.Ctx) error {
 		domainReq.CategoryID = req.CategoryID
 	}
 	if req.Title != nil {
-		domainReq.Title = *req.Title
+		sanitized := utils.SanitizeString(*req.Title)
+		if !utils.ValidateNoXSS(sanitized) {
+			return utils.BadRequestResponse(c, ErrPotentialXSS)
+		}
+		domainReq.Title = sanitized
 	}
 	if req.JobLevel != nil {
 		domainReq.JobLevel = *req.JobLevel
@@ -341,13 +304,16 @@ func (h *JobHandler) UpdateJob(c *fiber.Ctx) error {
 		domainReq.EmploymentType = *req.EmploymentType
 	}
 	if req.Description != nil {
-		domainReq.Description = *req.Description
+		sanitized := utils.SanitizeHTML(*req.Description)
+		domainReq.Description = sanitized
 	}
 	if req.RequirementsText != nil {
-		domainReq.RequirementsText = *req.RequirementsText
+		sanitized := utils.SanitizeHTML(*req.RequirementsText)
+		domainReq.RequirementsText = sanitized
 	}
 	if req.Responsibilities != nil {
-		domainReq.Responsibilities = *req.Responsibilities
+		sanitized := utils.SanitizeHTML(*req.Responsibilities)
+		domainReq.Responsibilities = sanitized
 	}
 	if req.RemoteOption != nil {
 		domainReq.RemoteOption = req.RemoteOption
@@ -382,11 +348,8 @@ func (h *JobHandler) UpdateJob(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update job", err.Error())
 	}
 
-	// ownership is checked in service on specific operations; update doesn't require employerID directly here
-	_ = employerID
-
 	resp := mapper.ToJobDetailResponse(updated)
-	return utils.SuccessResponse(c, "Job updated successfully", resp)
+	return utils.SuccessResponse(c, MsgUpdatedSuccess, resp)
 }
 
 // DELETE /jobs/:id
@@ -396,14 +359,14 @@ func (h *JobHandler) DeleteJob(c *fiber.Ctx) error {
 
 	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
 	if err != nil || id <= 0 {
-		return utils.BadRequestResponse(c, "Invalid job ID")
+		return utils.BadRequestResponse(c, ErrInvalidID)
 	}
 
 	if err := h.jobService.DeleteJob(ctx, id, employerID); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to delete job", err.Error())
 	}
 
-	return utils.SuccessResponse(c, "Job deleted successfully", fiber.Map{"deleted": true})
+	return utils.SuccessResponse(c, MsgDeletedSuccess, fiber.Map{"deleted": true})
 }
 
 // GET /jobs/my-jobs
@@ -413,20 +376,20 @@ func (h *JobHandler) GetMyJobs(c *fiber.Ctx) error {
 
 	var f request.JobFilterRequest
 	if err := c.QueryParser(&f); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid query params", err.Error())
+		return utils.BadRequestResponse(c, ErrInvalidQueryParams)
 	}
 	if err := utils.ValidateStruct(&f); err != nil {
 		errs := utils.FormatValidationErrors(err)
-		return utils.ValidationErrorResponse(c, "Validation failed", errs)
+		return utils.ValidationErrorResponse(c, ErrValidationFailed, errs)
 	}
 	f.Page, f.Limit = utils.ValidatePagination(f.Page, f.Limit, 100)
 
 	// Build domain filter
 	df := job.JobFilter{
-		Status:    f.Status,
-		City:      "",
-		Province:  "",
-		SortBy:    f.SortBy,
+		Status:   f.Status,
+		City:     "",
+		Province: "",
+		SortBy:   f.SortBy,
 	}
 	if f.CompanyID != nil {
 		df.CompanyID = *f.CompanyID
@@ -452,7 +415,7 @@ func (h *JobHandler) GetMyJobs(c *fiber.Ctx) error {
 	}
 	meta := utils.GetPaginationMeta(f.Page, f.Limit, total)
 	payload := response.JobListResponse{Jobs: respJobs}
-	return utils.SuccessResponseWithMeta(c, "My jobs retrieved successfully", payload, meta)
+	return utils.SuccessResponseWithMeta(c, MsgFetchedSuccess, payload, meta)
 }
 
 // POST /jobs/:id/publish
@@ -462,31 +425,36 @@ func (h *JobHandler) PublishJob(c *fiber.Ctx) error {
 
 	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
 	if err != nil || id <= 0 {
-		return utils.BadRequestResponse(c, "Invalid job ID")
+		return utils.BadRequestResponse(c, ErrInvalidID)
 	}
 
 	var req request.PublishJobRequest
 	_ = c.BodyParser(&req) // optional fields
 	if err := utils.ValidateStruct(&req); err != nil {
 		errs := utils.FormatValidationErrors(err)
-		return utils.ValidationErrorResponse(c, "Validation failed", errs)
+		return utils.ValidationErrorResponse(c, ErrValidationFailed, errs)
 	}
 
-	// If ExpiredAt provided, set it before publishing
+	// If ExpiredAt provided, parse and validate using datetime helper
 	if req.ExpiredAt != nil && *req.ExpiredAt != "" {
-		if t, err := time.Parse(time.RFC3339, *req.ExpiredAt); err == nil {
-			if err := h.jobService.SetJobExpiry(ctx, id, t); err != nil {
+		expiredAt, err := utils.ParseOptionalDateTime(req.ExpiredAt)
+		if err != nil {
+			return utils.BadRequestResponse(c, ErrInvalidDateFormat)
+		}
+		if expiredAt != nil {
+			if err := utils.MustBeFutureTime(*expiredAt); err != nil {
+				return utils.BadRequestResponse(c, ErrFutureDateRequired)
+			}
+			if err := h.jobService.SetJobExpiry(ctx, id, *expiredAt); err != nil {
 				return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to set job expiry", err.Error())
 			}
-		} else {
-			return utils.BadRequestResponse(c, "expired_at must be RFC3339 format")
 		}
 	}
 
 	if err := h.jobService.PublishJob(ctx, id, employerID); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to publish job", err.Error())
 	}
-	return utils.SuccessResponse(c, "Job published successfully", fiber.Map{"published": true})
+	return utils.SuccessResponse(c, MsgUpdatedSuccess, fiber.Map{"published": true})
 }
 
 // POST /jobs/:id/close
@@ -496,18 +464,18 @@ func (h *JobHandler) CloseJob(c *fiber.Ctx) error {
 
 	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
 	if err != nil || id <= 0 {
-		return utils.BadRequestResponse(c, "Invalid job ID")
+		return utils.BadRequestResponse(c, ErrInvalidID)
 	}
 
 	var req request.CloseJobRequest
 	_ = c.BodyParser(&req) // reason optional; domain CloseJob doesn't take it
 	if err := utils.ValidateStruct(&req); err != nil {
 		errs := utils.FormatValidationErrors(err)
-		return utils.ValidationErrorResponse(c, "Validation failed", errs)
+		return utils.ValidationErrorResponse(c, ErrValidationFailed, errs)
 	}
 
 	if err := h.jobService.CloseJob(ctx, id, employerID); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to close job", err.Error())
 	}
-	return utils.SuccessResponse(c, "Job closed successfully", fiber.Map{"closed": true})
+	return utils.SuccessResponse(c, MsgUpdatedSuccess, fiber.Map{"closed": true})
 }
