@@ -6,21 +6,36 @@ import (
 	"mime/multipart"
 	"time"
 
+	"keerja-backend/internal/cache"
 	"keerja-backend/internal/domain/company"
 	"keerja-backend/internal/utils"
+)
+
+// Cache TTL constants
+const (
+	CompanyListTTL     = 5 * time.Minute  // Company listings cache
+	CompanyDetailTTL   = 10 * time.Minute // Individual company details
+	CompanyProfileTTL  = 10 * time.Minute // Company profiles
+	CompanyStatsTTL    = 15 * time.Minute // Company statistics
+	CompanyReviewTTL   = 5 * time.Minute  // Company reviews
+	CompanyRatingTTL   = 10 * time.Minute // Average ratings
+	CompanyVerifiedTTL = 15 * time.Minute // Verified companies
+	CompanyTopRatedTTL = 15 * time.Minute // Top-rated companies
 )
 
 // companyService implements the CompanyService interface
 type companyService struct {
 	companyRepo   company.CompanyRepository
 	uploadService UploadService
+	cache         cache.Cache
 }
 
 // NewCompanyService creates a new company service instance
-func NewCompanyService(companyRepo company.CompanyRepository, uploadService UploadService) company.CompanyService {
+func NewCompanyService(companyRepo company.CompanyRepository, uploadService UploadService, cacheService cache.Cache) company.CompanyService {
 	return &companyService{
 		companyRepo:   companyRepo,
 		uploadService: uploadService,
+		cache:         cacheService,
 	}
 }
 
@@ -70,21 +85,44 @@ func (s *companyService) RegisterCompany(ctx context.Context, req *company.Regis
 		return nil, fmt.Errorf("failed to create company: %w", err)
 	}
 
-	return comp, nil
-}
-
-// GetCompany retrieves company by ID
-func (s *companyService) GetCompany(ctx context.Context, id int64) (*company.Company, error) {
-	comp, err := s.companyRepo.GetFullCompanyProfile(ctx, id)
-	if err != nil {
-		return nil, fmt.Errorf("company not found: %w", err)
+	// Invalidate list caches (new company should appear in lists)
+	s.cache.DeletePattern("companies:list:*")
+	if comp.Verified {
+		s.cache.DeletePattern("companies:verified:*")
 	}
 
 	return comp, nil
 }
 
-// GetCompanyBySlug retrieves company by slug
+// GetCompany retrieves company by ID (with caching)
+func (s *companyService) GetCompany(ctx context.Context, id int64) (*company.Company, error) {
+	// Try cache first
+	cacheKey := cache.GenerateCacheKey("company", "detail", id)
+	if cached, ok := s.cache.Get(cacheKey); ok {
+		return cached.(*company.Company), nil
+	}
+
+	// Cache miss - fetch from database
+	comp, err := s.companyRepo.GetFullCompanyProfile(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("company not found: %w", err)
+	}
+
+	// Store in cache
+	s.cache.Set(cacheKey, comp, CompanyDetailTTL)
+
+	return comp, nil
+}
+
+// GetCompanyBySlug retrieves company by slug (with caching)
 func (s *companyService) GetCompanyBySlug(ctx context.Context, slug string) (*company.Company, error) {
+	// Try cache first
+	cacheKey := cache.GenerateCacheKey("company", "slug", slug)
+	if cached, ok := s.cache.Get(cacheKey); ok {
+		return cached.(*company.Company), nil
+	}
+
+	// Cache miss - fetch from database
 	comp, err := s.companyRepo.FindBySlug(ctx, slug)
 	if err != nil {
 		return nil, fmt.Errorf("company not found: %w", err)
@@ -93,8 +131,13 @@ func (s *companyService) GetCompanyBySlug(ctx context.Context, slug string) (*co
 	// Get full profile
 	fullComp, err := s.companyRepo.GetFullCompanyProfile(ctx, comp.ID)
 	if err != nil {
-		return comp, nil // Return basic info if full profile fails
+		// Store basic info if full profile fails
+		s.cache.Set(cacheKey, comp, CompanyDetailTTL)
+		return comp, nil
 	}
+
+	// Store in cache
+	s.cache.Set(cacheKey, fullComp, CompanyDetailTTL)
 
 	return fullComp, nil
 }
@@ -175,6 +218,14 @@ func (s *companyService) UpdateCompany(ctx context.Context, companyID int64, req
 		return fmt.Errorf("failed to update company: %w", err)
 	}
 
+	// Invalidate related caches
+	s.cache.Delete(cache.GenerateCacheKey("company", "detail", companyID))
+	s.cache.Delete(cache.GenerateCacheKey("company", "slug", comp.Slug))
+	s.cache.Delete(cache.GenerateCacheKey("company", "profile", companyID))
+	s.cache.Delete(cache.GenerateCacheKey("company", "stats", companyID))
+	s.cache.DeletePattern("companies:list:*")
+	s.cache.DeletePattern("companies:top-rated:*")
+
 	return nil
 }
 
@@ -206,15 +257,52 @@ func (s *companyService) DeleteCompany(ctx context.Context, companyID int64) err
 		return fmt.Errorf("failed to delete company: %w", err)
 	}
 
+	// Invalidate all related caches
+	s.cache.DeletePattern(fmt.Sprintf("company:*:%d", companyID))
+	s.cache.DeletePattern("companies:list:*")
+	s.cache.DeletePattern("companies:verified:*")
+	s.cache.DeletePattern("companies:top-rated:*")
+
 	return nil
 }
 
-// ListCompanies lists companies with filters
+// ListCompanies lists companies with filters (with caching)
 func (s *companyService) ListCompanies(ctx context.Context, filter *company.CompanyFilter) ([]company.Company, int64, error) {
+	// Generate cache key from filter
+	filterMap := map[string]interface{}{
+		"search_query":  filter.SearchQuery,
+		"industry":      filter.Industry,
+		"company_type":  filter.CompanyType,
+		"size_category": filter.SizeCategory,
+		"city":          filter.City,
+		"province":      filter.Province,
+		"verified":      filter.Verified,
+		"is_active":     filter.IsActive,
+		"page":          filter.Page,
+		"limit":         filter.Limit,
+		"sort_by":       filter.SortBy,
+		"sort_order":    filter.SortOrder,
+	}
+	filterHash := cache.GenerateFilterHash(filterMap)
+	cacheKey := cache.GenerateCacheKey("companies", "list", filterHash)
+
+	// Try cache first
+	if cached, ok := s.cache.Get(cacheKey); ok {
+		result := cached.(map[string]interface{})
+		return result["companies"].([]company.Company), result["total"].(int64), nil
+	}
+
+	// Cache miss - fetch from database
 	companies, total, err := s.companyRepo.List(ctx, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to list companies: %w", err)
 	}
+
+	// Store in cache
+	s.cache.Set(cacheKey, map[string]interface{}{
+		"companies": companies,
+		"total":     total,
+	}, CompanyListTTL)
 
 	return companies, total, nil
 }
