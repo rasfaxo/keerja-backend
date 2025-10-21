@@ -65,6 +65,12 @@ type Config struct {
 	DefaultPageSize int
 	MaxPageSize     int
 
+	// Cache Configuration
+	CacheEnabled         bool
+	CacheDefaultTTL      time.Duration
+	CacheCleanupInterval time.Duration
+	CacheMaxSize         int
+
 	// Frontend URLs
 	FrontendURL      string
 	VerifyEmailURL   string
@@ -135,6 +141,12 @@ func LoadConfig() *Config {
 		// Pagination
 		DefaultPageSize: getEnvAsInt("DEFAULT_PAGE_SIZE", 10),
 		MaxPageSize:     getEnvAsInt("MAX_PAGE_SIZE", 100),
+
+		// Cache Configuration
+		CacheEnabled:         getEnvAsBool("CACHE_ENABLED", true),
+		CacheDefaultTTL:      time.Duration(getEnvAsInt("CACHE_DEFAULT_TTL_MINUTES", 5)) * time.Minute,
+		CacheCleanupInterval: time.Duration(getEnvAsInt("CACHE_CLEANUP_INTERVAL_MINUTES", 1)) * time.Minute,
+		CacheMaxSize:         getEnvAsInt("CACHE_MAX_SIZE", 10000),
 
 		// Frontend URLs
 		FrontendURL:      getEnv("FRONTEND_URL", "http://localhost:3000"),
