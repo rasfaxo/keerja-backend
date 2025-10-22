@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	"keerja-backend/internal/cache"
 	"keerja-backend/internal/config"
 	"keerja-backend/internal/handler/http"
 	"keerja-backend/internal/middleware"
@@ -51,13 +52,16 @@ func main() {
 	appLogger.Info("Initializing repositories...")
 	userRepo := postgres.NewUserRepository(db)
 	emailRepo := postgres.NewEmailRepository(db)
+	companyRepo := postgres.NewCompanyRepository(db)
+	jobRepo := postgres.NewJobRepository(db)
+	applicationRepo := postgres.NewApplicationRepository(db)
 
 	// Initialize services
 	appLogger.Info("Initializing services...")
 	tokenStore := service.NewInMemoryTokenStore()
 
-	// Initialize email service
-	emailService := service.NewEmailService(emailRepo)
+	// Initialize email service with config
+	emailService := service.NewEmailService(emailRepo, cfg)
 
 	// Initialize upload service
 	uploadConfig := service.UploadServiceConfig{
@@ -72,14 +76,42 @@ func main() {
 		JWTDuration: time.Duration(cfg.JWTExpirationHours) * time.Hour,
 	}
 
+	// Initialize cache
+	appLogger.Info("Initializing cache...")
+	var cacheService cache.Cache
+	if cfg.CacheEnabled {
+		cacheService = cache.NewInMemoryCache(cfg.CacheMaxSize, cfg.CacheCleanupInterval)
+		appLogger.Info(fmt.Sprintf("Cache enabled (max size: %d, cleanup interval: %s)",
+			cfg.CacheMaxSize, cfg.CacheCleanupInterval))
+	} else {
+		// Use a no-op cache if caching is disabled
+		cacheService = cache.NewInMemoryCache(1, 1*time.Minute) // Minimal cache
+		appLogger.Info("Cache disabled")
+	}
+
 	// Create auth service with email service
 	authService := service.NewAuthService(userRepo, emailService, tokenStore, authServiceConfig)
 	userService := service.NewUserService(userRepo, uploadService)
+	companyService := service.NewCompanyService(companyRepo, uploadService, cacheService)
+	jobService := service.NewJobService(jobRepo, companyRepo, userRepo)
+	applicationService := service.NewApplicationService(applicationRepo, jobRepo, userRepo, companyRepo)
 
 	// Initialize handlers
 	appLogger.Info("🎮 Initializing handlers...")
 	authHandler := http.NewAuthHandler(authService, userRepo)
 	userHandler := http.NewUserHandler(userService)
+
+	// Initialize company handlers (split by domain)
+	appLogger.Info("🏢 Initializing company handlers...")
+	companyBasicHandler := http.NewCompanyBasicHandler(companyService)
+	companyProfileHandler := http.NewCompanyProfileHandler(companyService)
+	companyReviewHandler := http.NewCompanyReviewHandler(companyService)
+	companyStatsHandler := http.NewCompanyStatsHandler(companyService)
+
+	// Initialize job & application handlers
+	appLogger.Info("💼 Initializing job & application handlers...")
+	jobHandler := http.NewJobHandler(jobService)
+	applicationHandler := http.NewApplicationHandler(applicationService)
 
 	// Setup Fiber app
 	app := fiber.New(fiber.Config{
@@ -92,7 +124,7 @@ func main() {
 	})
 
 	// Setup global middleware (order matters!)
-	appLogger.Info("🛡️  Setting up middleware...")
+	appLogger.Info("Setting up middleware...")
 
 	// 1. Panic recovery (must be first)
 	app.Use(middleware.RecoverPanic(cfg.AppEnv == "development"))
@@ -122,6 +154,16 @@ func main() {
 		Config:      cfg,
 		AuthHandler: authHandler,
 		UserHandler: userHandler,
+
+		// Job & Application handlers
+		JobHandler:         jobHandler,
+		ApplicationHandler: applicationHandler,
+
+		// Company handlers (split by domain)
+		CompanyBasicHandler:   companyBasicHandler,
+		CompanyProfileHandler: companyProfileHandler,
+		CompanyReviewHandler:  companyReviewHandler,
+		CompanyStatsHandler:   companyStatsHandler,
 	}
 	routes.SetupRoutes(app, deps)
 
@@ -148,13 +190,12 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	appLogger.Info("🛑 Shutting down server gracefully...")
+	appLogger.Info("Shutting down server gracefully...")
 
 	// Graceful shutdown with timeout
 	if err := app.ShutdownWithTimeout(10 * time.Second); err != nil {
-		appLogger.WithError(err).Error("❌ Server forced to shutdown")
+		appLogger.WithError(err).Error("Server forced to shutdown")
 	}
 
-	appLogger.Info("✅ Server stopped successfully")
+	appLogger.Info("Server stopped successfully")
 }
-

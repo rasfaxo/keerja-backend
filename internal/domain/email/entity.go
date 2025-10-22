@@ -13,7 +13,7 @@ type EmailLog struct {
 	Provider      string     `json:"provider" gorm:"type:varchar(50)"`
 	SentAt        *time.Time `json:"sent_at"`
 	FailureReason string     `json:"failure_reason" gorm:"type:text"`
-	Metadata      string     `json:"metadata" gorm:"type:json"` // Additional data as JSON
+	Metadata      *string    `json:"metadata,omitempty" gorm:"type:jsonb"`
 	RetryCount    int        `json:"retry_count" gorm:"default:0"`
 	MaxRetries    int        `json:"max_retries" gorm:"default:3"`
 	CreatedAt     time.Time  `json:"created_at" gorm:"type:timestamp;default:now()"`

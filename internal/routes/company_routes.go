@@ -8,83 +8,207 @@ import (
 
 // SetupCompanyRoutes configures company routes
 // Routes: /api/v1/companies/*
+//
+// Route Organization:
+// - Basic CRUD: CompanyBasicHandler (10 endpoints)
+// - Profile & Social: CompanyProfileHandler (8 endpoints)
+// - Reviews & Ratings: CompanyReviewHandler (5 endpoints)
+// - Statistics & Queries: CompanyStatsHandler (3 endpoints)
+// Total: 26 endpoints
 func SetupCompanyRoutes(api fiber.Router, deps *Dependencies, authMw *middleware.AuthMiddleware) {
 	companies := api.Group("/companies")
 
-	// Public routes
-	companies.Get("/", func(c *fiber.Ctx) error {
-		// TODO: Implement ListCompanies handler
-		// deps.CompanyHandler.ListCompanies(c)
-		return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{
-			"message": "List companies endpoint - Coming soon",
-		})
-	})
+	// ==========================================
+	// PUBLIC ROUTES - Basic CRUD (CompanyBasicHandler)
+	// ==========================================
 
-	companies.Get("/:id", func(c *fiber.Ctx) error {
-		// TODO: Implement GetCompany handler
-		// deps.CompanyHandler.GetCompany(c)
-		return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{
-			"message": "Get company details endpoint - Coming soon",
-		})
-	})
+	// List companies with filters/search/pagination
+	companies.Get("/",
+		middleware.SearchRateLimiter(), // Rate limit search/listing - 30 req/min
+		deps.CompanyBasicHandler.ListCompanies,
+	)
 
-	// Protected routes
+	// Get company by ID
+	companies.Get("/:id",
+		deps.CompanyBasicHandler.GetCompany,
+	)
+
+	// Get company by slug (SEO-friendly)
+	companies.Get("/slug/:slug",
+		deps.CompanyBasicHandler.GetCompanyBySlug,
+	)
+
+	// ==========================================
+	// PUBLIC ROUTES - Statistics (CompanyStatsHandler)
+	// ==========================================
+
+	// Get verified companies
+	companies.Get("/verified",
+		deps.CompanyStatsHandler.GetVerifiedCompanies,
+	)
+
+	// Get top-rated companies
+	companies.Get("/top-rated",
+		deps.CompanyStatsHandler.GetTopRatedCompanies,
+	)
+
+	// ==========================================
+	// PUBLIC ROUTES - Reviews (CompanyReviewHandler)
+	// ==========================================
+
+	// Get company reviews (public)
+	companies.Get("/:id/reviews",
+		deps.CompanyReviewHandler.GetCompanyReviews,
+	)
+
+	// Get company average ratings (public)
+	companies.Get("/:id/ratings",
+		deps.CompanyReviewHandler.GetAverageRatings,
+	)
+
+	// ==========================================
+	// PUBLIC ROUTES - Profile (CompanyProfileHandler)
+	// ==========================================
+
+	// Get company profile (public)
+	companies.Get("/:id/profile",
+		deps.CompanyProfileHandler.GetProfile,
+	)
+
+	// Get company followers (public)
+	companies.Get("/:id/followers",
+		deps.CompanyProfileHandler.GetFollowers,
+	)
+
+	// Get company statistics (public)
+	companies.Get("/:id/stats",
+		deps.CompanyStatsHandler.GetCompanyStats,
+	)
+
+	// ==========================================
+	// PROTECTED ROUTES - Authentication Required
+	// ==========================================
 	protected := companies.Group("")
 	protected.Use(authMw.AuthRequired())
 
-	protected.Post("/", func(c *fiber.Ctx) error {
-		// TODO: Implement RegisterCompany handler
-		// deps.CompanyHandler.RegisterCompany(c)
-		return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{
-			"message": "Register company endpoint - Coming soon",
-		})
-	})
+	// ------------------------------------------
+	// Basic CRUD Operations (CompanyBasicHandler)
+	// ------------------------------------------
 
-	protected.Put("/:id", func(c *fiber.Ctx) error {
-		// TODO: Implement UpdateCompany handler
-		// deps.CompanyHandler.UpdateCompany(c)
-		return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{
-			"message": "Update company endpoint - Coming soon",
-		})
-	})
+	// Create company (register)
+	protected.Post("/",
+		deps.CompanyBasicHandler.CreateCompany,
+	)
 
-	protected.Post("/:id/follow", func(c *fiber.Ctx) error {
-		// TODO: Implement FollowCompany handler
-		// deps.CompanyHandler.FollowCompany(c)
-		return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{
-			"message": "Follow company endpoint - Coming soon",
-		})
-	})
+	// Update company details
+	protected.Put("/:id",
+		deps.CompanyBasicHandler.UpdateCompany,
+	)
 
-	protected.Delete("/:id/follow", func(c *fiber.Ctx) error {
-		// TODO: Implement UnfollowCompany handler
-		// deps.CompanyHandler.UnfollowCompany(c)
-		return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{
-			"message": "Unfollow company endpoint - Coming soon",
-		})
-	})
+	// Delete company
+	protected.Delete("/:id",
+		deps.CompanyBasicHandler.DeleteCompany,
+	)
 
-	protected.Post("/:id/review", func(c *fiber.Ctx) error {
-		// TODO: Implement AddReview handler
-		// deps.CompanyHandler.AddReview(c)
-		return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{
-			"message": "Add company review endpoint - Coming soon",
-		})
-	})
+	// Upload company logo
+	protected.Post("/:id/logo",
+		deps.CompanyBasicHandler.UploadLogo,
+	)
 
-	protected.Post("/:id/invite-employee", func(c *fiber.Ctx) error {
-		// TODO: Implement InviteEmployee handler
-		// deps.CompanyHandler.InviteEmployee(c)
-		return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{
-			"message": "Invite employee endpoint - Coming soon",
-		})
-	})
+	// Delete company logo
+	protected.Delete("/:id/logo",
+		deps.CompanyBasicHandler.DeleteLogo,
+	)
 
-	protected.Post("/:id/verify", func(c *fiber.Ctx) error {
-		// TODO: Implement RequestVerification handler
-		// deps.CompanyHandler.RequestVerification(c)
-		return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{
-			"message": "Request company verification endpoint - Coming soon",
-		})
-	})
+	// Upload company banner
+	protected.Post("/:id/banner",
+		deps.CompanyBasicHandler.UploadBanner,
+	)
+
+	// Delete company banner
+	protected.Delete("/:id/banner",
+		deps.CompanyBasicHandler.DeleteBanner,
+	)
+
+	// ------------------------------------------
+	// Profile Management (CompanyProfileHandler)
+	// ------------------------------------------
+
+	// Update company profile
+	protected.Put("/:id/profile",
+		deps.CompanyProfileHandler.UpdateProfile,
+	)
+
+	// Publish company profile (make public)
+	protected.Post("/:id/profile/publish",
+		deps.CompanyProfileHandler.PublishProfile,
+	)
+
+	// Unpublish company profile (make private)
+	protected.Post("/:id/profile/unpublish",
+		deps.CompanyProfileHandler.UnpublishProfile,
+	)
+
+	// ------------------------------------------
+	// Social Features (CompanyProfileHandler)
+	// ------------------------------------------
+
+	// Follow company
+	protected.Post("/:id/follow",
+		deps.CompanyProfileHandler.FollowCompany,
+	)
+
+	// Unfollow company
+	protected.Delete("/:id/follow",
+		deps.CompanyProfileHandler.UnfollowCompany,
+	)
+
+	// Get user's followed companies
+	protected.Get("/followed",
+		deps.CompanyProfileHandler.GetFollowedCompanies,
+	)
+
+	// ------------------------------------------
+	// Review Management (CompanyReviewHandler)
+	// ------------------------------------------
+
+	// Add company review with rate limiting (prevent spam)
+	protected.Post("/:id/review",
+		middleware.APIRateLimiter(), // Rate limit reviews - 100 req/min
+		deps.CompanyReviewHandler.AddReview,
+	)
+
+	// Update company review (own review only)
+	protected.Put("/:id/review/:reviewId",
+		deps.CompanyReviewHandler.UpdateReview,
+	)
+
+	// Delete company review (own review only)
+	protected.Delete("/:id/review/:reviewId",
+		deps.CompanyReviewHandler.DeleteReview,
+	)
+
+	// ------------------------------------------
+	// Additional Protected Routes (Future Implementation)
+	// ------------------------------------------
+
+	// TODO: Implement InviteEmployee handler
+	protected.Post("/:id/invite-employee",
+		middleware.EmailRateLimiter(), // Rate limit invitations - 3/hour
+		func(c *fiber.Ctx) error {
+			return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{
+				"message": "Invite employee endpoint - Coming soon",
+			})
+		},
+	)
+
+	// TODO: Implement RequestVerification handler
+	protected.Post("/:id/verify",
+		middleware.APIRateLimiter(), // Rate limit verification requests
+		func(c *fiber.Ctx) error {
+			return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{
+				"message": "Request company verification endpoint - Coming soon",
+			})
+		},
+	)
 }

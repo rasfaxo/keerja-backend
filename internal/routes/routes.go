@@ -13,10 +13,15 @@ type Dependencies struct {
 	Config             *config.Config
 	AuthHandler        *http.AuthHandler
 	UserHandler        *http.UserHandler
-	JobHandler         interface{} // TODO: Change to *http.JobHandler when implemented
-	ApplicationHandler interface{} // TODO: Change to *http.ApplicationHandler when implemented
-	CompanyHandler     interface{} // TODO: Change to *http.CompanyHandler when implemented
-	AdminHandler       interface{} // TODO: Change to *http.AdminHandler when implemented
+	JobHandler         *http.JobHandler         // Job management (9 endpoints)
+	ApplicationHandler *http.ApplicationHandler // Application management (21 endpoints)
+	AdminHandler       interface{}              // TODO: Change to *http.AdminHandler when implemented
+
+	// Company handlers (split by domain for better organization)
+	CompanyBasicHandler   *http.CompanyBasicHandler   // CRUD operations (10 endpoints)
+	CompanyProfileHandler *http.CompanyProfileHandler // Profile & social features (8 endpoints)
+	CompanyReviewHandler  *http.CompanyReviewHandler  // Review system (5 endpoints)
+	CompanyStatsHandler   *http.CompanyStatsHandler   // Statistics & queries (3 endpoints)
 }
 
 // SetupRoutes configures all application routes
