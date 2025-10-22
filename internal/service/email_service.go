@@ -2,23 +2,45 @@ package service
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
+	"strconv"
+	"time"
 
+	"keerja-backend/internal/config"
 	"keerja-backend/internal/domain/email"
+
+	"gopkg.in/gomail.v2"
 )
 
 // emailService implements email.EmailService interface
 type emailService struct {
 	emailRepo email.EmailRepository
-	// In production, you would inject actual email provider (SMTP, SendGrid, AWS SES, etc.)
-	// provider EmailProvider
+	config    *config.Config
+	dialer    *gomail.Dialer
 }
 
 // NewEmailService creates a new email service instance
-func NewEmailService(emailRepo email.EmailRepository) email.EmailService {
+func NewEmailService(emailRepo email.EmailRepository, cfg *config.Config) email.EmailService {
+	// Parse SMTP port
+	smtpPort, err := strconv.Atoi(cfg.SMTPPort)
+	if err != nil {
+		smtpPort = 587 // Default port
+	}
+
+	// Create SMTP dialer
+	dialer := gomail.NewDialer(cfg.SMTPHost, smtpPort, cfg.SMTPUsername, cfg.SMTPPassword)
+
+	// For MailHog or development, disable SSL/TLS verification
+	if cfg.IsDevelopment() || cfg.SMTPHost == "localhost" || cfg.SMTPHost == "mailhog" {
+		dialer.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	}
+
 	return &emailService{
 		emailRepo: emailRepo,
+		config:    cfg,
+		dialer:    dialer,
 	}
 }
 
@@ -30,7 +52,7 @@ func (s *emailService) SendEmail(ctx context.Context, to, subject, body string) 
 		Subject:   subject,
 		Body:      body,
 		Status:    "pending",
-		Provider:  "smtp", // Default provider
+		Provider:  "smtp",
 	}
 
 	// Save to database
@@ -38,8 +60,8 @@ func (s *emailService) SendEmail(ctx context.Context, to, subject, body string) 
 		return fmt.Errorf("failed to create email log: %w", err)
 	}
 
-	// Send email using provider (simulated here)
-	if err := s.sendEmailViaProvider(ctx, to, subject, body); err != nil {
+	// Send email using SMTP
+	if err := s.sendViaSMTP(to, subject, body); err != nil {
 		log.MarkAsFailed(err.Error())
 		s.emailRepo.Update(ctx, log)
 		return fmt.Errorf("failed to send email: %w", err)
@@ -55,19 +77,28 @@ func (s *emailService) SendEmail(ctx context.Context, to, subject, body string) 
 }
 
 // SendTemplateEmail sends an email using a template
-func (s *emailService) SendTemplateEmail(ctx context.Context, to, template string, data map[string]interface{}) error {
-	// Load template and render with data
-	subject, body, err := s.renderTemplate(template, data)
+func (s *emailService) SendTemplateEmail(ctx context.Context, to, templateName string, data map[string]interface{}) error {
+	// Convert template name to EmailTemplate type
+	templateType := email.EmailTemplate(templateName)
+
+	// Prepare template data
+	templateData := s.mapToTemplateData(data)
+
+	// Render template
+	body, err := email.RenderTemplate(templateType, templateData)
 	if err != nil {
 		return fmt.Errorf("failed to render template: %w", err)
 	}
+
+	// Get subject
+	subject := email.GetSubject(templateType)
 
 	// Create email log
 	log := &email.EmailLog{
 		Recipient: to,
 		Subject:   subject,
 		Body:      body,
-		Template:  template,
+		Template:  templateName,
 		Status:    "pending",
 		Provider:  "smtp",
 	}
@@ -77,12 +108,19 @@ func (s *emailService) SendTemplateEmail(ctx context.Context, to, template strin
 		return fmt.Errorf("failed to create email log: %w", err)
 	}
 
+	// Debug: Log before sending
+	fmt.Printf("[DEBUG] About to send email to: %s\n", to)
+	fmt.Printf("[DEBUG] SMTP Host: %s:%s\n", s.config.SMTPHost, s.config.SMTPPort)
+
 	// Send email
-	if err := s.sendEmailViaProvider(ctx, to, subject, body); err != nil {
+	if err := s.sendViaSMTP(to, subject, body); err != nil {
+		fmt.Printf("[ERROR] Failed to send email: %v\n", err)
 		log.MarkAsFailed(err.Error())
 		s.emailRepo.Update(ctx, log)
 		return fmt.Errorf("failed to send email: %w", err)
 	}
+
+	fmt.Printf("[DEBUG] Email sent successfully\n")
 
 	// Mark as sent
 	log.MarkAsSent()
@@ -95,128 +133,89 @@ func (s *emailService) SendTemplateEmail(ctx context.Context, to, template strin
 
 // SendVerificationEmail sends account verification email
 func (s *emailService) SendVerificationEmail(ctx context.Context, to, token string) error {
-	subject := "Verify Your Keerja Account"
-	body := fmt.Sprintf(`
-		<html>
-		<body>
-			<h2>Welcome to Keerja!</h2>
-			<p>Please verify your email address by clicking the link below:</p>
-			<p><a href="https://keerja.com/verify?token=%s">Verify Email</a></p>
-			<p>This link will expire in 24 hours.</p>
-			<p>If you didn't create an account, please ignore this email.</p>
-		</body>
-		</html>
-	`, token)
+	verifyURL := fmt.Sprintf("%s?token=%s", s.config.VerifyEmailURL, token)
 
-	return s.SendEmail(ctx, to, subject, body)
+	data := map[string]interface{}{
+		"Name":         to,
+		"Token":        token,
+		"VerifyURL":    verifyURL,
+		"SupportEmail": s.config.SupportEmail,
+		"Year":         time.Now().Year(),
+	}
+
+	return s.SendTemplateEmail(ctx, to, string(email.TemplateVerification), data)
 }
 
 // SendPasswordResetEmail sends password reset email
 func (s *emailService) SendPasswordResetEmail(ctx context.Context, to, token string) error {
-	subject := "Reset Your Keerja Password"
-	body := fmt.Sprintf(`
-		<html>
-		<body>
-			<h2>Password Reset Request</h2>
-			<p>You requested to reset your password. Click the link below to proceed:</p>
-			<p><a href="https://keerja.com/reset-password?token=%s">Reset Password</a></p>
-			<p>This link will expire in 1 hour.</p>
-			<p>If you didn't request this, please ignore this email.</p>
-		</body>
-		</html>
-	`, token)
+	resetURL := fmt.Sprintf("%s?token=%s", s.config.ResetPasswordURL, token)
 
-	return s.SendEmail(ctx, to, subject, body)
+	data := map[string]interface{}{
+		"Name":         to,
+		"Token":        token,
+		"ResetURL":     resetURL,
+		"SupportEmail": s.config.SupportEmail,
+		"Year":         time.Now().Year(),
+	}
+
+	return s.SendTemplateEmail(ctx, to, string(email.TemplateForgotPassword), data)
 }
 
 // SendWelcomeEmail sends welcome email to new users
 func (s *emailService) SendWelcomeEmail(ctx context.Context, to, name string) error {
-	subject := "Welcome to Keerja!"
-	body := fmt.Sprintf(`
-		<html>
-		<body>
-			<h2>Welcome to Keerja, %s!</h2>
-			<p>We're excited to have you on board. Here's what you can do:</p>
-			<ul>
-				<li>Complete your profile</li>
-				<li>Upload your resume</li>
-				<li>Start applying for jobs</li>
-				<li>Get personalized job recommendations</li>
-			</ul>
-			<p><a href="https://keerja.com/dashboard">Go to Dashboard</a></p>
-		</body>
-		</html>
-	`, name)
+	data := map[string]interface{}{
+		"Name":         name,
+		"DashboardURL": s.config.DashboardURL,
+		"SupportEmail": s.config.SupportEmail,
+		"Year":         time.Now().Year(),
+	}
 
-	return s.SendEmail(ctx, to, subject, body)
+	return s.SendTemplateEmail(ctx, to, string(email.TemplateWelcome), data)
 }
 
 // SendJobApplicationEmail sends job application confirmation
 func (s *emailService) SendJobApplicationEmail(ctx context.Context, to, jobTitle, companyName string) error {
-	subject := fmt.Sprintf("Application Received: %s at %s", jobTitle, companyName)
-	body := fmt.Sprintf(`
-		<html>
-		<body>
-			<h2>Application Received</h2>
-			<p>Your application for <strong>%s</strong> at <strong>%s</strong> has been successfully submitted.</p>
-			<p>The employer will review your application and contact you if they're interested.</p>
-			<p><a href="https://keerja.com/applications">View Your Applications</a></p>
-		</body>
-		</html>
-	`, jobTitle, companyName)
+	data := map[string]interface{}{
+		"Name":         to,
+		"JobTitle":     jobTitle,
+		"CompanyName":  companyName,
+		"DashboardURL": s.config.DashboardURL,
+		"SupportEmail": s.config.SupportEmail,
+		"Year":         time.Now().Year(),
+	}
 
-	return s.SendEmail(ctx, to, subject, body)
+	return s.SendTemplateEmail(ctx, to, string(email.TemplateApplicationUpdate), data)
 }
 
 // SendInterviewInvitationEmail sends interview invitation
 func (s *emailService) SendInterviewInvitationEmail(ctx context.Context, to, jobTitle string, interviewDate string) error {
-	subject := fmt.Sprintf("Interview Invitation: %s", jobTitle)
-	body := fmt.Sprintf(`
-		<html>
-		<body>
-			<h2>Interview Invitation</h2>
-			<p>Congratulations! You've been invited for an interview for the position of <strong>%s</strong>.</p>
-			<p><strong>Interview Date:</strong> %s</p>
-			<p>Please confirm your attendance and prepare accordingly.</p>
-			<p><a href="https://keerja.com/interviews">View Interview Details</a></p>
-		</body>
-		</html>
-	`, jobTitle, interviewDate)
+	data := map[string]interface{}{
+		"Name":          to,
+		"JobTitle":      jobTitle,
+		"InterviewDate": interviewDate,
+		"InterviewTime": "10:00 AM",
+		"InterviewURL":  fmt.Sprintf("%s/interviews", s.config.DashboardURL),
+		"SupportEmail":  s.config.SupportEmail,
+		"Year":          time.Now().Year(),
+	}
 
-	return s.SendEmail(ctx, to, subject, body)
+	return s.SendTemplateEmail(ctx, to, string(email.TemplateInterviewInvite), data)
 }
 
 // SendJobStatusUpdateEmail sends job status update notification
 func (s *emailService) SendJobStatusUpdateEmail(ctx context.Context, to, jobTitle, status string) error {
-	subject := fmt.Sprintf("Application Status Update: %s", jobTitle)
-
-	statusMessage := map[string]string{
-		"screening":   "Your application is being reviewed by the employer.",
-		"shortlisted": "Congratulations! You've been shortlisted for an interview.",
-		"interview":   "You've been invited for an interview.",
-		"offered":     "Congratulations! You've received a job offer.",
-		"hired":       "Congratulations! You've been hired for this position.",
-		"rejected":    "Unfortunately, your application was not successful this time.",
+	data := map[string]interface{}{
+		"Name":          to,
+		"JobTitle":      jobTitle,
+		"Status":        status,
+		"ApplicationID": "APP-12345",
+		"Message":       "Your application has been updated.",
+		"DashboardURL":  s.config.DashboardURL,
+		"SupportEmail":  s.config.SupportEmail,
+		"Year":          time.Now().Year(),
 	}
 
-	message := statusMessage[status]
-	if message == "" {
-		message = "Your application status has been updated."
-	}
-
-	body := fmt.Sprintf(`
-		<html>
-		<body>
-			<h2>Application Status Update</h2>
-			<p>Your application for <strong>%s</strong> has been updated.</p>
-			<p><strong>New Status:</strong> %s</p>
-			<p>%s</p>
-			<p><a href="https://keerja.com/applications">View Application Details</a></p>
-		</body>
-		</html>
-	`, jobTitle, status, message)
-
-	return s.SendEmail(ctx, to, subject, body)
+	return s.SendTemplateEmail(ctx, to, string(email.TemplateApplicationUpdate), data)
 }
 
 // SendBulkEmail sends email to multiple recipients
@@ -263,7 +262,7 @@ func (s *emailService) RetryFailedEmail(ctx context.Context, logID int64) error 
 	log.Status = "pending"
 
 	// Attempt to send
-	if err := s.sendEmailViaProvider(ctx, log.Recipient, log.Subject, log.Body); err != nil {
+	if err := s.sendViaSMTP(log.Recipient, log.Subject, log.Body); err != nil {
 		log.MarkAsFailed(err.Error())
 		s.emailRepo.Update(ctx, log)
 		return fmt.Errorf("failed to resend email: %w", err)
@@ -285,36 +284,88 @@ func (s *emailService) GetFailedEmails(ctx context.Context, page, limit int) ([]
 
 // ===== Helper Methods =====
 
-// sendEmailViaProvider sends email using the actual provider
-// This is a placeholder - in production, integrate with SMTP, SendGrid, AWS SES, etc.
-func (s *emailService) sendEmailViaProvider(ctx context.Context, to, subject, body string) error {
-	// TODO: Implement actual email sending logic
-	// For now, simulate successful sending and log to console
+// sendViaSMTP sends email using SMTP
+func (s *emailService) sendViaSMTP(to, subject, body string) error {
+	// Debug: Log connection attempt
+	fmt.Printf("🔌 [DEBUG] Attempting SMTP connection to %s:%s\n", s.config.SMTPHost, s.config.SMTPPort)
+	fmt.Printf("🔌 [DEBUG] SMTP Username: '%s' (empty=%v)\n", s.config.SMTPUsername, s.config.SMTPUsername == "")
+	fmt.Printf("🔌 [DEBUG] SMTP From: %s\n", s.config.SMTPFrom)
 
-	fmt.Printf("\n====== EMAIL SENT ======\n")
-	fmt.Printf("To: %s\n", to)
-	fmt.Printf("Subject: %s\n", subject)
-	fmt.Printf("========================\n\n")
+	// Create message
+	m := gomail.NewMessage()
+	m.SetHeader("From", s.config.SMTPFrom)
+	m.SetHeader("To", to)
+	m.SetHeader("Subject", subject)
+	m.SetBody("text/html", body)
 
-	// Example with SMTP:
-	// return s.smtpClient.Send(to, subject, body)
+	// Send email
+	fmt.Printf("[DEBUG] Calling dialer.DialAndSend()...\n")
+	if err := s.dialer.DialAndSend(m); err != nil {
+		fmt.Printf("[ERROR] SMTP Error: %v\n", err)
+		return fmt.Errorf("failed to send email via SMTP: %w", err)
+	}
 
-	// Example with SendGrid:
-	// return s.sendgridClient.Send(to, subject, body)
+	// Log for development
+	if s.config.IsDevelopment() {
+		fmt.Printf("\n====== EMAIL SENT VIA SMTP ======\n")
+		fmt.Printf("To: %s\n", to)
+		fmt.Printf("Subject: %s\n", subject)
+		fmt.Printf("SMTP Host: %s:%s\n", s.config.SMTPHost, s.config.SMTPPort)
+		fmt.Printf("================================\n\n")
+	}
 
-	// Simulate success
 	return nil
 }
 
-// renderTemplate renders email template with data
-func (s *emailService) renderTemplate(template string, data map[string]interface{}) (string, string, error) {
-	// TODO: Implement template rendering
-	// Load template from file or database
-	// Render with data using template engine (html/template, etc.)
+// mapToTemplateData converts map to TemplateData
+func (s *emailService) mapToTemplateData(data map[string]interface{}) email.TemplateData {
+	templateData := email.TemplateData{
+		SupportEmail: s.config.SupportEmail,
+		DashboardURL: s.config.DashboardURL,
+		LoginURL:     s.config.FrontendURL + "/login",
+		Year:         time.Now().Year(),
+	}
 
-	// For now, return placeholder
-	subject := fmt.Sprintf("Email from template: %s", template)
-	body := fmt.Sprintf("Template: %s, Data: %v", template, data)
+	// Map data to struct fields
+	if v, ok := data["Name"].(string); ok {
+		templateData.Name = v
+	}
+	if v, ok := data["Email"].(string); ok {
+		templateData.Email = v
+	}
+	if v, ok := data["Token"].(string); ok {
+		templateData.Token = v
+	}
+	if v, ok := data["VerifyURL"].(string); ok {
+		templateData.VerifyURL = v
+	}
+	if v, ok := data["ResetURL"].(string); ok {
+		templateData.ResetURL = v
+	}
+	if v, ok := data["CompanyName"].(string); ok {
+		templateData.CompanyName = v
+	}
+	if v, ok := data["JobTitle"].(string); ok {
+		templateData.JobTitle = v
+	}
+	if v, ok := data["InterviewDate"].(string); ok {
+		templateData.InterviewDate = v
+	}
+	if v, ok := data["InterviewTime"].(string); ok {
+		templateData.InterviewTime = v
+	}
+	if v, ok := data["InterviewURL"].(string); ok {
+		templateData.InterviewURL = v
+	}
+	if v, ok := data["ApplicationID"].(string); ok {
+		templateData.ApplicationID = v
+	}
+	if v, ok := data["Status"].(string); ok {
+		templateData.Status = v
+	}
+	if v, ok := data["Message"].(string); ok {
+		templateData.Message = v
+	}
 
-	return subject, body, nil
+	return templateData
 }

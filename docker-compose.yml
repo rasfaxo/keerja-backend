@@ -55,6 +55,16 @@ services:
       - ./logs:/app/logs
       - ./uploads:/app/uploads
     restart: unless-stopped
+  
+  # MailHog for email testing
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - "1025:1025" # SMTP port
+      - "8025:8025" # Web UI port
+    networks:
+      - keerja-network
 
 volumes:
   postgres_data:

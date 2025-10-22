@@ -60,8 +60,8 @@ func main() {
 	appLogger.Info("Initializing services...")
 	tokenStore := service.NewInMemoryTokenStore()
 
-	// Initialize email service
-	emailService := service.NewEmailService(emailRepo)
+	// Initialize email service with config
+	emailService := service.NewEmailService(emailRepo, cfg)
 
 	// Initialize upload service
 	uploadConfig := service.UploadServiceConfig{
