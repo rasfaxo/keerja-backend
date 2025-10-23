@@ -2,24 +2,21 @@ package master
 
 import (
 	"time"
-
-	"gorm.io/gorm"
 )
 
 // BenefitsMaster represents a master data entry for job benefits
 // Maps to: benefits_master table
 type BenefitsMaster struct {
-	ID              int64          `gorm:"primaryKey;autoIncrement" json:"id"`
-	Code            string         `gorm:"type:varchar(50);not null;uniqueIndex" json:"code" validate:"required,min=2,max=50"`
-	Name            string         `gorm:"type:varchar(150);not null;uniqueIndex" json:"name" validate:"required,min=2,max=150"`
-	Category        string         `gorm:"type:varchar(50);default:'other'" json:"category" validate:"oneof=financial health career lifestyle flexibility other"`
-	Description     string         `gorm:"type:text" json:"description,omitempty"`
-	Icon            string         `gorm:"type:varchar(100)" json:"icon,omitempty"`
-	IsActive        bool           `gorm:"default:true" json:"is_active"`
-	PopularityScore float64        `gorm:"type:numeric(5,2);default:0.00;index:idx_benefits_master_popularity,sort:desc" json:"popularity_score" validate:"min=0,max=100"`
-	CreatedAt       time.Time      `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt       time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
-	DeletedAt       gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+	ID              int64     `gorm:"primaryKey;autoIncrement" json:"id"`
+	Code            string    `gorm:"type:varchar(50);not null;uniqueIndex" json:"code" validate:"required,min=2,max=50"`
+	Name            string    `gorm:"type:varchar(150);not null;uniqueIndex" json:"name" validate:"required,min=2,max=150"`
+	Category        string    `gorm:"type:varchar(50);default:'other'" json:"category" validate:"oneof=financial health career lifestyle flexibility other"`
+	Description     string    `gorm:"type:text" json:"description,omitempty"`
+	Icon            string    `gorm:"type:varchar(100)" json:"icon,omitempty"`
+	IsActive        bool      `gorm:"default:true" json:"is_active"`
+	PopularityScore float64   `gorm:"type:numeric(5,2);default:0.00;index:idx_benefits_master_popularity,sort:desc" json:"popularity_score" validate:"min=0,max=100"`
+	CreatedAt       time.Time `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt       time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 }
 
 // TableName specifies the table name for BenefitsMaster
@@ -68,27 +65,26 @@ func (b *BenefitsMaster) IncrementPopularity(amount float64) {
 // SkillsMaster represents a master data entry for skills
 // Maps to: skills_master table
 type SkillsMaster struct {
-	ID              int64          `gorm:"primaryKey;autoIncrement" json:"id"`
-	Code            string         `gorm:"type:varchar(50);uniqueIndex" json:"code,omitempty" validate:"omitempty,min=2,max=50"`
-	Name            string         `gorm:"type:varchar(150);not null;uniqueIndex" json:"name" validate:"required,min=2,max=150"`
-	NormalizedName  string         `gorm:"type:varchar(150)" json:"normalized_name,omitempty"`
-	CategoryID      *int64         `gorm:"index" json:"category_id,omitempty"`
-	Description     string         `gorm:"type:text" json:"description,omitempty"`
-	SkillType       string         `gorm:"type:varchar(30);default:'technical'" json:"skill_type" validate:"oneof=technical soft language tool"`
-	DifficultyLevel string         `gorm:"type:varchar(20);default:'intermediate'" json:"difficulty_level" validate:"oneof=beginner intermediate advanced"`
-	PopularityScore float64        `gorm:"type:numeric(5,2);default:0.00;index:idx_skills_master_popularity,sort:desc" json:"popularity_score" validate:"min=0,max=100"`
-	Aliases         []string       `gorm:"type:text[]" json:"aliases,omitempty"`
-	ParentID        *int64         `gorm:"index" json:"parent_id,omitempty"`
-	IsActive        bool           `gorm:"default:true" json:"is_active"`
-	CreatedAt       time.Time      `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt       time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
-	DeletedAt       gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+	ID              int64     `gorm:"primaryKey;autoIncrement" json:"id"`
+	Code            string    `gorm:"type:varchar(50);uniqueIndex" json:"code,omitempty" validate:"omitempty,min=2,max=50"`
+	Name            string    `gorm:"type:varchar(150);not null;uniqueIndex" json:"name" validate:"required,min=2,max=150"`
+	NormalizedName  string    `gorm:"type:varchar(150)" json:"normalized_name,omitempty"`
+	CategoryID      *int64    `gorm:"index" json:"category_id,omitempty"`
+	Description     string    `gorm:"type:text" json:"description,omitempty"`
+	SkillType       string    `gorm:"type:varchar(30);default:'technical'" json:"skill_type" validate:"oneof=technical soft language tool"`
+	DifficultyLevel string    `gorm:"type:varchar(20);default:'intermediate'" json:"difficulty_level" validate:"oneof=beginner intermediate advanced"`
+	PopularityScore float64   `gorm:"type:numeric(5,2);default:0.00;index:idx_skills_master_popularity,sort:desc" json:"popularity_score" validate:"min=0,max=100"`
+	Aliases         []string  `gorm:"type:text[]" json:"aliases,omitempty"`
+	ParentID        *int64    `gorm:"index" json:"parent_id,omitempty"`
+	IsActive        bool      `gorm:"default:true" json:"is_active"`
+	CreatedAt       time.Time `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt       time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 
 	// Relationships
 	// Note: Category references job_categories table (not included here to avoid circular dependency)
 	// In implementation, use: Category *job.JobCategory `gorm:"foreignKey:CategoryID;constraint:OnDelete:SET NULL"`
-	Parent   *SkillsMaster   `gorm:"foreignKey:ParentID;constraint:OnDelete:SET NULL" json:"parent,omitempty"`
-	Children []SkillsMaster  `gorm:"foreignKey:ParentID;constraint:OnDelete:SET NULL" json:"children,omitempty"`
+	Parent   *SkillsMaster  `gorm:"foreignKey:ParentID;constraint:OnDelete:SET NULL" json:"parent,omitempty"`
+	Children []SkillsMaster `gorm:"foreignKey:ParentID;constraint:OnDelete:SET NULL" json:"children,omitempty"`
 }
 
 // TableName specifies the table name for SkillsMaster
