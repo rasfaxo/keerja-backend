@@ -28,6 +28,7 @@ help:
 	@echo "  make docker-logs  - Show Docker logs"
 	@echo "  make migrate-up   - Run database migrations (jika ada)"
 	@echo "  make migrate-down - Rollback database migrations (jika ada)"
+	@echo "  make seed         - Run database seeders"
 
 ## install: Download semua dependencies
 install:
@@ -108,5 +109,10 @@ migrate-up:
 migrate-down:
 	@echo "Rolling back migrations..."
 	@echo "Migrations not implemented yet. Use your migration tool here."
+
+## seed: Run database seeders
+seed:
+	@echo "Running database seeders..."
+	$(GOCMD) run ./cmd/seeder/main.go
 
 .DEFAULT_GOAL := help
