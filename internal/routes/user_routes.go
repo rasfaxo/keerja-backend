@@ -29,7 +29,8 @@ func SetupUserRoutes(api fiber.Router, deps *Dependencies, authMw *middleware.Au
 	users.Delete("/me/experience/:id", deps.UserHandler.DeleteExperience)
 
 	// Skills routes
-	users.Post("/me/skills", deps.UserHandler.AddSkill)
+	users.Post("/me/skills", deps.UserHandler.AddSkill)        // Single skill
+	users.Post("/me/skills/batch", deps.UserHandler.AddSkills) // Multiple skills
 	users.Delete("/me/skills/:id", deps.UserHandler.DeleteSkill)
 
 	// Document upload routes

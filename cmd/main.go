@@ -55,6 +55,7 @@ func main() {
 	companyRepo := postgres.NewCompanyRepository(db)
 	jobRepo := postgres.NewJobRepository(db)
 	applicationRepo := postgres.NewApplicationRepository(db)
+	skillsMasterRepo := postgres.NewSkillsMasterRepository(db)
 
 	// Initialize services
 	appLogger.Info("Initializing services...")
@@ -91,7 +92,7 @@ func main() {
 
 	// Create auth service with email service
 	authService := service.NewAuthService(userRepo, emailService, tokenStore, authServiceConfig)
-	userService := service.NewUserService(userRepo, uploadService)
+	userService := service.NewUserService(userRepo, uploadService, skillsMasterRepo)
 	companyService := service.NewCompanyService(companyRepo, uploadService, cacheService)
 	jobService := service.NewJobService(jobRepo, companyRepo, userRepo)
 	applicationService := service.NewApplicationService(applicationRepo, jobRepo, userRepo, companyRepo)

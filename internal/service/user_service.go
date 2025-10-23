@@ -6,21 +6,28 @@ import (
 	"mime/multipart"
 	"time"
 
+	"keerja-backend/internal/domain/master"
 	"keerja-backend/internal/domain/user"
 	"keerja-backend/internal/utils"
 )
 
 // userService implements the UserService interface
 type userService struct {
-	userRepo      user.UserRepository
-	uploadService UploadService
+	userRepo         user.UserRepository
+	uploadService    UploadService
+	skillsMasterRepo master.SkillsMasterRepository
 }
 
 // NewUserService creates a new user service instance
-func NewUserService(userRepo user.UserRepository, uploadService UploadService) user.UserService {
+func NewUserService(
+	userRepo user.UserRepository,
+	uploadService UploadService,
+	skillsMasterRepo master.SkillsMasterRepository,
+) user.UserService {
 	return &userService{
-		userRepo:      userRepo,
-		uploadService: uploadService,
+		userRepo:         userRepo,
+		uploadService:    uploadService,
+		skillsMasterRepo: skillsMasterRepo,
 	}
 }
 
@@ -603,16 +610,68 @@ func (s *userService) GetExperiences(ctx context.Context, userID int64) ([]user.
 // Skill Management
 // =============================================================================
 
+// AddSkill adds a single skill for a user
+// User can either select from skills_master (using skill_id) or input custom skill (using skill_name)
+func (s *userService) AddSkill(ctx context.Context, userID int64, req *user.AddUserSkillRequest) error {
+	skill := &user.UserSkill{
+		UserID:     userID,
+		SkillLevel: &req.ProficiencyLevel,
+	}
+
+	// Determine skill name: either from skills_master or custom input
+	if req.SkillID != nil {
+		// Query skills_master to get skill name by ID
+		skillMaster, err := s.skillsMasterRepo.FindByID(ctx, *req.SkillID)
+		if err != nil {
+			return fmt.Errorf("skill_id %d not found in skills_master: %w", *req.SkillID, err)
+		}
+		skill.SkillName = skillMaster.Name
+	} else {
+		// Use custom skill name provided by user
+		skill.SkillName = req.SkillName
+	}
+
+	if req.YearsOfExperience != nil {
+		years := int(*req.YearsOfExperience)
+		skill.YearsExperience = &years
+	}
+
+	if err := s.userRepo.AddSkill(ctx, skill); err != nil {
+		return fmt.Errorf("failed to add skill: %w", err)
+	}
+
+	return nil
+}
+
 // AddSkills adds multiple skills for a user
-func (s *userService) AddSkills(ctx context.Context, userID int64, skillNames []string) error {
-	for _, skillName := range skillNames {
+// Each skill can be from skills_master or custom input
+func (s *userService) AddSkills(ctx context.Context, userID int64, req *user.AddUserSkillsRequest) error {
+	for i, skillReq := range req.Skills {
 		skill := &user.UserSkill{
-			UserID:    userID,
-			SkillName: skillName,
+			UserID:     userID,
+			SkillLevel: &skillReq.ProficiencyLevel,
+		}
+
+		// Determine skill name: either from skills_master or custom input
+		if skillReq.SkillID != nil {
+			// Query skills_master to get skill name by ID
+			skillMaster, err := s.skillsMasterRepo.FindByID(ctx, *skillReq.SkillID)
+			if err != nil {
+				return fmt.Errorf("skill #%d: skill_id %d not found in skills_master: %w", i+1, *skillReq.SkillID, err)
+			}
+			skill.SkillName = skillMaster.Name
+		} else {
+			// Use custom skill name provided by user
+			skill.SkillName = skillReq.SkillName
+		}
+
+		if skillReq.YearsOfExperience != nil {
+			years := int(*skillReq.YearsOfExperience)
+			skill.YearsExperience = &years
 		}
 
 		if err := s.userRepo.AddSkill(ctx, skill); err != nil {
-			return fmt.Errorf("failed to add skill %s: %w", skillName, err)
+			return fmt.Errorf("failed to add skill #%d: %w", i+1, err)
 		}
 	}
 

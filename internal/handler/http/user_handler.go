@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"strconv"
 
 	"keerja-backend/internal/domain/user"
@@ -518,9 +519,7 @@ func (h *UserHandler) AddSkill(c *fiber.Ctx) error {
 	ctx := c.Context()
 	userID := middleware.GetUserID(c)
 
-	var req struct {
-		SkillNames []string `json:"skill_names" validate:"required,min=1,dive,min=1"`
-	}
+	var req request.AddUserSkillRequest
 	if err := c.BodyParser(&req); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body", err.Error())
 	}
@@ -530,17 +529,79 @@ func (h *UserHandler) AddSkill(c *fiber.Ctx) error {
 		return utils.ValidationErrorResponse(c, "Validation failed", errors)
 	}
 
-	// Sanitize skill names
-	for i := range req.SkillNames {
-		req.SkillNames[i] = utils.SanitizeString(req.SkillNames[i])
+	// Validate: must have either skill_id or skill_name
+	if req.SkillID == nil && req.SkillName == "" {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Validation failed", "Either skill_id or skill_name must be provided")
 	}
 
-	// Add skills
-	if err := h.userService.AddSkills(ctx, userID, req.SkillNames); err != nil {
+	// Convert DTO request to domain request
+	domainReq := &user.AddUserSkillRequest{
+		SkillID:           req.SkillID,
+		SkillName:         req.SkillName,
+		ProficiencyLevel:  req.ProficiencyLevel,
+		YearsOfExperience: req.YearsOfExperience,
+	}
+
+	if err := h.userService.AddSkill(ctx, userID, domainReq); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to add skill", err.Error())
+	}
+
+	return utils.CreatedResponse(c, "Skill added successfully", nil)
+}
+
+// AddSkills godoc
+// @Summary Add multiple skills
+// @Description Add multiple skills to user profile in batch
+// @Tags users
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body request.AddUserSkillsRequest true "Add Skills Request"
+// @Success 201 {object} utils.Response
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /users/me/skills/batch [post]
+func (h *UserHandler) AddSkills(c *fiber.Ctx) error {
+	ctx := c.Context()
+	userID := middleware.GetUserID(c)
+
+	var req request.AddUserSkillsRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body", err.Error())
+	}
+
+	if err := utils.ValidateStruct(&req); err != nil {
+		errors := utils.FormatValidationErrors(err)
+		return utils.ValidationErrorResponse(c, "Validation failed", errors)
+	}
+
+	// Convert DTO request to domain request
+	domainSkills := make([]user.AddUserSkillRequest, len(req.Skills))
+	for i, skill := range req.Skills {
+		// Validate: each skill must have either skill_id or skill_name
+		if skill.SkillID == nil && skill.SkillName == "" {
+			return utils.ErrorResponse(c, fiber.StatusBadRequest, "Validation failed",
+				fmt.Sprintf("Skill #%d: Either skill_id or skill_name must be provided", i+1))
+		}
+
+		domainSkills[i] = user.AddUserSkillRequest{
+			SkillID:           skill.SkillID,
+			SkillName:         skill.SkillName,
+			ProficiencyLevel:  skill.ProficiencyLevel,
+			YearsOfExperience: skill.YearsOfExperience,
+		}
+	}
+
+	domainReq := &user.AddUserSkillsRequest{
+		Skills: domainSkills,
+	}
+
+	if err := h.userService.AddSkills(ctx, userID, domainReq); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to add skills", err.Error())
 	}
 
-	return utils.CreatedResponse(c, "Skills added successfully", nil)
+	return utils.CreatedResponse(c, fmt.Sprintf("Successfully added %d skills", len(req.Skills)), nil)
 }
 
 // DeleteSkill godoc
