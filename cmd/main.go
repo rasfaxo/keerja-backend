@@ -56,6 +56,9 @@ func main() {
 	jobRepo := postgres.NewJobRepository(db)
 	applicationRepo := postgres.NewApplicationRepository(db)
 	skillsMasterRepo := postgres.NewSkillsMasterRepository(db)
+	oauthRepo := postgres.NewOAuthRepository(db)
+	otpCodeRepo := postgres.NewOTPCodeRepository(db)
+	refreshTokenRepo := postgres.NewRefreshTokenRepository(db)
 
 	// Initialize services
 	appLogger.Info("Initializing services...")
@@ -92,6 +95,37 @@ func main() {
 
 	// Create auth service with email service
 	authService := service.NewAuthService(userRepo, emailService, tokenStore, authServiceConfig)
+
+	// Create OAuth service
+	googleConfig := service.OAuthConfig{
+		ClientID:     cfg.GoogleClientID,
+		ClientSecret: cfg.GoogleClientSecret,
+		RedirectURI:  cfg.GoogleRedirectURI,
+	}
+	oauthService := service.NewOAuthService(
+		oauthRepo,
+		userRepo,
+		googleConfig,
+		cfg.JWTSecret,
+		time.Duration(cfg.JWTExpirationHours)*time.Hour,
+	)
+
+	// Create registration service (for OTP-based registration)
+	registrationService := service.NewRegistrationService(
+		userRepo,
+		otpCodeRepo,
+		emailService,
+		cfg.JWTSecret,
+		time.Duration(cfg.JWTExpirationHours)*time.Hour,
+	)
+
+	// Create refresh token service (for remember me)
+	refreshTokenService := service.NewRefreshTokenService(
+		refreshTokenRepo,
+		cfg.JWTSecret,
+		time.Duration(cfg.JWTExpirationHours)*time.Hour,
+	)
+
 	userService := service.NewUserService(userRepo, uploadService, skillsMasterRepo)
 	companyService := service.NewCompanyService(companyRepo, uploadService, cacheService)
 	jobService := service.NewJobService(jobRepo, companyRepo, userRepo)
@@ -99,7 +133,7 @@ func main() {
 
 	// Initialize handlers
 	appLogger.Info("🎮 Initializing handlers...")
-	authHandler := http.NewAuthHandler(authService, userRepo)
+	authHandler := http.NewAuthHandler(authService, oauthService, registrationService, refreshTokenService, userRepo)
 	userHandler := http.NewUserHandler(userService)
 
 	// Initialize company handlers (split by domain)

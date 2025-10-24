@@ -77,6 +77,11 @@ type Config struct {
 	ResetPasswordURL string
 	DashboardURL     string
 	SupportEmail     string
+
+	// OAuth Configuration
+	GoogleClientID     string
+	GoogleClientSecret string
+	GoogleRedirectURI  string
 }
 
 var globalConfig *Config
@@ -154,6 +159,11 @@ func LoadConfig() *Config {
 		ResetPasswordURL: getEnv("RESET_PASSWORD_URL", "http://localhost:3000/reset-password"),
 		DashboardURL:     getEnv("DASHBOARD_URL", "http://localhost:3000/dashboard"),
 		SupportEmail:     getEnv("SUPPORT_EMAIL", "support@keerja.com"),
+
+		// OAuth Configuration
+		GoogleClientID:     getEnv("GOOGLE_CLIENT_ID", ""),
+		GoogleClientSecret: getEnv("GOOGLE_CLIENT_SECRET", ""),
+		GoogleRedirectURI:  getEnv("GOOGLE_REDIRECT_URI", "http://localhost:8080/api/auth/oauth/google/callback"),
 	}
 
 	// Validate required configurations

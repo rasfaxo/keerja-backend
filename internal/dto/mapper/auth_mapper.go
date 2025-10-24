@@ -1,6 +1,7 @@
 package mapper
 
 import (
+	"keerja-backend/internal/domain/auth"
 	"keerja-backend/internal/domain/user"
 	"keerja-backend/internal/dto/response"
 )
@@ -51,4 +52,65 @@ func ToTokenResponse(accessToken string, refreshToken string) *response.TokenRes
 		TokenType:    "Bearer",
 		ExpiresIn:    3600,
 	}
+}
+
+// ToDeviceListResponse converts refresh tokens to DeviceListResponse
+func ToDeviceListResponse(tokens []*auth.RefreshToken) *response.DeviceListResponse {
+	devices := make([]response.DeviceInfo, 0, len(tokens))
+
+	for _, token := range tokens {
+		device := response.DeviceInfo{
+			ID:         token.ID,
+			DeviceName: token.DeviceName,
+			DeviceType: token.DeviceType,
+			IPAddress:  token.IPAddress,
+			LastUsedAt: token.LastUsedAt.Format("2006-01-02T15:04:05Z07:00"),
+			CreatedAt:  token.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+			IsCurrent:  false, // Can be set by handler based on current request
+		}
+		devices = append(devices, device)
+	}
+
+	return &response.DeviceListResponse{
+		Devices: devices,
+		Total:   len(devices),
+	}
+}
+
+// ToOAuthProviderResponse converts OAuthProvider to response DTO
+func ToOAuthProviderResponse(provider *auth.OAuthProvider) *response.OAuthProviderResponse {
+	if provider == nil {
+		return nil
+	}
+
+	// Note: OAuthProvider doesn't have LastLoginAt in entity
+	// Using UpdatedAt as approximation
+	var lastLoginAt *string
+	if !provider.UpdatedAt.IsZero() && !provider.UpdatedAt.Equal(provider.CreatedAt) {
+		t := provider.UpdatedAt.Format("2006-01-02T15:04:05Z07:00")
+		lastLoginAt = &t
+	}
+
+	return &response.OAuthProviderResponse{
+		ID:          provider.ID,
+		Provider:    provider.Provider,
+		ProviderID:  provider.ProviderUserID, // Using ProviderUserID from entity
+		Email:       provider.Email,
+		DisplayName: provider.Name, // Using Name from entity
+		ConnectedAt: provider.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		LastLoginAt: lastLoginAt,
+	}
+}
+
+// ToOAuthProviderListResponse converts slice of OAuthProvider to list response
+func ToOAuthProviderListResponse(providers []*auth.OAuthProvider) []response.OAuthProviderResponse {
+	result := make([]response.OAuthProviderResponse, 0, len(providers))
+
+	for _, provider := range providers {
+		if resp := ToOAuthProviderResponse(provider); resp != nil {
+			result = append(result, *resp)
+		}
+	}
+
+	return result
 }

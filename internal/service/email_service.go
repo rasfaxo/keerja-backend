@@ -366,6 +366,42 @@ func (s *emailService) mapToTemplateData(data map[string]interface{}) email.Temp
 	if v, ok := data["Message"].(string); ok {
 		templateData.Message = v
 	}
+	if v, ok := data["OTPCode"].(string); ok {
+		templateData.OTPCode = v
+	}
+	if v, ok := data["Purpose"].(string); ok {
+		templateData.Purpose = v
+	}
+	if v, ok := data["ExpiryMinutes"].(string); ok {
+		templateData.ExpiryMinutes = v
+	}
 
 	return templateData
+}
+
+// SendOTPEmail sends OTP code via email
+func (s *emailService) SendOTPEmail(ctx context.Context, to, code, purpose string) error {
+	data := map[string]interface{}{
+		"Name":          to,
+		"OTPCode":       code,
+		"Purpose":       purpose,
+		"ExpiryMinutes": "10",
+		"SupportEmail":  s.config.SupportEmail,
+		"Year":          time.Now().Year(),
+	}
+
+	return s.SendTemplateEmail(ctx, to, string(email.TemplateOTP), data)
+}
+
+// SendOTPRegistrationEmail sends OTP for email verification during registration
+func (s *emailService) SendOTPRegistrationEmail(ctx context.Context, to, name, code string) error {
+	data := map[string]interface{}{
+		"Name":          name,
+		"OTPCode":       code,
+		"ExpiryMinutes": "5",
+		"SupportEmail":  s.config.SupportEmail,
+		"Year":          time.Now().Year(),
+	}
+
+	return s.SendTemplateEmail(ctx, to, string(email.TemplateOTPRegistration), data)
 }

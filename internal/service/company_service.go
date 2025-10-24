@@ -212,6 +212,9 @@ func (s *companyService) UpdateCompany(ctx context.Context, companyID int64, req
 	if req.Culture != nil {
 		comp.Culture = req.Culture
 	}
+	if req.Benefits != nil {
+		comp.Benefits = req.Benefits
+	}
 
 	// Update company
 	if err := s.companyRepo.Update(ctx, comp); err != nil {

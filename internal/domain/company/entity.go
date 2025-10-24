@@ -4,40 +4,41 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 // Company represents the main company entity
 type Company struct {
-	ID                 int64      `gorm:"primaryKey;autoIncrement" json:"id"`
-	UUID               uuid.UUID  `gorm:"type:uuid;default:gen_random_uuid();uniqueIndex" json:"uuid"`
-	CompanyName        string     `gorm:"type:varchar(200);not null" json:"company_name" validate:"required,min=2,max=200"`
-	Slug               string     `gorm:"type:varchar(200);uniqueIndex;not null" json:"slug" validate:"required"`
-	LegalName          *string    `gorm:"type:varchar(200)" json:"legal_name,omitempty"`
-	RegistrationNumber *string    `gorm:"type:varchar(100)" json:"registration_number,omitempty"`
-	Industry           *string    `gorm:"type:varchar(100)" json:"industry,omitempty"`
-	CompanyType        *string    `gorm:"type:varchar(50);check:company_type IN ('private','public','startup','ngo','government')" json:"company_type,omitempty" validate:"omitempty,oneof=private public startup ngo government"`
-	SizeCategory       *string    `gorm:"type:varchar(50);check:size_category IN ('1-10','11-50','51-200','201-1000','1000+')" json:"size_category,omitempty" validate:"omitempty,oneof=1-10 11-50 51-200 201-1000 1000+"`
-	WebsiteURL         *string    `gorm:"type:text" json:"website_url,omitempty" validate:"omitempty,url"`
-	EmailDomain        *string    `gorm:"type:varchar(100)" json:"email_domain,omitempty"`
-	Phone              *string    `gorm:"type:varchar(30)" json:"phone,omitempty"`
-	Address            *string    `gorm:"type:text" json:"address,omitempty"`
-	City               *string    `gorm:"type:varchar(100)" json:"city,omitempty"`
-	Province           *string    `gorm:"type:varchar(100)" json:"province,omitempty"`
-	Country            string     `gorm:"type:varchar(100);default:'Indonesia'" json:"country"`
-	PostalCode         *string    `gorm:"type:varchar(10)" json:"postal_code,omitempty"`
-	Latitude           *float64   `gorm:"type:numeric(10,6)" json:"latitude,omitempty"`
-	Longitude          *float64   `gorm:"type:numeric(10,6)" json:"longitude,omitempty"`
-	LogoURL            *string    `gorm:"type:text" json:"logo_url,omitempty"`
-	BannerURL          *string    `gorm:"type:text" json:"banner_url,omitempty"`
-	About              *string    `gorm:"type:text" json:"about,omitempty"`
-	Culture            *string    `gorm:"type:text" json:"culture,omitempty"`
-	Benefits           *string    `gorm:"type:text[]" json:"benefits,omitempty"` // PostgreSQL array
-	Verified           bool       `gorm:"default:false" json:"verified"`
-	VerifiedAt         *time.Time `gorm:"type:timestamp" json:"verified_at,omitempty"`
-	VerifiedBy         *int64     `gorm:"type:bigint" json:"verified_by,omitempty"`
-	IsActive           bool       `gorm:"default:true" json:"is_active"`
-	CreatedAt          time.Time  `gorm:"type:timestamp;default:now()" json:"created_at"`
-	UpdatedAt          time.Time  `gorm:"type:timestamp;default:now()" json:"updated_at"`
+	ID                 int64          `gorm:"primaryKey;autoIncrement" json:"id"`
+	UUID               uuid.UUID      `gorm:"type:uuid;default:gen_random_uuid();uniqueIndex" json:"uuid"`
+	CompanyName        string         `gorm:"type:varchar(200);not null" json:"company_name" validate:"required,min=2,max=200"`
+	Slug               string         `gorm:"type:varchar(200);uniqueIndex;not null" json:"slug" validate:"required"`
+	LegalName          *string        `gorm:"type:varchar(200)" json:"legal_name,omitempty"`
+	RegistrationNumber *string        `gorm:"type:varchar(100)" json:"registration_number,omitempty"`
+	Industry           *string        `gorm:"type:varchar(100)" json:"industry,omitempty"`
+	CompanyType        *string        `gorm:"type:varchar(50);check:company_type IN ('private','public','startup','ngo','government')" json:"company_type,omitempty" validate:"omitempty,oneof=private public startup ngo government"`
+	SizeCategory       *string        `gorm:"type:varchar(50);check:size_category IN ('1-10','11-50','51-200','201-1000','1000+')" json:"size_category,omitempty" validate:"omitempty,oneof=1-10 11-50 51-200 201-1000 1000+"`
+	WebsiteURL         *string        `gorm:"type:text" json:"website_url,omitempty" validate:"omitempty,url"`
+	EmailDomain        *string        `gorm:"type:varchar(100)" json:"email_domain,omitempty"`
+	Phone              *string        `gorm:"type:varchar(30)" json:"phone,omitempty"`
+	Address            *string        `gorm:"type:text" json:"address,omitempty"`
+	City               *string        `gorm:"type:varchar(100)" json:"city,omitempty"`
+	Province           *string        `gorm:"type:varchar(100)" json:"province,omitempty"`
+	Country            string         `gorm:"type:varchar(100);default:'Indonesia'" json:"country"`
+	PostalCode         *string        `gorm:"type:varchar(10)" json:"postal_code,omitempty"`
+	Latitude           *float64       `gorm:"type:numeric(10,6)" json:"latitude,omitempty"`
+	Longitude          *float64       `gorm:"type:numeric(10,6)" json:"longitude,omitempty"`
+	LogoURL            *string        `gorm:"type:text" json:"logo_url,omitempty"`
+	BannerURL          *string        `gorm:"type:text" json:"banner_url,omitempty"`
+	About              *string        `gorm:"type:text" json:"about,omitempty"`
+	Culture            *string        `gorm:"type:text" json:"culture,omitempty"`
+	Benefits           pq.StringArray `gorm:"type:text[]" json:"benefits,omitempty"` // PostgreSQL array
+	Verified           bool           `gorm:"default:false" json:"verified"`
+	VerifiedAt         *time.Time     `gorm:"type:timestamp" json:"verified_at,omitempty"`
+	VerifiedBy         *int64         `gorm:"type:bigint" json:"verified_by,omitempty"`
+	IsActive           bool           `gorm:"default:true" json:"is_active"`
+	CreatedAt          time.Time      `gorm:"type:timestamp;default:now()" json:"created_at"`
+	UpdatedAt          time.Time      `gorm:"type:timestamp;default:now()" json:"updated_at"`
 
 	// Relationships
 	Profile       *CompanyProfile      `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE" json:"profile,omitempty"`

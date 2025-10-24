@@ -45,3 +45,31 @@ type PasswordResetResponse struct {
 	Success bool   `json:"success"`
 	Message string `json:"message"`
 }
+
+// DeviceInfo represents device session information
+type DeviceInfo struct {
+	ID         int64   `json:"id"`
+	DeviceName *string `json:"device_name"`
+	DeviceType *string `json:"device_type"`
+	IPAddress  *string `json:"ip_address"`
+	LastUsedAt string  `json:"last_used_at"`
+	CreatedAt  string  `json:"created_at"`
+	IsCurrent  bool    `json:"is_current"` // whether this is the current device
+}
+
+// DeviceListResponse represents list of active devices
+type DeviceListResponse struct {
+	Devices []DeviceInfo `json:"devices"`
+	Total   int          `json:"total"`
+}
+
+// OAuthProviderResponse represents connected OAuth provider
+type OAuthProviderResponse struct {
+	ID          int64   `json:"id"`
+	Provider    string  `json:"provider"`
+	ProviderID  string  `json:"provider_id"`
+	Email       *string `json:"email,omitempty"`
+	DisplayName *string `json:"display_name,omitempty"`
+	ConnectedAt string  `json:"connected_at"`
+	LastLoginAt *string `json:"last_login_at,omitempty"`
+}
