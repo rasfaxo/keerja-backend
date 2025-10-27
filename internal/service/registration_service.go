@@ -108,6 +108,14 @@ func (s *RegistrationService) RegisterUser(ctx context.Context, fullName, email,
 		return fmt.Errorf("failed to create user: %w", err)
 	}
 
+	// Create empty user profile for the new user
+	userProfile := &user.UserProfile{
+		UserID: newUser.ID,
+	}
+	if err := s.userRepo.CreateProfile(ctx, userProfile); err != nil {
+		return fmt.Errorf("failed to create user profile: %w", err)
+	}
+
 	// Generate and send OTP
 	if err := s.sendOTPToUser(ctx, newUser.ID, email); err != nil {
 		// Rollback user creation if OTP sending fails (optional)

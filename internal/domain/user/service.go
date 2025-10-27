@@ -93,6 +93,8 @@ type RegisterRequest struct {
 }
 
 type UpdateProfileRequest struct {
+	FullName           *string
+	Phone              *string
 	Headline           *string
 	Bio                *string
 	Gender             *string

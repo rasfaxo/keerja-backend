@@ -80,6 +80,10 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 	}
 
 	// Sanitize text input fields
+	if req.FullName != nil {
+		sanitized := utils.SanitizeString(*req.FullName)
+		req.FullName = &sanitized
+	}
 	if req.Headline != nil {
 		sanitized := utils.SanitizeString(*req.Headline)
 		req.Headline = &sanitized
@@ -107,6 +111,8 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 
 	// Convert to domain request
 	domainReq := &user.UpdateProfileRequest{
+		FullName:           req.FullName,
+		Phone:              req.Phone,
 		Headline:           req.Headline,
 		Bio:                req.Bio,
 		Gender:             req.Gender,

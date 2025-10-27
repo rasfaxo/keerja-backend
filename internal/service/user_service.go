@@ -84,13 +84,50 @@ func (s *userService) GetProfileBySlug(ctx context.Context, slug string) (*user.
 
 // UpdateProfile updates user profile information
 func (s *userService) UpdateProfile(ctx context.Context, userID int64, req *user.UpdateProfileRequest) error {
-	// Get existing profile
-	profile, err := s.userRepo.FindProfileByUserID(ctx, userID)
+	// Get user data first (for full_name and phone updates)
+	usr, err := s.userRepo.FindByID(ctx, userID)
 	if err != nil {
-		return fmt.Errorf("profile not found: %w", err)
+		return fmt.Errorf("failed to find user: %w", err)
+	}
+	if usr == nil {
+		return fmt.Errorf("user not found")
 	}
 
-	// Update fields if provided
+	// Update user table fields (full_name, phone)
+	userUpdated := false
+	if req.FullName != nil {
+		usr.FullName = *req.FullName
+		userUpdated = true
+	}
+	if req.Phone != nil {
+		usr.Phone = req.Phone
+		userUpdated = true
+	}
+
+	// Save user updates if any
+	if userUpdated {
+		if err := s.userRepo.Update(ctx, usr); err != nil {
+			return fmt.Errorf("failed to update user: %w", err)
+		}
+	}
+
+	// Get existing profile or create new one
+	profile, err := s.userRepo.FindProfileByUserID(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("failed to find profile: %w", err)
+	}
+
+	// If profile doesn't exist, create a new one
+	if profile == nil {
+		profile = &user.UserProfile{
+			UserID: userID,
+		}
+		if err := s.userRepo.CreateProfile(ctx, profile); err != nil {
+			return fmt.Errorf("failed to create profile: %w", err)
+		}
+	}
+
+	// Update profile fields if provided
 	if req.Headline != nil {
 		profile.Headline = req.Headline
 	}
