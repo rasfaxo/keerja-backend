@@ -1,10 +1,13 @@
 package http
 
 import (
+	"context"
 	"keerja-backend/internal/domain/auth"
+	"keerja-backend/internal/domain/company"
 	"keerja-backend/internal/domain/user"
 	"keerja-backend/internal/dto/mapper"
 	"keerja-backend/internal/dto/request"
+	"keerja-backend/internal/dto/response"
 	"keerja-backend/internal/middleware"
 	"keerja-backend/internal/service"
 	"keerja-backend/internal/utils"
@@ -18,6 +21,7 @@ type AuthHandler struct {
 	registrationService *service.RegistrationService
 	refreshTokenService *service.RefreshTokenService
 	userRepo            user.UserRepository
+	companyRepo         company.CompanyRepository
 }
 
 func NewAuthHandler(
@@ -26,6 +30,7 @@ func NewAuthHandler(
 	registrationService *service.RegistrationService,
 	refreshTokenService *service.RefreshTokenService,
 	userRepo user.UserRepository,
+	companyRepo company.CompanyRepository,
 ) *AuthHandler {
 	return &AuthHandler{
 		authService:         authService,
@@ -33,7 +38,29 @@ func NewAuthHandler(
 		registrationService: registrationService,
 		refreshTokenService: refreshTokenService,
 		userRepo:            userRepo,
+		companyRepo:         companyRepo,
 	}
+}
+
+// buildAuthResponse builds auth response with company info for employer
+func (h *AuthHandler) buildAuthResponse(ctx context.Context, usr *user.User, accessToken, refreshToken string) *response.AuthResponse {
+	// If user is employer, include company info
+	if usr.UserType == "employer" {
+		companies, err := h.companyRepo.GetCompaniesByUserID(ctx, usr.ID)
+		if err != nil {
+			// Log error but continue without company
+			println("DEBUG: Error getting companies for user", usr.ID, ":", err.Error())
+		} else if len(companies) > 0 {
+			// Get first company (primary company)
+			println("DEBUG: Found", len(companies), "companies for user", usr.ID)
+			return mapper.ToAuthResponseWithCompany(usr, &companies[0], accessToken, refreshToken)
+		} else {
+			println("DEBUG: No companies found for employer user", usr.ID)
+		}
+	}
+
+	// Jobseeker or employer without company
+	return mapper.ToAuthResponse(usr, accessToken, refreshToken)
 }
 
 // Register godoc
@@ -141,10 +168,10 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to login", err.Error())
 	}
 
-	// Convert to response DTO
-	response := mapper.ToAuthResponse(usr, accessToken, "")
+	// Build auth response with company info if employer
+	authResponse := h.buildAuthResponse(ctx, usr, accessToken, "")
 
-	return utils.SuccessResponse(c, "Login successful", response)
+	return utils.SuccessResponse(c, "Login successful", authResponse)
 }
 
 // VerifyEmail godoc
@@ -302,10 +329,10 @@ func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get user info", err.Error())
 	}
 
-	// Convert to response DTO
-	response := mapper.ToAuthResponse(usr, accessToken, "")
+	// Build auth response with company info if employer
+	authResponse := h.buildAuthResponse(ctx, usr, accessToken, "")
 
-	return utils.SuccessResponse(c, "Token refreshed successfully", response)
+	return utils.SuccessResponse(c, "Token refreshed successfully", authResponse)
 }
 
 // Logout godoc
@@ -476,10 +503,10 @@ func (h *AuthHandler) VerifyEmailOTP(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to verify OTP", err.Error())
 	}
 
-	// Convert to response DTO
-	response := mapper.ToAuthResponse(usr, accessToken, "")
+	// Build auth response with company info if employer
+	authResponse := h.buildAuthResponse(ctx, usr, accessToken, "")
 
-	return utils.SuccessResponse(c, "Email verified successfully", response)
+	return utils.SuccessResponse(c, "Email verified successfully", authResponse)
 }
 
 // ResendOTP godoc
@@ -698,10 +725,10 @@ func (h *AuthHandler) LoginWithRememberMe(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to create refresh token", err.Error())
 	}
 
-	// Convert to response DTO
-	response := mapper.ToAuthResponse(usr, accessToken, refreshToken)
+	// Build auth response with company info if employer
+	authResponse := h.buildAuthResponse(ctx, usr, accessToken, refreshToken)
 
-	return utils.SuccessResponse(c, "Login successful", response)
+	return utils.SuccessResponse(c, "Login successful", authResponse)
 }
 
 // RefreshAccessToken godoc

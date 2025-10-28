@@ -2,6 +2,7 @@ package mapper
 
 import (
 	"keerja-backend/internal/domain/auth"
+	"keerja-backend/internal/domain/company"
 	"keerja-backend/internal/domain/user"
 	"keerja-backend/internal/dto/response"
 )
@@ -18,7 +19,26 @@ func ToAuthResponse(u *user.User, accessToken string, refreshToken string) *resp
 		TokenType:    "Bearer",
 		ExpiresIn:    3600, // 1 hour in seconds
 		User:         ToUserBasic(u),
+		Company:      nil, // Will be set by handler if user is employer
 	}
+}
+
+// ToAuthResponseWithCompany converts User entity and Company to AuthResponse DTO (for employer)
+func ToAuthResponseWithCompany(u *user.User, c *company.Company, accessToken string, refreshToken string) *response.AuthResponse {
+	if u == nil {
+		return nil
+	}
+
+	authResp := &response.AuthResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		TokenType:    "Bearer",
+		ExpiresIn:    3600, // 1 hour in seconds
+		User:         ToUserBasic(u),
+		Company:      ToCompanyBasic(c),
+	}
+
+	return authResp
 }
 
 // ToUserBasic converts User entity to UserBasic DTO
@@ -41,6 +61,27 @@ func ToUserBasic(u *user.User) *response.UserBasic {
 		UserType:   u.UserType,
 		IsVerified: u.IsVerified,
 		Status:     u.Status,
+	}
+}
+
+// ToCompanyBasic converts Company entity to CompanyBasic DTO
+func ToCompanyBasic(c *company.Company) *response.CompanyBasic {
+	if c == nil {
+		return nil
+	}
+
+	logoURL := ""
+	if c.LogoURL != nil {
+		logoURL = *c.LogoURL
+	}
+
+	return &response.CompanyBasic{
+		ID:          c.ID,
+		UUID:        c.UUID.String(),
+		CompanyName: c.CompanyName,
+		Slug:        c.Slug,
+		LogoURL:     logoURL,
+		IsVerified:  c.Verified,
 	}
 }
 

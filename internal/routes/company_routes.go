@@ -192,14 +192,10 @@ func SetupCompanyRoutes(api fiber.Router, deps *Dependencies, authMw *middleware
 	// Additional Protected Routes (Future Implementation)
 	// ------------------------------------------
 
-	// TODO: Implement InviteEmployee handler
+	// Invite employee to company
 	protected.Post("/:id/invite-employee",
 		middleware.EmailRateLimiter(), // Rate limit invitations - 3/hour
-		func(c *fiber.Ctx) error {
-			return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{
-				"message": "Invite employee endpoint - Coming soon",
-			})
-		},
+		deps.CompanyInviteHandler.InviteEmployee,
 	)
 
 	// TODO: Implement RequestVerification handler

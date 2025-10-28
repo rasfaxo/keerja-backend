@@ -132,8 +132,8 @@ func main() {
 	applicationService := service.NewApplicationService(applicationRepo, jobRepo, userRepo, companyRepo)
 
 	// Initialize handlers
-	appLogger.Info("🎮 Initializing handlers...")
-	authHandler := http.NewAuthHandler(authService, oauthService, registrationService, refreshTokenService, userRepo)
+	appLogger.Info("Initializing handlers...")
+	authHandler := http.NewAuthHandler(authService, oauthService, registrationService, refreshTokenService, userRepo, companyRepo)
 	userHandler := http.NewUserHandler(userService)
 
 	// Initialize company handlers (split by domain)
@@ -142,9 +142,10 @@ func main() {
 	companyProfileHandler := http.NewCompanyProfileHandler(companyService)
 	companyReviewHandler := http.NewCompanyReviewHandler(companyService)
 	companyStatsHandler := http.NewCompanyStatsHandler(companyService)
+	companyInviteHandler := http.NewCompanyInviteHandler(companyService, emailService)
 
 	// Initialize job & application handlers
-	appLogger.Info("💼 Initializing job & application handlers...")
+	appLogger.Info("Initializing job & application handlers...")
 	jobHandler := http.NewJobHandler(jobService)
 	applicationHandler := http.NewApplicationHandler(applicationService)
 
@@ -199,6 +200,7 @@ func main() {
 		CompanyProfileHandler: companyProfileHandler,
 		CompanyReviewHandler:  companyReviewHandler,
 		CompanyStatsHandler:   companyStatsHandler,
+		CompanyInviteHandler:  companyInviteHandler,
 	}
 	routes.SetupRoutes(app, deps)
 

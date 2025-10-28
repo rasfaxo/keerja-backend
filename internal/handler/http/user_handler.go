@@ -3,10 +3,12 @@ package http
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"keerja-backend/internal/domain/user"
 	"keerja-backend/internal/dto/mapper"
 	"keerja-backend/internal/dto/request"
+	"keerja-backend/internal/dto/response"
 	"keerja-backend/internal/middleware"
 	"keerja-backend/internal/utils"
 
@@ -25,12 +27,14 @@ func NewUserHandler(userService user.UserService) *UserHandler {
 
 // GetProfile godoc
 // @Summary Get current user profile
-// @Description Get authenticated user's profile with all related data
+// @Description Get authenticated user's profile. Use query param 'include' to fetch related data: 'all' for everything, or comma-separated list like 'educations,skills,projects'
 // @Tags users
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} utils.Response{data=response.UserProfileResponse}
+// @Param include query string false "Include related data: all, educations, experiences, skills, certifications, languages, projects, documents, preference" example(educations,skills)
+// @Success 200 {object} utils.Response{data=response.UserResponse} "Basic profile"
+// @Success 200 {object} utils.Response{data=response.UserDetailResponse} "Full profile when include=all"
 // @Failure 401 {object} utils.Response
 // @Failure 500 {object} utils.Response
 // @Router /users/me [get]
@@ -38,14 +42,33 @@ func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
 	ctx := c.Context()
 	userID := middleware.GetUserID(c)
 
+	// Parse include query parameter
+	includeParam := c.Query("include", "")
+
 	// Get user profile
 	usr, err := h.userService.GetProfile(ctx, userID)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get profile", err.Error())
 	}
 
-	// Convert to response DTO
-	response := mapper.ToUserResponse(usr)
+	// Determine response based on include parameter
+	var response interface{}
+
+	if includeParam == "" {
+		// Default: Basic profile only (fast, minimal data)
+		response = mapper.ToUserResponse(usr)
+	} else if includeParam == "all" {
+		// Include everything (full detail)
+		response = mapper.ToUserDetailResponse(usr)
+	} else {
+		// Include specific sections (custom includes)
+		includes := strings.Split(includeParam, ",")
+		// Trim spaces from each include
+		for i := range includes {
+			includes[i] = strings.TrimSpace(includes[i])
+		}
+		response = mapper.ToUserResponseWithIncludes(usr, includes)
+	}
 
 	return utils.SuccessResponse(c, "Profile retrieved successfully", response)
 }
@@ -133,6 +156,216 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 	}
 
 	return utils.SuccessResponse(c, "Profile updated successfully", nil)
+}
+
+// GetEducations godoc
+// @Summary Get user educations
+// @Description Get list of user's educations
+// @Tags users
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} utils.Response{data=[]response.UserEducationResponse}
+// @Failure 401 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /users/me/educations [get]
+func (h *UserHandler) GetEducations(c *fiber.Ctx) error {
+	ctx := c.Context()
+	userID := middleware.GetUserID(c)
+
+	usr, err := h.userService.GetProfile(ctx, userID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get educations", err.Error())
+	}
+
+	educations := make([]response.UserEducationResponse, 0, len(usr.Educations))
+	for _, edu := range usr.Educations {
+		if mapped := mapper.ToUserEducationResponse(&edu); mapped != nil {
+			educations = append(educations, *mapped)
+		}
+	}
+
+	return utils.SuccessResponse(c, "Educations retrieved successfully", educations)
+}
+
+// GetExperiences godoc
+// @Summary Get user experiences
+// @Description Get list of user's work experiences
+// @Tags users
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} utils.Response{data=[]response.UserExperienceResponse}
+// @Failure 401 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /users/me/experiences [get]
+func (h *UserHandler) GetExperiences(c *fiber.Ctx) error {
+	ctx := c.Context()
+	userID := middleware.GetUserID(c)
+
+	usr, err := h.userService.GetProfile(ctx, userID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get experiences", err.Error())
+	}
+
+	experiences := make([]response.UserExperienceResponse, 0, len(usr.Experiences))
+	for _, exp := range usr.Experiences {
+		if mapped := mapper.ToUserExperienceResponse(&exp); mapped != nil {
+			experiences = append(experiences, *mapped)
+		}
+	}
+
+	return utils.SuccessResponse(c, "Experiences retrieved successfully", experiences)
+}
+
+// GetSkills godoc
+// @Summary Get user skills
+// @Description Get list of user's skills
+// @Tags users
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} utils.Response{data=[]response.UserSkillResponse}
+// @Failure 401 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /users/me/skills [get]
+func (h *UserHandler) GetSkills(c *fiber.Ctx) error {
+	ctx := c.Context()
+	userID := middleware.GetUserID(c)
+
+	usr, err := h.userService.GetProfile(ctx, userID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get skills", err.Error())
+	}
+
+	skills := make([]response.UserSkillResponse, 0, len(usr.Skills))
+	for _, skill := range usr.Skills {
+		if mapped := mapper.ToUserSkillResponse(&skill); mapped != nil {
+			skills = append(skills, *mapped)
+		}
+	}
+
+	return utils.SuccessResponse(c, "Skills retrieved successfully", skills)
+}
+
+// GetCertifications godoc
+// @Summary Get user certifications
+// @Description Get list of user's certifications
+// @Tags users
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} utils.Response{data=[]response.UserCertificationResponse}
+// @Failure 401 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /users/me/certifications [get]
+func (h *UserHandler) GetCertifications(c *fiber.Ctx) error {
+	ctx := c.Context()
+	userID := middleware.GetUserID(c)
+
+	usr, err := h.userService.GetProfile(ctx, userID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get certifications", err.Error())
+	}
+
+	certifications := make([]response.UserCertificationResponse, 0, len(usr.Certifications))
+	for _, cert := range usr.Certifications {
+		if mapped := mapper.ToUserCertificationResponse(&cert); mapped != nil {
+			certifications = append(certifications, *mapped)
+		}
+	}
+
+	return utils.SuccessResponse(c, "Certifications retrieved successfully", certifications)
+}
+
+// GetLanguages godoc
+// @Summary Get user languages
+// @Description Get list of user's languages
+// @Tags users
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} utils.Response{data=[]response.UserLanguageResponse}
+// @Failure 401 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /users/me/languages [get]
+func (h *UserHandler) GetLanguages(c *fiber.Ctx) error {
+	ctx := c.Context()
+	userID := middleware.GetUserID(c)
+
+	usr, err := h.userService.GetProfile(ctx, userID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get languages", err.Error())
+	}
+
+	languages := make([]response.UserLanguageResponse, 0, len(usr.Languages))
+	for _, lang := range usr.Languages {
+		if mapped := mapper.ToUserLanguageResponse(&lang); mapped != nil {
+			languages = append(languages, *mapped)
+		}
+	}
+
+	return utils.SuccessResponse(c, "Languages retrieved successfully", languages)
+}
+
+// GetProjects godoc
+// @Summary Get user projects
+// @Description Get list of user's projects/portfolio
+// @Tags users
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} utils.Response{data=[]response.UserProjectResponse}
+// @Failure 401 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /users/me/projects [get]
+func (h *UserHandler) GetProjects(c *fiber.Ctx) error {
+	ctx := c.Context()
+	userID := middleware.GetUserID(c)
+
+	usr, err := h.userService.GetProfile(ctx, userID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get projects", err.Error())
+	}
+
+	projects := make([]response.UserProjectResponse, 0, len(usr.Projects))
+	for _, proj := range usr.Projects {
+		if mapped := mapper.ToUserProjectResponse(&proj); mapped != nil {
+			projects = append(projects, *mapped)
+		}
+	}
+
+	return utils.SuccessResponse(c, "Projects retrieved successfully", projects)
+}
+
+// GetDocuments godoc
+// @Summary Get user documents
+// @Description Get list of user's documents (CV, portfolio, etc)
+// @Tags users
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} utils.Response{data=[]response.UserDocumentResponse}
+// @Failure 401 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /users/me/documents [get]
+func (h *UserHandler) GetDocuments(c *fiber.Ctx) error {
+	ctx := c.Context()
+	userID := middleware.GetUserID(c)
+
+	usr, err := h.userService.GetProfile(ctx, userID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get documents", err.Error())
+	}
+
+	documents := make([]response.UserDocumentResponse, 0, len(usr.Documents))
+	for _, doc := range usr.Documents {
+		if mapped := mapper.ToUserDocumentResponse(&doc); mapped != nil {
+			documents = append(documents, *mapped)
+		}
+	}
+
+	return utils.SuccessResponse(c, "Documents retrieved successfully", documents)
 }
 
 // AddEducation godoc

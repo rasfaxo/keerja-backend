@@ -2,11 +2,12 @@ package response
 
 // AuthResponse represents authentication response with tokens
 type AuthResponse struct {
-	AccessToken  string     `json:"access_token"`
-	RefreshToken string     `json:"refresh_token"`
-	TokenType    string     `json:"token_type"`
-	ExpiresIn    int64      `json:"expires_in"`
-	User         *UserBasic `json:"user"`
+	AccessToken  string        `json:"access_token"`
+	RefreshToken string        `json:"refresh_token"`
+	TokenType    string        `json:"token_type"`
+	ExpiresIn    int64         `json:"expires_in"`
+	User         *UserBasic    `json:"user"`
+	Company      *CompanyBasic `json:"company"`
 }
 
 // UserBasic represents basic user info in auth response
@@ -19,6 +20,16 @@ type UserBasic struct {
 	UserType   string `json:"user_type"`
 	IsVerified bool   `json:"is_verified"`
 	Status     string `json:"status"`
+}
+
+// CompanyBasic represents basic company info in auth response (for employer only)
+type CompanyBasic struct {
+	ID          int64  `json:"id"`
+	UUID        string `json:"uuid"`
+	CompanyName string `json:"company_name"`
+	Slug        string `json:"slug"`
+	LogoURL     string `json:"logo_url,omitempty"`
+	IsVerified  bool   `json:"is_verified"`
 }
 
 // TokenResponse represents token-only response

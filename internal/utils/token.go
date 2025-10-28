@@ -69,3 +69,10 @@ func GetPasswordResetTokenExpiry() time.Time {
 func GetRefreshTokenExpiry() time.Time {
 	return time.Now().Add(7 * 24 * time.Hour)
 }
+
+// GenerateRandomToken generates a random token of specified length (in bytes)
+func GenerateRandomToken(length int) string {
+	bytes := make([]byte, length)
+	rand.Read(bytes)
+	return base64.URLEncoding.EncodeToString(bytes)
+}

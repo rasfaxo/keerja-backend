@@ -22,6 +22,7 @@ type Dependencies struct {
 	CompanyProfileHandler *http.CompanyProfileHandler // Profile & social features (8 endpoints)
 	CompanyReviewHandler  *http.CompanyReviewHandler  // Review system (5 endpoints)
 	CompanyStatsHandler   *http.CompanyStatsHandler   // Statistics & queries (3 endpoints)
+	CompanyInviteHandler  *http.CompanyInviteHandler  // Employee invitation (1 endpoint)
 }
 
 // SetupRoutes configures all application routes
