@@ -144,11 +144,32 @@ func (s *userService) UpdateProfile(ctx context.Context, userID int64, req *user
 		}
 		profile.BirthDate = &birthDate
 	}
+	if req.Nationality != nil {
+		profile.Nationality = req.Nationality
+	}
+	if req.Address != nil {
+		profile.Address = req.Address
+	}
 	if req.LocationCity != nil {
 		profile.LocationCity = req.LocationCity
 	}
+	if req.LocationState != nil {
+		profile.LocationState = req.LocationState
+	}
 	if req.LocationCountry != nil {
 		profile.LocationCountry = req.LocationCountry
+	}
+	if req.PostalCode != nil {
+		profile.PostalCode = req.PostalCode
+	}
+	if req.LinkedinURL != nil {
+		profile.LinkedInURL = req.LinkedinURL
+	}
+	if req.PortfolioURL != nil {
+		profile.PortfolioURL = req.PortfolioURL
+	}
+	if req.GithubURL != nil {
+		profile.GithubURL = req.GithubURL
 	}
 	if req.DesiredPosition != nil {
 		profile.DesiredPosition = req.DesiredPosition

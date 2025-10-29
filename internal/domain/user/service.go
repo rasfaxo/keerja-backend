@@ -99,8 +99,15 @@ type UpdateProfileRequest struct {
 	Bio                *string
 	Gender             *string
 	BirthDate          *string
+	Nationality        *string
+	Address            *string
 	LocationCity       *string
+	LocationState      *string
 	LocationCountry    *string
+	PostalCode         *string
+	LinkedinURL        *string
+	PortfolioURL       *string
+	GithubURL          *string
 	DesiredPosition    *string
 	DesiredSalaryMin   *float64
 	DesiredSalaryMax   *float64

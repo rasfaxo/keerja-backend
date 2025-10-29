@@ -60,10 +60,17 @@ type UserProfile struct {
 	Headline           *string    `gorm:"type:varchar(150)" json:"headline,omitempty" validate:"omitempty,max=150"`
 	Bio                *string    `gorm:"type:text" json:"bio,omitempty"`
 	Gender             *string    `gorm:"type:varchar(10);check:gender IN ('male','female','other')" json:"gender,omitempty" validate:"omitempty,oneof=male female other"`
-	BirthDate          *time.Time `gorm:"type:date" json:"birth_date,omitempty"`
-	LocationCity       *string    `gorm:"type:varchar(100)" json:"location_city,omitempty"`
-	LocationCountry    *string    `gorm:"type:varchar(100)" json:"location_country,omitempty"`
-	DesiredPosition    *string    `gorm:"type:varchar(150)" json:"desired_position,omitempty"`
+	BirthDate          *time.Time `gorm:"type:date;column:birth_date" json:"birth_date,omitempty"`
+	Nationality        *string    `gorm:"type:varchar(100);column:nationality" json:"nationality,omitempty"`
+	Address            *string    `gorm:"type:text;column:address" json:"address,omitempty"`
+	LocationCity       *string    `gorm:"type:varchar(100);column:location_city" json:"location_city,omitempty"`
+	LocationState      *string    `gorm:"type:varchar(100);column:location_state" json:"location_state,omitempty"`
+	LocationCountry    *string    `gorm:"type:varchar(100);column:location_country" json:"location_country,omitempty"`
+	PostalCode         *string    `gorm:"type:varchar(10);column:postal_code" json:"postal_code,omitempty"`
+	LinkedInURL        *string    `gorm:"type:varchar(255);column:linkedin_url" json:"linkedin_url,omitempty"`
+	PortfolioURL       *string    `gorm:"type:varchar(255);column:portfolio_url" json:"portfolio_url,omitempty"`
+	GithubURL          *string    `gorm:"type:varchar(255);column:github_url" json:"github_url,omitempty"`
+	DesiredPosition    *string    `gorm:"type:varchar(150);column:desired_position" json:"desired_position,omitempty"`
 	DesiredSalaryMin   *float64   `gorm:"type:numeric(12,2)" json:"desired_salary_min,omitempty"`
 	DesiredSalaryMax   *float64   `gorm:"type:numeric(12,2)" json:"desired_salary_max,omitempty"`
 	ExperienceLevel    *string    `gorm:"type:varchar(50);check:experience_level IN ('internship','junior','mid','senior','lead')" json:"experience_level,omitempty" validate:"omitempty,oneof=internship junior mid senior lead"`
