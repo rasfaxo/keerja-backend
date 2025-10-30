@@ -6,6 +6,7 @@ import (
 	"keerja-backend/internal/domain/company"
 	"keerja-backend/internal/domain/email"
 	"keerja-backend/internal/dto/request"
+	"keerja-backend/internal/middleware"
 	"keerja-backend/internal/utils"
 
 	"github.com/gofiber/fiber/v2"
@@ -50,8 +51,11 @@ func (h *CompanyInviteHandler) InviteEmployee(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid company ID", err.Error())
 	}
 
-	// Get authenticated user from context
-	userID := c.Locals("userID").(int64)
+	// Get authenticated user from context using middleware helper
+	userID := middleware.GetUserID(c)
+	if userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "User not authenticated", "userID not found in context")
+	}
 
 	// Parse and validate request body
 	var req request.InviteEmployeeRequest
@@ -79,8 +83,11 @@ func (h *CompanyInviteHandler) InviteEmployee(c *fiber.Ctx) error {
 
 	// Check if user is authorized to invite employees (owner or admin)
 	hasPermission, err := h.companyService.CheckEmployerPermission(ctx, userID, int64(companyID), "admin")
-	if err != nil || !hasPermission {
-		return utils.ErrorResponse(c, fiber.StatusForbidden, "You are not authorized to invite employees for this company", "")
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to check user permission", err.Error())
+	}
+	if !hasPermission {
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "You don't have permission to invite employees. Only company owner or admin can perform this action.", "")
 	}
 
 	// Generate invitation token (valid for 7 days)

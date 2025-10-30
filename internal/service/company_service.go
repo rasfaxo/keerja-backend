@@ -44,7 +44,7 @@ func NewCompanyService(companyRepo company.CompanyRepository, uploadService Uplo
 // =============================================================================
 
 // RegisterCompany registers a new company
-func (s *companyService) RegisterCompany(ctx context.Context, req *company.RegisterCompanyRequest) (*company.Company, error) {
+func (s *companyService) RegisterCompany(ctx context.Context, req *company.RegisterCompanyRequest, userID int64) (*company.Company, error) {
 	// Generate unique slug from company name
 	slug := utils.GenerateSlug(req.CompanyName)
 
@@ -83,6 +83,25 @@ func (s *companyService) RegisterCompany(ctx context.Context, req *company.Regis
 
 	if err := s.companyRepo.Create(ctx, comp); err != nil {
 		return nil, fmt.Errorf("failed to create company: %w", err)
+	}
+
+	// Add user as company owner
+	now := time.Now()
+	employerUser := &company.EmployerUser{
+		UserID:     userID,
+		CompanyID:  comp.ID,
+		Role:       "owner",
+		IsActive:   true,
+		IsVerified: true, // Auto-verify the owner
+		VerifiedAt: &now,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}
+
+	if err := s.companyRepo.CreateEmployerUser(ctx, employerUser); err != nil {
+		// If failed to add user as owner, rollback company creation would be ideal
+		// For now, return error but company is still created
+		return nil, fmt.Errorf("failed to add user as company owner: %w", err)
 	}
 
 	// Invalidate list caches (new company should appear in lists)
@@ -1241,6 +1260,16 @@ func (s *companyService) CheckEmployerPermission(ctx context.Context, userID, co
 	employerUser, err := s.companyRepo.FindEmployerUserByUserAndCompany(ctx, userID, companyID)
 	if err != nil {
 		return false, nil // User not an employer for this company
+	}
+
+	// Additional safety check for nil employerUser
+	if employerUser == nil {
+		return false, nil
+	}
+
+	// Check if user is active and verified
+	if !employerUser.IsActive {
+		return false, nil
 	}
 
 	// Role hierarchy: owner > admin > recruiter > viewer

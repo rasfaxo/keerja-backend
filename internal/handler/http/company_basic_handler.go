@@ -110,6 +110,12 @@ func (h *CompanyBasicHandler) ListCompanies(c *fiber.Ctx) error {
 func (h *CompanyBasicHandler) CreateCompany(c *fiber.Ctx) error {
 	ctx := c.Context()
 
+	// Get authenticated user ID from JWT using middleware helper
+	userID := middleware.GetUserID(c)
+	if userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "User not authenticated", "userID not found in context")
+	}
+
 	// Parse request body
 	var req request.RegisterCompanyRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -173,8 +179,8 @@ func (h *CompanyBasicHandler) CreateCompany(c *fiber.Ctx) error {
 		About:              req.About,
 	}
 
-	// Create the company
-	createdCompany, err := h.companyService.RegisterCompany(ctx, domainReq)
+	// Create the company with user as owner
+	createdCompany, err := h.companyService.RegisterCompany(ctx, domainReq, userID)
 	if err != nil {
 		return utils.InternalServerErrorResponse(c, ErrFailedOperation)
 	}
@@ -245,7 +251,7 @@ func (h *CompanyBasicHandler) GetCompanyBySlug(c *fiber.Ctx) error {
 
 // UpdateCompany godoc
 // @Summary Update a company profile
-// @Description Update the details of a company profile
+// @Description Update the details of a company profile (Only owner/admin can update)
 // @Tags companies
 // @Accept json
 // @Produce json
@@ -255,16 +261,32 @@ func (h *CompanyBasicHandler) GetCompanyBySlug(c *fiber.Ctx) error {
 // @Success 200 {object} utils.Response
 // @Failure 400 {object} utils.Response
 // @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
 // @Failure 404 {object} utils.Response
 // @Failure 500 {object} utils.Response
 // @Router /companies/{id} [put]
 func (h *CompanyBasicHandler) UpdateCompany(c *fiber.Ctx) error {
 	ctx := c.Context()
 
+	// Get authenticated user ID from JWT using middleware helper
+	userID := middleware.GetUserID(c)
+	if userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "User not authenticated", "userID not found in context")
+	}
+
 	// Get company ID from the URL
 	companyID, err := strconv.Atoi(c.Params("id"))
 	if err != nil || companyID <= 0 {
 		return utils.BadRequestResponse(c, ErrInvalidID)
+	}
+
+	// Check if user has permission (owner or admin)
+	hasPermission, err := h.companyService.CheckEmployerPermission(ctx, userID, int64(companyID), "admin")
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to check user permission", err.Error())
+	}
+	if !hasPermission {
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "You don't have permission to update this company. Only company owner or admin can perform this action.", "")
 	}
 
 	// Parse request body
@@ -347,7 +369,7 @@ func (h *CompanyBasicHandler) UpdateCompany(c *fiber.Ctx) error {
 
 // DeleteCompany godoc
 // @Summary Delete a company profile
-// @Description Delete a company profile by ID
+// @Description Delete a company profile by ID (Only owner can delete)
 // @Tags companies
 // @Accept json
 // @Produce json
@@ -356,16 +378,32 @@ func (h *CompanyBasicHandler) UpdateCompany(c *fiber.Ctx) error {
 // @Success 200 {object} utils.Response
 // @Failure 400 {object} utils.Response
 // @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
 // @Failure 404 {object} utils.Response
 // @Failure 500 {object} utils.Response
 // @Router /companies/{id} [delete]
 func (h *CompanyBasicHandler) DeleteCompany(c *fiber.Ctx) error {
 	ctx := c.Context()
 
+	// Get authenticated user ID from JWT using middleware helper
+	userID := middleware.GetUserID(c)
+	if userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "User not authenticated", "userID not found in context")
+	}
+
 	// Get company ID from the URL
 	companyID, err := strconv.Atoi(c.Params("id"))
 	if err != nil || companyID <= 0 {
 		return utils.BadRequestResponse(c, ErrInvalidID)
+	}
+
+	// Check if user is the owner (only owner can delete company)
+	isOwner, err := h.companyService.CheckEmployerPermission(ctx, userID, int64(companyID), "owner")
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to check user permission", err.Error())
+	}
+	if !isOwner {
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "You don't have permission to delete this company. Only company owner can perform this action.", "")
 	}
 
 	// Delete the company profile
@@ -492,4 +530,39 @@ func (h *CompanyBasicHandler) DeleteBanner(c *fiber.Ctx) error {
 		return utils.InternalServerErrorResponse(c, ErrFailedOperation)
 	}
 	return utils.SuccessResponse(c, MsgDeletedSuccess, nil)
+}
+
+// GetMyCompanies godoc
+// @Summary Get my companies
+// @Description Get all companies where the authenticated user is a member
+// @Tags companies
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} utils.Response{data=[]response.CompanyResponse}
+// @Failure 401 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /companies/my-companies [get]
+func (h *CompanyBasicHandler) GetMyCompanies(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	// Get authenticated user ID from JWT using middleware helper
+	userID := middleware.GetUserID(c)
+	if userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "User not authenticated", "userID not found in context")
+	}
+
+	// Get companies where user is a member
+	companies, err := h.companyService.GetUserCompanies(ctx, userID)
+	if err != nil {
+		return utils.InternalServerErrorResponse(c, ErrFailedOperation)
+	}
+
+	// Map to response DTOs
+	responses := make([]response.CompanyResponse, 0, len(companies))
+	for _, comp := range companies {
+		responses = append(responses, *mapper.ToCompanyResponse(&comp))
+	}
+
+	return utils.SuccessResponse(c, MsgFetchedSuccess, responses)
 }

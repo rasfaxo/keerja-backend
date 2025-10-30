@@ -19,6 +19,22 @@ func SetupCompanyRoutes(api fiber.Router, deps *Dependencies, authMw *middleware
 	companies := api.Group("/companies")
 
 	// ==========================================
+	// PROTECTED ROUTES - User-Specific
+	// ==========================================
+
+	// Get my companies (where user is a member)
+	companies.Get("/my-companies",
+		authMw.AuthRequired(),
+		deps.CompanyBasicHandler.GetMyCompanies,
+	)
+
+	// Get user's followed companies
+	companies.Get("/followed",
+		authMw.AuthRequired(),
+		deps.CompanyProfileHandler.GetFollowedCompanies,
+	)
+
+	// ==========================================
 	// PUBLIC ROUTES - Basic CRUD (CompanyBasicHandler)
 	// ==========================================
 
@@ -161,11 +177,6 @@ func SetupCompanyRoutes(api fiber.Router, deps *Dependencies, authMw *middleware
 	// Unfollow company
 	protected.Delete("/:id/follow",
 		deps.CompanyProfileHandler.UnfollowCompany,
-	)
-
-	// Get user's followed companies
-	protected.Get("/followed",
-		deps.CompanyProfileHandler.GetFollowedCompanies,
 	)
 
 	// ------------------------------------------

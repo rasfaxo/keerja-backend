@@ -8,7 +8,7 @@ import (
 // CompanyService defines the business logic interface for company operations
 type CompanyService interface {
 	// Company registration and management
-	RegisterCompany(ctx context.Context, req *RegisterCompanyRequest) (*Company, error)
+	RegisterCompany(ctx context.Context, req *RegisterCompanyRequest, userID int64) (*Company, error)
 	GetCompany(ctx context.Context, id int64) (*Company, error)
 	GetCompanyBySlug(ctx context.Context, slug string) (*Company, error)
 	UpdateCompany(ctx context.Context, companyID int64, req *UpdateCompanyRequest) error
