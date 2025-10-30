@@ -130,6 +130,7 @@ func main() {
 	companyService := service.NewCompanyService(companyRepo, uploadService, cacheService)
 	jobService := service.NewJobService(jobRepo, companyRepo, userRepo)
 	applicationService := service.NewApplicationService(applicationRepo, jobRepo, userRepo, companyRepo)
+	skillsMasterService := service.NewSkillsMasterService(skillsMasterRepo)
 
 	// Initialize handlers
 	appLogger.Info("Initializing handlers...")
@@ -148,6 +149,10 @@ func main() {
 	appLogger.Info("Initializing job & application handlers...")
 	jobHandler := http.NewJobHandler(jobService)
 	applicationHandler := http.NewApplicationHandler(applicationService)
+
+	// Initialize master data handlers
+	appLogger.Info("Initializing master data handlers...")
+	skillsMasterHandler := http.NewSkillsMasterHandler(skillsMasterService)
 
 	// Setup Fiber app
 	app := fiber.New(fiber.Config{
@@ -201,6 +206,9 @@ func main() {
 		CompanyReviewHandler:  companyReviewHandler,
 		CompanyStatsHandler:   companyStatsHandler,
 		CompanyInviteHandler:  companyInviteHandler,
+
+		// Master data handlers
+		SkillsMasterHandler: skillsMasterHandler,
 	}
 	routes.SetupRoutes(app, deps)
 

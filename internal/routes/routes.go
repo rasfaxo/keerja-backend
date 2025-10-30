@@ -23,6 +23,9 @@ type Dependencies struct {
 	CompanyReviewHandler  *http.CompanyReviewHandler  // Review system (5 endpoints)
 	CompanyStatsHandler   *http.CompanyStatsHandler   // Statistics & queries (3 endpoints)
 	CompanyInviteHandler  *http.CompanyInviteHandler  // Employee invitation (1 endpoint)
+
+	// Master data handlers
+	SkillsMasterHandler *http.SkillsMasterHandler // Skills master data (8 endpoints)
 }
 
 // SetupRoutes configures all application routes
@@ -43,10 +46,11 @@ func SetupRoutes(app *fiber.App, deps *Dependencies) {
 	})
 
 	// Setup route groups (each in separate file)
-	SetupAuthRoutes(api, deps, authMw)        // auth_routes.go
-	SetupUserRoutes(api, deps, authMw)        // user_routes.go
-	SetupJobRoutes(api, deps, authMw)         // job_routes.go
-	SetupApplicationRoutes(api, deps, authMw) // application_routes.go
-	SetupCompanyRoutes(api, deps, authMw)     // company_routes.go
-	SetupAdminRoutes(api, deps, authMw)       // admin_routes.go
+	SetupAuthRoutes(api, deps, authMw)               // auth_routes.go
+	SetupUserRoutes(api, deps, authMw)               // user_routes.go
+	SetupJobRoutes(api, deps, authMw)                // job_routes.go
+	SetupApplicationRoutes(api, deps, authMw)        // application_routes.go
+	SetupCompanyRoutes(api, deps, authMw)            // company_routes.go
+	SetupAdminRoutes(api, deps, authMw)              // admin_routes.go
+	SetupSkillsRoutes(api, deps.SkillsMasterHandler) // skills_routes.go
 }
