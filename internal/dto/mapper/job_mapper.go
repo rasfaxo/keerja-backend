@@ -1,6 +1,7 @@
 package mapper
 
 import (
+	"keerja-backend/internal/domain/company"
 	"keerja-backend/internal/domain/job"
 	"keerja-backend/internal/dto/response"
 )
@@ -46,6 +47,29 @@ func ToJobResponse(j *job.Job) *response.JobResponse {
 		IsExpired:         j.IsExpired(),
 		DaysRemaining:     daysRemaining,
 	}
+}
+
+// ToJobResponseWithCompany maps Job entity with company info to JobResponse DTO
+func ToJobResponseWithCompany(j *job.Job, comp *company.Company) *response.JobResponse {
+	if j == nil {
+		return nil
+	}
+
+	resp := ToJobResponse(j)
+	if resp == nil {
+		return nil
+	}
+
+	// Add company info if available
+	if comp != nil {
+		resp.CompanyName = comp.CompanyName
+		if comp.LogoURL != nil {
+			resp.CompanyLogoURL = *comp.LogoURL
+		}
+		resp.CompanyVerified = comp.IsVerified()
+	}
+
+	return resp
 }
 
 // ToJobDetailResponse maps Job entity with relations to JobDetailResponse DTO
@@ -125,6 +149,30 @@ func ToJobDetailResponse(j *job.Job) *response.JobDetailResponse {
 		for i, req := range j.JobRequirements {
 			resp.JobRequirements[i] = *ToJobRequirementResponse(&req)
 		}
+	}
+
+	return resp
+}
+
+// ToJobDetailResponseWithCompany maps Job entity with company info to JobDetailResponse DTO
+func ToJobDetailResponseWithCompany(j *job.Job, comp *company.Company) *response.JobDetailResponse {
+	if j == nil {
+		return nil
+	}
+
+	resp := ToJobDetailResponse(j)
+	if resp == nil {
+		return nil
+	}
+
+	// Add company info if available
+	if comp != nil {
+		resp.CompanyName = comp.CompanyName
+		if comp.LogoURL != nil {
+			resp.CompanyLogoURL = *comp.LogoURL
+		}
+		resp.CompanyVerified = comp.IsVerified()
+		resp.CompanySlug = comp.Slug
 	}
 
 	return resp
