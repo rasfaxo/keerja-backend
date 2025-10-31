@@ -344,3 +344,44 @@ func (eu *EmployerUser) IsAdmin() bool {
 func (eu *EmployerUser) CanManageJobs() bool {
 	return eu.Role == "owner" || eu.Role == "admin" || eu.Role == "recruiter"
 }
+
+// CompanyInvitation represents company employee invitation
+type CompanyInvitation struct {
+	ID         int64      `gorm:"primaryKey;autoIncrement" json:"id"`
+	CompanyID  int64      `gorm:"not null;index" json:"company_id"`
+	Email      string     `gorm:"type:varchar(150);not null;index" json:"email" validate:"required,email"`
+	FullName   string     `gorm:"type:varchar(150);not null" json:"full_name" validate:"required"`
+	Position   *string    `gorm:"type:varchar(100)" json:"position,omitempty"`
+	Role       string     `gorm:"type:varchar(30);default:'recruiter';check:role IN ('admin','recruiter','viewer')" json:"role" validate:"oneof=admin recruiter viewer"`
+	Token      string     `gorm:"type:varchar(64);uniqueIndex;not null" json:"token"`
+	Status     string     `gorm:"type:varchar(20);default:'pending';check:status IN ('pending','accepted','rejected','expired')" json:"status"`
+	InvitedBy  int64      `gorm:"not null" json:"invited_by"`
+	AcceptedBy *int64     `gorm:"type:bigint" json:"accepted_by,omitempty"`
+	AcceptedAt *time.Time `gorm:"type:timestamp" json:"accepted_at,omitempty"`
+	ExpiresAt  time.Time  `gorm:"type:timestamp;not null" json:"expires_at"`
+	CreatedAt  time.Time  `gorm:"type:timestamp;default:now()" json:"created_at"`
+	UpdatedAt  time.Time  `gorm:"type:timestamp;default:now()" json:"updated_at"`
+
+	// Relationships
+	Company *Company `gorm:"foreignKey:CompanyID" json:"-"`
+}
+
+// TableName specifies the table name for CompanyInvitation
+func (CompanyInvitation) TableName() string {
+	return "company_invitations"
+}
+
+// IsExpired checks if invitation is expired
+func (ci *CompanyInvitation) IsExpired() bool {
+	return time.Now().After(ci.ExpiresAt)
+}
+
+// IsPending checks if invitation is pending
+func (ci *CompanyInvitation) IsPending() bool {
+	return ci.Status == "pending"
+}
+
+// IsAccepted checks if invitation is accepted
+func (ci *CompanyInvitation) IsAccepted() bool {
+	return ci.Status == "accepted"
+}

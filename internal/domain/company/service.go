@@ -72,7 +72,13 @@ type CompanyService interface {
 
 	// Employer user management
 	InviteEmployer(ctx context.Context, req *InviteEmployerRequest) error
-	AcceptInvitation(ctx context.Context, userID, companyID int64) error
+	AcceptInvitation(ctx context.Context, token string, userID int64) error
+	ResendInvitation(ctx context.Context, invitationID, requestedBy int64) error
+	CancelInvitation(ctx context.Context, invitationID, canceledBy int64) error
+	GetPendingInvitations(ctx context.Context, companyID int64) ([]CompanyInvitation, error)
+	GetUserPendingInvitations(ctx context.Context, email string) ([]CompanyInvitation, error)
+	ExpireOldInvitations(ctx context.Context) (int64, error)
+	GetEmployerUser(ctx context.Context, userID, companyID int64) (*EmployerUser, error)
 	UpdateEmployerRole(ctx context.Context, employerUserID int64, newRole string) error
 	RemoveEmployerUser(ctx context.Context, employerUserID, companyID int64) error
 	GetEmployerUsers(ctx context.Context, companyID int64) ([]EmployerUser, error)

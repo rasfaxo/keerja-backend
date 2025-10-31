@@ -5,6 +5,7 @@ import (
 
 	"keerja-backend/internal/domain/company"
 	"keerja-backend/internal/domain/email"
+	"keerja-backend/internal/domain/user"
 	"keerja-backend/internal/dto/request"
 	"keerja-backend/internal/middleware"
 	"keerja-backend/internal/utils"
@@ -16,13 +17,15 @@ import (
 type CompanyInviteHandler struct {
 	companyService company.CompanyService
 	emailService   email.EmailService
+	userService    user.UserService
 }
 
 // NewCompanyInviteHandler creates a new instance of CompanyInviteHandler
-func NewCompanyInviteHandler(companyService company.CompanyService, emailService email.EmailService) *CompanyInviteHandler {
+func NewCompanyInviteHandler(companyService company.CompanyService, emailService email.EmailService, userService user.UserService) *CompanyInviteHandler {
 	return &CompanyInviteHandler{
 		companyService: companyService,
 		emailService:   emailService,
+		userService:    userService,
 	}
 }
 
@@ -90,63 +93,246 @@ func (h *CompanyInviteHandler) InviteEmployee(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusForbidden, "You don't have permission to invite employees. Only company owner or admin can perform this action.", "")
 	}
 
-	// Generate invitation token (valid for 7 days)
-	// TODO: Store token in database or Redis for verification
-	inviteToken := utils.GenerateRandomToken(32)
-	inviteURL := fmt.Sprintf("%s/accept-invite?token=%s", c.BaseURL(), inviteToken)
+	// Create invitation request
+	inviteReq := &company.InviteEmployerRequest{
+		CompanyID:     int64(companyID),
+		Email:         req.Email,
+		Role:          req.Role,
+		PositionTitle: &req.Position,
+	}
 
-	// Send invitation email
-	emailBody := h.generateInviteEmailBody(comp.CompanyName, req.FullName, req.Position, inviteURL)
-	subject := fmt.Sprintf("Undangan Bergabung di %s - Keerja", comp.CompanyName)
+	// Save invitation to database
+	if err := h.companyService.InviteEmployer(ctx, inviteReq); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to create invitation", err.Error())
+	}
 
-	if err := h.emailService.SendEmail(ctx, req.Email, subject, emailBody); err != nil {
+	// Get invitation to get token for email
+	invitations, err := h.companyService.GetPendingInvitations(ctx, int64(companyID))
+	if err != nil || len(invitations) == 0 {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to retrieve invitation", "")
+	}
+
+	// Find the latest invitation for this email
+	var invitation *company.CompanyInvitation
+	for i := range invitations {
+		if invitations[i].Email == req.Email && invitations[i].Status == "pending" {
+			invitation = &invitations[i]
+			break
+		}
+	}
+
+	if invitation == nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to find invitation", "")
+	}
+
+	// Generate invitation URL
+	inviteURL := fmt.Sprintf("%s/accept-invite?token=%s", c.BaseURL(), invitation.Token)
+
+	// Get inviter name from user service
+	inviterName := "Administrator" // Default fallback
+	inviterUser, err := h.userService.GetProfile(ctx, userID)
+	if err == nil && inviterUser != nil {
+		inviterName = inviterUser.FullName
+	}
+
+	// Send invitation email using template
+	if err := h.emailService.SendCompanyInvitationEmail(
+		ctx,
+		req.Email,
+		req.FullName,
+		comp.CompanyName,
+		inviterName,
+		req.Position,
+		req.Role,
+		inviteURL,
+		7, // 7 days expiry
+	); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to send invitation email", err.Error())
 	}
 
-	// TODO: Store invitation record in database
-	// - Save invitation token
-	// - Track invitation status (pending, accepted, rejected, expired)
-	// - Allow resending invitation
-	// - Set expiration time (7 days)
-
 	return utils.SuccessResponse(c, "Invitation sent successfully", fiber.Map{
-		"email":    req.Email,
-		"name":     req.FullName,
-		"position": req.Position,
-		"role":     req.Role,
-		"company":  comp.CompanyName,
+		"email":         req.Email,
+		"name":          req.FullName,
+		"position":      req.Position,
+		"role":          req.Role,
+		"company":       comp.CompanyName,
+		"expires_at":    invitation.ExpiresAt,
+		"invitation_id": invitation.ID,
 	})
 }
 
-// generateInviteEmailBody generates HTML email body for employee invitation
-func (h *CompanyInviteHandler) generateInviteEmailBody(companyName, employeeName, position, inviteURL string) string {
-	return fmt.Sprintf(`
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Undangan Bergabung di %s</title>
-</head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #4CAF50;">Undangan Bergabung di %s</h2>
-        <p>Halo %s,</p>
-        <p>Anda telah diundang untuk bergabung dengan <strong>%s</strong> sebagai <strong>%s</strong> melalui platform Keerja.</p>
-        <div style="text-align: center; margin: 30px 0;">
-            <a href="%s" style="background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">
-                Terima Undangan
-            </a>
-        </div>
-        <p>Atau salin dan tempel link berikut di browser Anda:</p>
-        <p style="word-break: break-all; color: #666; font-size: 12px;">%s</p>
-        <p>Link undangan ini akan kadaluarsa dalam 7 hari.</p>
-        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-        <p style="font-size: 12px; color: #999;">
-            Jika Anda tidak mengenal perusahaan ini atau tidak mengharapkan undangan ini, abaikan email ini.<br>
-            Butuh bantuan? Hubungi kami di support@keerja.com
-        </p>
-    </div>
-</body>
-</html>
-	`, companyName, companyName, employeeName, companyName, position, inviteURL, inviteURL)
+// AcceptInvitation godoc
+// @Summary Accept company invitation
+// @Description Accept invitation to join a company as employer user
+// @Tags companies
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param token query string true "Invitation token"
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 404 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /companies/invitations/accept [post]
+func (h *CompanyInviteHandler) AcceptInvitation(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	// Get token from query parameter
+	token := c.Query("token")
+	if token == "" {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invitation token is required", "")
+	}
+
+	// Get authenticated user from context
+	userID := middleware.GetUserID(c)
+	if userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "User not authenticated", "userID not found in context")
+	}
+
+	// Accept invitation
+	if err := h.companyService.AcceptInvitation(ctx, token, userID); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to accept invitation", err.Error())
+	}
+
+	return utils.SuccessResponse(c, "Invitation accepted successfully", fiber.Map{
+		"message": "You are now an employer of this company",
+	})
+}
+
+// ResendInvitation godoc
+// @Summary Resend company invitation
+// @Description Resend invitation email to employee
+// @Tags companies
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Company ID"
+// @Param invitationId path int true "Invitation ID"
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 404 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /companies/{id}/invitations/{invitationId}/resend [post]
+func (h *CompanyInviteHandler) ResendInvitation(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	// Get company ID and invitation ID from path parameters
+	companyID, err := c.ParamsInt("id")
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid company ID", err.Error())
+	}
+
+	invitationID, err := c.ParamsInt("invitationId")
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid invitation ID", err.Error())
+	}
+
+	// Get authenticated user
+	userID := middleware.GetUserID(c)
+	if userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "User not authenticated", "")
+	}
+
+	// Check permission
+	hasPermission, err := h.companyService.CheckEmployerPermission(ctx, userID, int64(companyID), "admin")
+	if err != nil || !hasPermission {
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "You don't have permission to resend invitations", "")
+	}
+
+	// Resend invitation
+	if err := h.companyService.ResendInvitation(ctx, int64(invitationID), userID); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to resend invitation", err.Error())
+	}
+
+	return utils.SuccessResponse(c, "Invitation resent successfully", nil)
+}
+
+// CancelInvitation godoc
+// @Summary Cancel company invitation
+// @Description Cancel pending invitation
+// @Tags companies
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Company ID"
+// @Param invitationId path int true "Invitation ID"
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 404 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /companies/{id}/invitations/{invitationId} [delete]
+func (h *CompanyInviteHandler) CancelInvitation(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	// Get invitation ID from path parameter (company ID validation done by permission check)
+	invitationID, err := c.ParamsInt("invitationId")
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid invitation ID", err.Error())
+	}
+
+	// Get authenticated user
+	userID := middleware.GetUserID(c)
+	if userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "User not authenticated", "")
+	}
+
+	// Cancel invitation (permission check inside service)
+	if err := h.companyService.CancelInvitation(ctx, int64(invitationID), userID); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to cancel invitation", err.Error())
+	}
+
+	return utils.SuccessResponse(c, "Invitation canceled successfully", nil)
+}
+
+// GetPendingInvitations godoc
+// @Summary Get pending invitations for company
+// @Description Get all pending invitations for a company
+// @Tags companies
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Company ID"
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 404 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /companies/{id}/invitations [get]
+func (h *CompanyInviteHandler) GetPendingInvitations(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	// Get company ID from path parameter
+	companyID, err := c.ParamsInt("id")
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid company ID", err.Error())
+	}
+
+	// Get authenticated user
+	userID := middleware.GetUserID(c)
+	if userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "User not authenticated", "")
+	}
+
+	// Check permission
+	hasPermission, err := h.companyService.CheckEmployerPermission(ctx, userID, int64(companyID), "admin")
+	if err != nil || !hasPermission {
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "You don't have permission to view invitations", "")
+	}
+
+	// Get invitations
+	invitations, err := h.companyService.GetPendingInvitations(ctx, int64(companyID))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get invitations", err.Error())
+	}
+
+	return utils.SuccessResponse(c, "Invitations retrieved successfully", fiber.Map{
+		"invitations": invitations,
+		"total":       len(invitations),
+	})
 }

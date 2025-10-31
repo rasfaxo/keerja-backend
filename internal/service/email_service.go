@@ -375,6 +375,21 @@ func (s *emailService) mapToTemplateData(data map[string]interface{}) email.Temp
 	if v, ok := data["ExpiryMinutes"].(string); ok {
 		templateData.ExpiryMinutes = v
 	}
+	if v, ok := data["InviterName"].(string); ok {
+		templateData.InviterName = v
+	}
+	if v, ok := data["Position"].(string); ok {
+		templateData.Position = v
+	}
+	if v, ok := data["Role"].(string); ok {
+		templateData.Role = v
+	}
+	if v, ok := data["InviteURL"].(string); ok {
+		templateData.InviteURL = v
+	}
+	if v, ok := data["ExpiryDays"].(string); ok {
+		templateData.ExpiryDays = v
+	}
 
 	return templateData
 }
@@ -404,4 +419,53 @@ func (s *emailService) SendOTPRegistrationEmail(ctx context.Context, to, name, c
 	}
 
 	return s.SendTemplateEmail(ctx, to, string(email.TemplateOTPRegistration), data)
+}
+
+// SendCompanyInvitationEmail sends company employee invitation email
+func (s *emailService) SendCompanyInvitationEmail(ctx context.Context, to, name, companyName, inviterName, position, role, inviteURL string, expiryDays int) error {
+	data := map[string]interface{}{
+		"Name":         name,
+		"Email":        to,
+		"CompanyName":  companyName,
+		"InviterName":  inviterName,
+		"Position":     position,
+		"Role":         role,
+		"InviteURL":    inviteURL,
+		"ExpiryDays":   fmt.Sprintf("%d", expiryDays),
+		"SupportEmail": s.config.SupportEmail,
+		"Year":         time.Now().Year(),
+	}
+
+	return s.SendTemplateEmail(ctx, to, string(email.TemplateCompanyInvitation), data)
+}
+
+// SendInvitationAcceptedEmail sends notification when invitation is accepted
+func (s *emailService) SendInvitationAcceptedEmail(ctx context.Context, to, inviterName, memberName, memberEmail, companyName, position, role string) error {
+	data := map[string]interface{}{
+		"InviterName":  inviterName,
+		"Name":         memberName,
+		"Email":        memberEmail,
+		"CompanyName":  companyName,
+		"Position":     position,
+		"Role":         role,
+		"DashboardURL": s.config.DashboardURL,
+		"SupportEmail": s.config.SupportEmail,
+		"Year":         time.Now().Year(),
+	}
+
+	return s.SendTemplateEmail(ctx, to, string(email.TemplateInvitationAccepted), data)
+}
+
+// SendInvitationExpiredEmail sends notification when invitation expires
+func (s *emailService) SendInvitationExpiredEmail(ctx context.Context, to, name, companyName, inviterName, position string) error {
+	data := map[string]interface{}{
+		"Name":         name,
+		"CompanyName":  companyName,
+		"InviterName":  inviterName,
+		"Position":     position,
+		"SupportEmail": s.config.SupportEmail,
+		"Year":         time.Now().Year(),
+	}
+
+	return s.SendTemplateEmail(ctx, to, string(email.TemplateInvitationExpired), data)
 }

@@ -11,6 +11,7 @@ import (
 	"keerja-backend/internal/cache"
 	"keerja-backend/internal/config"
 	"keerja-backend/internal/handler/http"
+	"keerja-backend/internal/jobs"
 	"keerja-backend/internal/middleware"
 	"keerja-backend/internal/repository/postgres"
 	"keerja-backend/internal/routes"
@@ -127,7 +128,7 @@ func main() {
 	)
 
 	userService := service.NewUserService(userRepo, uploadService, skillsMasterRepo)
-	companyService := service.NewCompanyService(companyRepo, uploadService, cacheService)
+	companyService := service.NewCompanyService(companyRepo, uploadService, cacheService, db)
 	jobService := service.NewJobService(jobRepo, companyRepo, userRepo)
 	applicationService := service.NewApplicationService(applicationRepo, jobRepo, userRepo, companyRepo)
 	skillsMasterService := service.NewSkillsMasterService(skillsMasterRepo)
@@ -143,7 +144,7 @@ func main() {
 	companyProfileHandler := http.NewCompanyProfileHandler(companyService)
 	companyReviewHandler := http.NewCompanyReviewHandler(companyService)
 	companyStatsHandler := http.NewCompanyStatsHandler(companyService)
-	companyInviteHandler := http.NewCompanyInviteHandler(companyService, emailService)
+	companyInviteHandler := http.NewCompanyInviteHandler(companyService, emailService, userService)
 
 	// Initialize job & application handlers
 	appLogger.Info("Initializing job & application handlers...")
@@ -209,11 +210,34 @@ func main() {
 
 		// Master data handlers
 		SkillsMasterHandler: skillsMasterHandler,
+
+		// Services (for middlewares)
+		CompanyService: companyService,
 	}
 	routes.SetupRoutes(app, deps)
 
 	// 404 handler (must be last)
 	app.Use(middleware.NotFoundHandler())
+
+	// ==========================================
+	// BACKGROUND JOBS SETUP
+	// ==========================================
+	appLogger.Info("Setting up background jobs...")
+
+	// Initialize scheduler
+	scheduler := jobs.NewScheduler()
+
+	// Register jobs
+	invitationExpiryJob := jobs.NewInvitationExpiryJob(companyService)
+	if err := scheduler.Register(invitationExpiryJob); err != nil {
+		appLogger.WithError(err).Fatal("Failed to register invitation expiry job")
+	}
+
+	// Start scheduler
+	scheduler.Start()
+
+	// Ensure scheduler stops on shutdown
+	defer scheduler.Stop()
 
 	// Start server in a goroutine
 	port := cfg.ServerPort
@@ -236,6 +260,10 @@ func main() {
 	<-quit
 
 	appLogger.Info("Shutting down server gracefully...")
+
+	// Stop background jobs first
+	appLogger.Info("Stopping background jobs...")
+	scheduler.Stop()
 
 	// Graceful shutdown with timeout
 	if err := app.ShutdownWithTimeout(10 * time.Second); err != nil {

@@ -48,6 +48,15 @@ type EmailService interface {
 
 	// SendOTPRegistrationEmail sends OTP for email verification during registration
 	SendOTPRegistrationEmail(ctx context.Context, to, name, code string) error
+
+	// SendCompanyInvitationEmail sends company employee invitation email
+	SendCompanyInvitationEmail(ctx context.Context, to, name, companyName, inviterName, position, role, inviteURL string, expiryDays int) error
+
+	// SendInvitationAcceptedEmail sends notification when invitation is accepted
+	SendInvitationAcceptedEmail(ctx context.Context, to, inviterName, memberName, memberEmail, companyName, position, role string) error
+
+	// SendInvitationExpiredEmail sends notification when invitation expires
+	SendInvitationExpiredEmail(ctx context.Context, to, name, companyName, inviterName, position string) error
 }
 
 // EmailFilter defines filters for email logs

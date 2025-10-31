@@ -14,12 +14,12 @@ type CompanyRepository interface {
 	Update(ctx context.Context, company *Company) error
 	Delete(ctx context.Context, id int64) error
 	List(ctx context.Context, filter *CompanyFilter) ([]Company, int64, error)
-	
+
 	// Profile operations
 	CreateProfile(ctx context.Context, profile *CompanyProfile) error
 	FindProfileByCompanyID(ctx context.Context, companyID int64) (*CompanyProfile, error)
 	UpdateProfile(ctx context.Context, profile *CompanyProfile) error
-	
+
 	// Follower operations
 	FollowCompany(ctx context.Context, companyID, userID int64) error
 	UnfollowCompany(ctx context.Context, companyID, userID int64) error
@@ -27,7 +27,7 @@ type CompanyRepository interface {
 	GetFollowers(ctx context.Context, companyID int64, page, limit int) ([]CompanyFollower, int64, error)
 	GetFollowedCompanies(ctx context.Context, userID int64, page, limit int) ([]Company, int64, error)
 	CountFollowers(ctx context.Context, companyID int64) (int64, error)
-	
+
 	// Review operations
 	CreateReview(ctx context.Context, review *CompanyReview) error
 	UpdateReview(ctx context.Context, review *CompanyReview) error
@@ -38,7 +38,7 @@ type CompanyRepository interface {
 	ApproveReview(ctx context.Context, id, moderatedBy int64) error
 	RejectReview(ctx context.Context, id, moderatedBy int64) error
 	CalculateAverageRatings(ctx context.Context, companyID int64) (*AverageRatings, error)
-	
+
 	// Document operations
 	CreateDocument(ctx context.Context, doc *CompanyDocument) error
 	UpdateDocument(ctx context.Context, doc *CompanyDocument) error
@@ -47,14 +47,14 @@ type CompanyRepository interface {
 	GetDocumentsByCompanyID(ctx context.Context, companyID int64) ([]CompanyDocument, error)
 	ApproveDocument(ctx context.Context, id, verifiedBy int64) error
 	RejectDocument(ctx context.Context, id, verifiedBy int64, reason string) error
-	
+
 	// Employee operations
 	AddEmployee(ctx context.Context, employee *CompanyEmployee) error
 	UpdateEmployee(ctx context.Context, employee *CompanyEmployee) error
 	DeleteEmployee(ctx context.Context, id int64) error
 	GetEmployeesByCompanyID(ctx context.Context, companyID int64, includeInactive bool) ([]CompanyEmployee, error)
 	CountEmployees(ctx context.Context, companyID int64, activeOnly bool) (int64, error)
-	
+
 	// Employer User operations
 	CreateEmployerUser(ctx context.Context, employerUser *EmployerUser) error
 	UpdateEmployerUser(ctx context.Context, employerUser *EmployerUser) error
@@ -63,7 +63,17 @@ type CompanyRepository interface {
 	FindEmployerUserByUserAndCompany(ctx context.Context, userID, companyID int64) (*EmployerUser, error)
 	GetEmployerUsersByCompanyID(ctx context.Context, companyID int64) ([]EmployerUser, error)
 	GetCompaniesByUserID(ctx context.Context, userID int64) ([]Company, error)
-	
+
+	// Company Invitation operations
+	CreateInvitation(ctx context.Context, invitation *CompanyInvitation) error
+	FindInvitationByToken(ctx context.Context, token string) (*CompanyInvitation, error)
+	FindInvitationByID(ctx context.Context, id int64) (*CompanyInvitation, error)
+	UpdateInvitation(ctx context.Context, invitation *CompanyInvitation) error
+	GetPendingInvitationsByCompany(ctx context.Context, companyID int64) ([]CompanyInvitation, error)
+	GetPendingInvitationsByEmail(ctx context.Context, email string) ([]CompanyInvitation, error)
+	ExpireOldInvitations(ctx context.Context) error
+	DeleteInvitation(ctx context.Context, id int64) error
+
 	// Verification operations
 	CreateVerification(ctx context.Context, verification *CompanyVerification) error
 	UpdateVerification(ctx context.Context, verification *CompanyVerification) error
@@ -72,7 +82,7 @@ type CompanyRepository interface {
 	ApproveVerification(ctx context.Context, companyID, reviewedBy int64, notes string) error
 	RejectVerification(ctx context.Context, companyID, reviewedBy int64, reason string) error
 	GetPendingVerifications(ctx context.Context, page, limit int) ([]CompanyVerification, int64, error)
-	
+
 	// Industry operations
 	CreateIndustry(ctx context.Context, industry *CompanyIndustry) error
 	UpdateIndustry(ctx context.Context, industry *CompanyIndustry) error
@@ -81,31 +91,31 @@ type CompanyRepository interface {
 	FindIndustryByCode(ctx context.Context, code string) (*CompanyIndustry, error)
 	GetAllIndustries(ctx context.Context, activeOnly bool) ([]CompanyIndustry, error)
 	GetIndustryTree(ctx context.Context) ([]CompanyIndustry, error)
-	
+
 	// Search and analytics
 	SearchCompanies(ctx context.Context, query string, filter *CompanyFilter) ([]Company, int64, error)
 	GetVerifiedCompanies(ctx context.Context, page, limit int) ([]Company, int64, error)
 	GetTopRatedCompanies(ctx context.Context, limit int) ([]Company, error)
 	GetCompaniesNeedingVerificationRenewal(ctx context.Context) ([]Company, error)
-	
+
 	// Full data with relationships
 	GetFullCompanyProfile(ctx context.Context, companyID int64) (*Company, error)
 }
 
 // CompanyFilter represents filters for querying companies
 type CompanyFilter struct {
-	Industry       *string
-	CompanyType    *string
-	SizeCategory   *string
-	City           *string
-	Province       *string
-	Verified       *bool
-	IsActive       *bool
-	SearchQuery    *string
-	Page           int
-	Limit          int
-	SortBy         string
-	SortOrder      string
+	Industry     *string
+	CompanyType  *string
+	SizeCategory *string
+	City         *string
+	Province     *string
+	Verified     *bool
+	IsActive     *bool
+	SearchQuery  *string
+	Page         int
+	Limit        int
+	SortBy       string
+	SortOrder    string
 }
 
 // ReviewFilter represents filters for querying reviews
@@ -122,10 +132,10 @@ type ReviewFilter struct {
 
 // AverageRatings represents average ratings for a company
 type AverageRatings struct {
-	Overall    float64
-	Culture    float64
-	WorkLife   float64
-	Salary     float64
-	Management float64
+	Overall      float64
+	Culture      float64
+	WorkLife     float64
+	Salary       float64
+	Management   float64
 	TotalReviews int64
 }

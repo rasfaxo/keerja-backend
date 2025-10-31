@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"keerja-backend/internal/domain/company"
+
 	"gorm.io/gorm"
 )
 
@@ -918,11 +919,11 @@ func (r *companyRepository) GetVerifiedCompanies(ctx context.Context, page, limi
 	verified := true
 	active := true
 	filter := &company.CompanyFilter{
-		Verified: &verified,
-		IsActive: &active,
-		Page:     page,
-		Limit:    limit,
-		SortBy:   "verified_at",
+		Verified:  &verified,
+		IsActive:  &active,
+		Page:      page,
+		Limit:     limit,
+		SortBy:    "verified_at",
 		SortOrder: "DESC",
 	}
 	return r.List(ctx, filter)
@@ -996,4 +997,85 @@ func (r *companyRepository) GetFullCompanyProfile(ctx context.Context, companyID
 		return nil, err
 	}
 	return &c, nil
+}
+
+// ===========================================
+// COMPANY INVITATION OPERATIONS
+// ===========================================
+
+// CreateInvitation creates a new company invitation
+func (r *companyRepository) CreateInvitation(ctx context.Context, invitation *company.CompanyInvitation) error {
+	return r.db.WithContext(ctx).Create(invitation).Error
+}
+
+// FindInvitationByToken finds an invitation by token
+func (r *companyRepository) FindInvitationByToken(ctx context.Context, token string) (*company.CompanyInvitation, error) {
+	var invitation company.CompanyInvitation
+	err := r.db.WithContext(ctx).
+		Preload("Company").
+		Where("token = ?", token).
+		First(&invitation).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("invitation not found")
+		}
+		return nil, err
+	}
+	return &invitation, nil
+}
+
+// FindInvitationByID finds an invitation by ID
+func (r *companyRepository) FindInvitationByID(ctx context.Context, id int64) (*company.CompanyInvitation, error) {
+	var invitation company.CompanyInvitation
+	err := r.db.WithContext(ctx).
+		Preload("Company").
+		First(&invitation, id).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("invitation not found")
+		}
+		return nil, err
+	}
+	return &invitation, nil
+}
+
+// UpdateInvitation updates an invitation record
+func (r *companyRepository) UpdateInvitation(ctx context.Context, invitation *company.CompanyInvitation) error {
+	return r.db.WithContext(ctx).Save(invitation).Error
+}
+
+// GetPendingInvitationsByCompany retrieves pending invitations for a company
+func (r *companyRepository) GetPendingInvitationsByCompany(ctx context.Context, companyID int64) ([]company.CompanyInvitation, error) {
+	var invitations []company.CompanyInvitation
+	err := r.db.WithContext(ctx).
+		Where("company_id = ? AND status = ?", companyID, "pending").
+		Where("expires_at > ?", time.Now()).
+		Order("created_at DESC").
+		Find(&invitations).Error
+	return invitations, err
+}
+
+// GetPendingInvitationsByEmail retrieves pending invitations for an email
+func (r *companyRepository) GetPendingInvitationsByEmail(ctx context.Context, email string) ([]company.CompanyInvitation, error) {
+	var invitations []company.CompanyInvitation
+	err := r.db.WithContext(ctx).
+		Preload("Company").
+		Where("email = ? AND status = ?", email, "pending").
+		Where("expires_at > ?", time.Now()).
+		Order("created_at DESC").
+		Find(&invitations).Error
+	return invitations, err
+}
+
+// ExpireOldInvitations marks old invitations as expired
+func (r *companyRepository) ExpireOldInvitations(ctx context.Context) error {
+	return r.db.WithContext(ctx).
+		Model(&company.CompanyInvitation{}).
+		Where("status = ? AND expires_at < ?", "pending", time.Now()).
+		Update("status", "expired").Error
+}
+
+// DeleteInvitation deletes an invitation
+func (r *companyRepository) DeleteInvitation(ctx context.Context, id int64) error {
+	return r.db.WithContext(ctx).Delete(&company.CompanyInvitation{}, id).Error
 }
