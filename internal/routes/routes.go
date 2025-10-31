@@ -28,6 +28,13 @@ type Dependencies struct {
 	// Master data handlers
 	SkillsMasterHandler *http.SkillsMasterHandler // Skills master data (8 endpoints)
 
+	// Notification handler
+	NotificationHandler *http.NotificationHandler // Notification management (14 endpoints)
+
+	// Device Token & Push Notification handlers
+	DeviceTokenHandler      *http.DeviceTokenHandler      // Device token management (6 endpoints)
+	PushNotificationHandler *http.PushNotificationHandler // Push notification sending (5 endpoints)
+
 	// Services (for middlewares)
 	CompanyService company.CompanyService
 }
@@ -53,11 +60,14 @@ func SetupRoutes(app *fiber.App, deps *Dependencies) {
 	})
 
 	// Setup route groups (each in separate file)
-	SetupAuthRoutes(api, deps, authMw)               // auth_routes.go
-	SetupUserRoutes(api, deps, authMw)               // user_routes.go
-	SetupJobRoutes(api, deps, authMw)                // job_routes.go
-	SetupApplicationRoutes(api, deps, authMw)        // application_routes.go
-	SetupCompanyRoutes(api, deps, authMw, permMw)    // company_routes.go
-	SetupAdminRoutes(api, deps, authMw)              // admin_routes.go
-	SetupSkillsRoutes(api, deps.SkillsMasterHandler) // skills_routes.go
+	SetupAuthRoutes(api, deps, authMw)                                     // auth_routes.go
+	SetupUserRoutes(api, deps, authMw)                                     // user_routes.go
+	SetupJobRoutes(api, deps, authMw)                                      // job_routes.go
+	SetupApplicationRoutes(api, deps, authMw)                              // application_routes.go
+	SetupCompanyRoutes(api, deps, authMw, permMw)                          // company_routes.go
+	SetupAdminRoutes(api, deps, authMw)                                    // admin_routes.go
+	SetupSkillsRoutes(api, deps.SkillsMasterHandler)                       // skills_routes.go
+	SetupNotificationRoutes(api, deps, authMw)                             // notification_routes.go
+	SetupDeviceTokenRoutes(api, deps.DeviceTokenHandler, authMw)           // device_token_routes.go
+	SetupPushNotificationRoutes(api, deps.PushNotificationHandler, authMw) // push_notification_routes.go
 }

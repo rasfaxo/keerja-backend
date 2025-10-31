@@ -9,17 +9,20 @@ import (
 
 	"keerja-backend/internal/domain/application"
 	"keerja-backend/internal/domain/company"
+	"keerja-backend/internal/domain/email"
 	"keerja-backend/internal/domain/job"
+	"keerja-backend/internal/domain/notification"
 	"keerja-backend/internal/domain/user"
 )
 
 // applicationService implements application.ApplicationService interface
 type applicationService struct {
-	appRepo     application.ApplicationRepository
-	jobRepo     job.JobRepository
-	userRepo    user.UserRepository
-	companyRepo company.CompanyRepository
-	// uploadService would be injected for document handling
+	appRepo      application.ApplicationRepository
+	jobRepo      job.JobRepository
+	userRepo     user.UserRepository
+	companyRepo  company.CompanyRepository
+	emailService email.EmailService
+	notifService notification.NotificationService
 }
 
 // NewApplicationService creates a new application service instance
@@ -28,12 +31,16 @@ func NewApplicationService(
 	jobRepo job.JobRepository,
 	userRepo user.UserRepository,
 	companyRepo company.CompanyRepository,
+	emailService email.EmailService,
+	notifService notification.NotificationService,
 ) application.ApplicationService {
 	return &applicationService{
-		appRepo:     appRepo,
-		jobRepo:     jobRepo,
-		userRepo:    userRepo,
-		companyRepo: companyRepo,
+		appRepo:      appRepo,
+		jobRepo:      jobRepo,
+		userRepo:     userRepo,
+		companyRepo:  companyRepo,
+		emailService: emailService,
+		notifService: notifService,
 	}
 }
 
@@ -961,7 +968,7 @@ func (s *applicationService) GetHighScoreApplications(ctx context.Context, compa
 // GetRecentApplications retrieves recent applications
 func (s *applicationService) GetRecentApplications(ctx context.Context, companyID int64, hours int, limit int) ([]application.JobApplication, error) {
 	cutoffTime := time.Now().Add(-time.Duration(hours) * time.Hour)
-	
+
 	filter := application.ApplicationFilter{
 		CompanyID:    companyID,
 		AppliedAfter: &cutoffTime,
@@ -993,10 +1000,10 @@ func (s *applicationService) GetApplicationAnalytics(ctx context.Context, applic
 
 	// Build analytics
 	analytics := &application.ApplicationAnalytics{
-		ApplicationID: applicationID,
-		Timeline:      s.buildTimeline(app, stages, interviews),
-		StageProgress: s.buildStageProgress(stages),
-		DocumentStats: s.buildDocumentStats(docs),
+		ApplicationID:  applicationID,
+		Timeline:       s.buildTimeline(app, stages, interviews),
+		StageProgress:  s.buildStageProgress(stages),
+		DocumentStats:  s.buildDocumentStats(docs),
 		InterviewStats: s.buildInterviewStats(interviews),
 		MatchAnalysis: application.MatchAnalysis{
 			OverallScore: app.MatchScore,
@@ -1108,26 +1115,182 @@ func (s *applicationService) GetApplicationSourceAnalytics(ctx context.Context, 
 
 // NotifyApplicationReceived sends notification for new application
 func (s *applicationService) NotifyApplicationReceived(ctx context.Context, applicationID int64) error {
-	// TODO: Implement notification logic
-	// This would integrate with notification service to send emails/push notifications
+	// Get application details
+	app, err := s.appRepo.FindByID(ctx, applicationID)
+	if err != nil {
+		return fmt.Errorf("application not found: %w", err)
+	}
+
+	// Get job details
+	j, err := s.jobRepo.FindByID(ctx, app.JobID)
+	if err != nil {
+		return fmt.Errorf("job not found: %w", err)
+	}
+
+	// Get user details
+	user, err := s.userRepo.FindByID(ctx, app.UserID)
+	if err != nil {
+		return fmt.Errorf("user not found: %w", err)
+	}
+
+	// Get company details
+	var companyName string
+	if app.CompanyID != nil {
+		comp, _ := s.companyRepo.FindByID(ctx, *app.CompanyID)
+		if comp != nil {
+			companyName = comp.CompanyName
+		}
+	}
+
+	// Send notification to user
+	if s.notifService != nil {
+		if err := s.notifService.NotifyJobApplication(ctx, app.UserID, app.JobID, applicationID); err != nil {
+			// Log error but don't fail the operation
+			fmt.Printf("failed to send notification: %v\n", err)
+		}
+	}
+
+	// Send email confirmation to user
+	if s.emailService != nil {
+		if err := s.emailService.SendJobApplicationEmail(ctx, user.Email, j.Title, companyName); err != nil {
+			// Log error but don't fail the operation
+			fmt.Printf("failed to send email: %v\n", err)
+		}
+	}
+
 	return nil
 }
 
 // NotifyStatusUpdate sends notification for status change
 func (s *applicationService) NotifyStatusUpdate(ctx context.Context, applicationID int64, newStatus string) error {
-	// TODO: Implement notification logic
+	// Get application details
+	app, err := s.appRepo.FindByID(ctx, applicationID)
+	if err != nil {
+		return fmt.Errorf("application not found: %w", err)
+	}
+
+	// Get job details
+	j, err := s.jobRepo.FindByID(ctx, app.JobID)
+	if err != nil {
+		return fmt.Errorf("job not found: %w", err)
+	}
+
+	// Get user details
+	user, err := s.userRepo.FindByID(ctx, app.UserID)
+	if err != nil {
+		return fmt.Errorf("user not found: %w", err)
+	}
+
+	// Send notification to user
+	if s.notifService != nil {
+		if err := s.notifService.NotifyStatusUpdate(ctx, app.UserID, applicationID, app.Status, newStatus); err != nil {
+			// Log error but don't fail the operation
+			fmt.Printf("failed to send notification: %v\n", err)
+		}
+	}
+
+	// Send email notification to user
+	if s.emailService != nil {
+		if err := s.emailService.SendJobStatusUpdateEmail(ctx, user.Email, j.Title, newStatus); err != nil {
+			// Log error but don't fail the operation
+			fmt.Printf("failed to send email: %v\n", err)
+		}
+	}
+
 	return nil
 }
 
 // NotifyInterviewScheduled sends notification for scheduled interview
 func (s *applicationService) NotifyInterviewScheduled(ctx context.Context, interviewID int64) error {
-	// TODO: Implement notification logic
+	// Get interview details
+	interview, err := s.appRepo.FindInterviewByID(ctx, interviewID)
+	if err != nil {
+		return fmt.Errorf("interview not found: %w", err)
+	}
+
+	// Get application details
+	app, err := s.appRepo.FindByID(ctx, interview.ApplicationID)
+	if err != nil {
+		return fmt.Errorf("application not found: %w", err)
+	}
+
+	// Get job details
+	j, err := s.jobRepo.FindByID(ctx, app.JobID)
+	if err != nil {
+		return fmt.Errorf("job not found: %w", err)
+	}
+
+	// Get user details
+	user, err := s.userRepo.FindByID(ctx, app.UserID)
+	if err != nil {
+		return fmt.Errorf("user not found: %w", err)
+	}
+
+	// Send notification to user
+	if s.notifService != nil {
+		if err := s.notifService.NotifyInterviewScheduled(ctx, app.UserID, interviewID, interview.ScheduledAt); err != nil {
+			// Log error but don't fail the operation
+			fmt.Printf("failed to send notification: %v\n", err)
+		}
+	}
+
+	// Send email invitation to user
+	if s.emailService != nil {
+		interviewDateStr := interview.ScheduledAt.Format("2006-01-02 15:04 MST")
+		if err := s.emailService.SendInterviewInvitationEmail(ctx, user.Email, j.Title, interviewDateStr); err != nil {
+			// Log error but don't fail the operation
+			fmt.Printf("failed to send email: %v\n", err)
+		}
+	}
+
 	return nil
 }
 
 // NotifyInterviewReminder sends interview reminder
 func (s *applicationService) NotifyInterviewReminder(ctx context.Context, interviewID int64) error {
-	// TODO: Implement notification logic
+	// Get interview details
+	interview, err := s.appRepo.FindInterviewByID(ctx, interviewID)
+	if err != nil {
+		return fmt.Errorf("interview not found: %w", err)
+	}
+
+	// Get application details
+	app, err := s.appRepo.FindByID(ctx, interview.ApplicationID)
+	if err != nil {
+		return fmt.Errorf("application not found: %w", err)
+	}
+
+	// Get job details
+	j, err := s.jobRepo.FindByID(ctx, app.JobID)
+	if err != nil {
+		return fmt.Errorf("job not found: %w", err)
+	}
+
+	// Get user details
+	user, err := s.userRepo.FindByID(ctx, app.UserID)
+	if err != nil {
+		return fmt.Errorf("user not found: %w", err)
+	}
+
+	// Send reminder notification to user
+	if s.notifService != nil {
+		// Note: NotificationService doesn't have NotifyInterviewReminder method
+		// We can reuse NotifyInterviewScheduled for reminders
+		if err := s.notifService.NotifyInterviewScheduled(ctx, app.UserID, interviewID, interview.ScheduledAt); err != nil {
+			// Log error but don't fail the operation
+			fmt.Printf("failed to send reminder notification: %v\n", err)
+		}
+	}
+
+	// Send reminder email to user (using same template as interview invitation)
+	if s.emailService != nil {
+		interviewDateStr := interview.ScheduledAt.Format("2006-01-02 15:04 MST")
+		if err := s.emailService.SendInterviewInvitationEmail(ctx, user.Email, j.Title, interviewDateStr); err != nil {
+			// Log error but don't fail the operation
+			fmt.Printf("failed to send reminder email: %v\n", err)
+		}
+	}
+
 	return nil
 }
 
@@ -1265,7 +1428,7 @@ func (s *applicationService) ExportApplications(ctx context.Context, companyID i
 // buildApplicationListResponse builds application list response
 func (s *applicationService) buildApplicationListResponse(ctx context.Context, apps []application.JobApplication, total int64, page, limit int) (*application.ApplicationListResponse, error) {
 	summaries := make([]application.ApplicationSummary, 0, len(apps))
-	
+
 	for _, app := range apps {
 		// Get job details
 		j, _ := s.jobRepo.FindByID(ctx, app.JobID)
@@ -1274,7 +1437,7 @@ func (s *applicationService) buildApplicationListResponse(ctx context.Context, a
 		if j != nil {
 			jobTitle = j.Title
 		}
-		
+
 		// Get company details
 		if app.CompanyID != nil {
 			comp, _ := s.companyRepo.FindByID(ctx, *app.CompanyID)
@@ -1282,24 +1445,24 @@ func (s *applicationService) buildApplicationListResponse(ctx context.Context, a
 				companyName = comp.CompanyName
 			}
 		}
-		
+
 		// Get user details
 		user, _ := s.userRepo.FindByID(ctx, app.UserID)
 		userName := ""
 		if user != nil {
 			userName = user.FullName
 		}
-		
+
 		// Get current stage
 		currentStage, _ := s.appRepo.GetCurrentStage(ctx, app.ID)
 		currentStageName := app.Status
 		if currentStage != nil {
 			currentStageName = currentStage.StageName
 		}
-		
+
 		// Calculate days since applied
 		daysSince := int(time.Since(app.AppliedAt).Hours() / 24)
-		
+
 		summaries = append(summaries, application.ApplicationSummary{
 			ID:               app.ID,
 			JobID:            app.JobID,
@@ -1316,9 +1479,9 @@ func (s *applicationService) buildApplicationListResponse(ctx context.Context, a
 			DaysSinceApplied: daysSince,
 		})
 	}
-	
+
 	totalPages := int(math.Ceil(float64(total) / float64(limit)))
-	
+
 	return &application.ApplicationListResponse{
 		Applications: summaries,
 		Total:        total,
@@ -1335,7 +1498,7 @@ func (s *applicationService) buildApplicationDetailResponse(ctx context.Context,
 	if err != nil {
 		return nil, fmt.Errorf("application not found: %w", err)
 	}
-	
+
 	// Get job details
 	j, _ := s.jobRepo.FindByID(ctx, app.JobID)
 	jobDetail := application.JobDetail{}
@@ -1346,14 +1509,14 @@ func (s *applicationService) buildApplicationDetailResponse(ctx context.Context,
 		jobDetail.Location = j.Location
 		jobDetail.JobLevel = j.JobLevel
 		jobDetail.Status = j.Status
-		
+
 		// Get company name
 		comp, _ := s.companyRepo.FindByID(ctx, j.CompanyID)
 		if comp != nil {
 			jobDetail.CompanyName = comp.CompanyName
 		}
 	}
-	
+
 	// Get applicant profile
 	user, _ := s.userRepo.FindByID(ctx, app.UserID)
 	applicantProfile := application.ApplicantProfile{}
@@ -1366,38 +1529,38 @@ func (s *applicationService) buildApplicationDetailResponse(ctx context.Context,
 		}
 		applicantProfile.ResumeURL = app.ResumeURL
 	}
-	
+
 	// Get stages
 	stages, _ := s.appRepo.ListStagesByApplication(ctx, applicationID)
-	
+
 	// Get documents
 	documents, _ := s.appRepo.ListDocumentsByApplication(ctx, applicationID)
-	
+
 	// Get notes
 	notes, _ := s.appRepo.ListNotesByApplication(ctx, applicationID)
-	
+
 	// Get interviews
 	interviews, _ := s.appRepo.ListInterviewsByApplication(ctx, applicationID)
-	
+
 	// Get stats
 	stats, _ := s.appRepo.GetApplicationStats(ctx, applicationID)
-	
+
 	return &application.ApplicationDetailResponse{
-		Application:      *app,
-		Job:              jobDetail,
-		Applicant:        applicantProfile,
-		Stages:           stages,
-		Documents:        documents,
-		Notes:            notes,
-		Interviews:       interviews,
-		Stats:            stats,
+		Application: *app,
+		Job:         jobDetail,
+		Applicant:   applicantProfile,
+		Stages:      stages,
+		Documents:   documents,
+		Notes:       notes,
+		Interviews:  interviews,
+		Stats:       stats,
 	}, nil
 }
 
 // buildTimeline builds timeline from application events
 func (s *applicationService) buildTimeline(app *application.JobApplication, stages []application.JobApplicationStage, interviews []application.Interview) []application.TimelineEvent {
 	timeline := make([]application.TimelineEvent, 0)
-	
+
 	// Add application submitted event
 	timeline = append(timeline, application.TimelineEvent{
 		Date:        app.AppliedAt,
@@ -1405,7 +1568,7 @@ func (s *applicationService) buildTimeline(app *application.JobApplication, stag
 		Description: "Application submitted",
 		Actor:       "Applicant",
 	})
-	
+
 	// Add stage events
 	for _, stage := range stages {
 		timeline = append(timeline, application.TimelineEvent{
@@ -1415,7 +1578,7 @@ func (s *applicationService) buildTimeline(app *application.JobApplication, stag
 			Actor:       "Recruiter",
 		})
 	}
-	
+
 	// Add interview events
 	for _, interview := range interviews {
 		timeline = append(timeline, application.TimelineEvent{
@@ -1425,26 +1588,26 @@ func (s *applicationService) buildTimeline(app *application.JobApplication, stag
 			Actor:       "Recruiter",
 		})
 	}
-	
+
 	return timeline
 }
 
 // buildStageProgress builds stage progress information
 func (s *applicationService) buildStageProgress(stages []application.JobApplicationStage) []application.StageProgress {
 	progress := make([]application.StageProgress, 0, len(stages))
-	
+
 	for _, stage := range stages {
 		duration := ""
 		if stage.CompletedAt != nil {
 			d := stage.CompletedAt.Sub(stage.StartedAt)
 			duration = fmt.Sprintf("%.1f hours", d.Hours())
 		}
-		
+
 		status := "in_progress"
 		if stage.IsCompleted() {
 			status = "completed"
 		}
-		
+
 		progress = append(progress, application.StageProgress{
 			StageName:   stage.StageName,
 			StartedAt:   stage.StartedAt,
@@ -1453,7 +1616,7 @@ func (s *applicationService) buildStageProgress(stages []application.JobApplicat
 			Status:      status,
 		})
 	}
-	
+
 	return progress
 }
 
@@ -1463,14 +1626,14 @@ func (s *applicationService) buildDocumentStats(docs []application.ApplicationDo
 		TotalDocuments: int64(len(docs)),
 		DocumentTypes:  make(map[string]int64),
 	}
-	
+
 	for _, doc := range docs {
 		if doc.IsVerified {
 			stats.VerifiedDocuments++
 		}
 		stats.DocumentTypes[doc.DocumentType]++
 	}
-	
+
 	return stats
 }
 
@@ -1479,28 +1642,28 @@ func (s *applicationService) buildInterviewStats(interviews []application.Interv
 	stats := application.InterviewStats{
 		TotalInterviews: int64(len(interviews)),
 	}
-	
+
 	var totalScore float64
 	var scoreCount int
-	
+
 	for _, interview := range interviews {
 		if interview.IsCompleted() {
 			stats.CompletedInterviews++
 		}
-		
+
 		if interview.OverallScore != nil {
 			totalScore += *interview.OverallScore
 			scoreCount++
-			
+
 			if *interview.OverallScore > stats.HighestScore {
 				stats.HighestScore = *interview.OverallScore
 			}
 		}
 	}
-	
+
 	if scoreCount > 0 {
 		stats.AverageScore = totalScore / float64(scoreCount)
 	}
-	
+
 	return stats
 }

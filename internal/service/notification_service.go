@@ -5,22 +5,30 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
+	"keerja-backend/internal/domain/email"
 	"keerja-backend/internal/domain/notification"
 )
 
 // notificationService implements notification.NotificationService interface
 type notificationService struct {
-	notifRepo notification.NotificationRepository
-	// In production, inject push notification service (Firebase, OneSignal, etc.)
-	// pushService PushNotificationService
+	notifRepo    notification.NotificationRepository
+	pushService  notification.PushNotificationService
+	emailService email.EmailService
 }
 
 // NewNotificationService creates a new notification service instance
-func NewNotificationService(notifRepo notification.NotificationRepository) notification.NotificationService {
+func NewNotificationService(
+	notifRepo notification.NotificationRepository,
+	pushService notification.PushNotificationService,
+	emailService email.EmailService,
+) notification.NotificationService {
 	return &notificationService{
-		notifRepo: notifRepo,
+		notifRepo:    notifRepo,
+		pushService:  pushService,
+		emailService: emailService,
 	}
 }
 
@@ -403,16 +411,27 @@ func (s *notificationService) SendPushNotification(ctx context.Context, userID i
 		return nil // Skip if push disabled
 	}
 
-	// TODO: Implement push notification
-	// Integrate with Firebase Cloud Messaging, OneSignal, etc.
-	// Send push notification to user's devices
+	// Build push message from notification
+	pushMessage := s.buildPushMessage(notif)
 
-	fmt.Printf("\n====== PUSH NOTIFICATION ======\n")
-	fmt.Printf("User ID: %d\n", userID)
-	fmt.Printf("Title: %s\n", notif.Title)
-	fmt.Printf("Message: %s\n", notif.Message)
-	fmt.Printf("===============================\n\n")
+	// Send push notification via FCM
+	results, err := s.pushService.SendToUser(ctx, userID, pushMessage)
+	if err != nil {
+		log.Printf("Failed to send push notification to user %d: %v", userID, err)
+		return fmt.Errorf("failed to send push notification: %w", err)
+	}
 
+	// Log results
+	successCount := 0
+	for _, result := range results {
+		if result.Success {
+			successCount++
+		} else {
+			log.Printf("Push notification failed: %s - %s", result.ErrorCode, result.ErrorMessage)
+		}
+	}
+
+	log.Printf("Push notification sent to user %d: %d/%d successful", userID, successCount, len(results))
 	return nil
 }
 
@@ -475,5 +494,47 @@ func (s *notificationService) sendToChannels(ctx context.Context, notif *notific
 	// Send email notification if enabled and high priority
 	if prefs.EmailEnabled && notif.IsHighPriority() {
 		s.SendEmailNotification(ctx, notif.UserID, notif)
+	}
+}
+
+// buildPushMessage converts notification to push message
+func (s *notificationService) buildPushMessage(notif *notification.Notification) *notification.PushMessage {
+	// Parse data from JSON string
+	data := make(map[string]string)
+	if notif.Data != "" {
+		var parsedData map[string]interface{}
+		if err := json.Unmarshal([]byte(notif.Data), &parsedData); err == nil {
+			// Convert to string map for FCM
+			for k, v := range parsedData {
+				data[k] = fmt.Sprintf("%v", v)
+			}
+		}
+	}
+
+	// Add notification metadata to data payload
+	data["notification_id"] = fmt.Sprintf("%d", notif.ID)
+	data["type"] = notif.Type
+	data["category"] = notif.Category
+	if notif.ActionURL != "" {
+		data["action_url"] = notif.ActionURL
+	}
+	if notif.RelatedID != nil {
+		data["related_id"] = fmt.Sprintf("%d", *notif.RelatedID)
+		data["related_type"] = notif.RelatedType
+	}
+
+	// Map priority
+	priority := "normal"
+	if notif.Priority == "high" || notif.Priority == "urgent" {
+		priority = "high"
+	}
+
+	return &notification.PushMessage{
+		Title:       notif.Title,
+		Body:        notif.Message,
+		ImageURL:    notif.Icon,
+		Data:        data,
+		Priority:    priority,
+		ClickAction: notif.ActionURL,
 	}
 }

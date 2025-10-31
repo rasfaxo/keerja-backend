@@ -82,6 +82,16 @@ type Config struct {
 	GoogleClientID     string
 	GoogleClientSecret string
 	GoogleRedirectURI  string
+
+	// FCM Configuration
+	FCMEnabled         bool
+	FCMProjectID       string
+	FCMCredentialsFile string
+	FCMTimeout         time.Duration
+	FCMBatchSize       int
+	FCMMaxRetries      int
+	PushDefaultSound   string
+	PushDefaultTTL     int
 }
 
 var globalConfig *Config
@@ -164,6 +174,16 @@ func LoadConfig() *Config {
 		GoogleClientID:     getEnv("GOOGLE_CLIENT_ID", ""),
 		GoogleClientSecret: getEnv("GOOGLE_CLIENT_SECRET", ""),
 		GoogleRedirectURI:  getEnv("GOOGLE_REDIRECT_URI", "http://localhost:8080/api/auth/oauth/google/callback"),
+
+		// FCM Configuration
+		FCMEnabled:         getEnvAsBool("FCM_ENABLED", false),
+		FCMProjectID:       getEnv("FCM_PROJECT_ID", ""),
+		FCMCredentialsFile: getEnv("FCM_CREDENTIALS_FILE", "config/firebase-service-account.json"),
+		FCMTimeout:         time.Duration(getEnvAsInt("FCM_TIMEOUT_SECONDS", 30)) * time.Second,
+		FCMBatchSize:       getEnvAsInt("FCM_BATCH_SIZE", 500),
+		FCMMaxRetries:      getEnvAsInt("FCM_MAX_RETRIES", 3),
+		PushDefaultSound:   getEnv("PUSH_DEFAULT_SOUND", "default"),
+		PushDefaultTTL:     getEnvAsInt("PUSH_DEFAULT_TTL", 86400), // 24 hours
 	}
 
 	// Validate required configurations
@@ -200,6 +220,42 @@ func (c *Config) Validate() error {
 		if c.StorageProvider == "local" {
 			log.Println("WARNING: Using local storage in production. Consider using S3 or Cloudinary")
 		}
+		if c.FCMEnabled && c.FCMCredentialsFile == "" {
+			return fmt.Errorf("FCM_CREDENTIALS_FILE is required when FCM is enabled in production")
+		}
+	}
+
+	// Validate FCM configuration if enabled
+	if c.FCMEnabled {
+		if err := c.ValidateFCM(); err != nil {
+			return fmt.Errorf("FCM configuration error: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// ValidateFCM validates FCM-specific configuration
+func (c *Config) ValidateFCM() error {
+	if c.FCMProjectID == "" {
+		return fmt.Errorf("FCM_PROJECT_ID is required when FCM is enabled")
+	}
+
+	if c.FCMCredentialsFile == "" {
+		return fmt.Errorf("FCM_CREDENTIALS_FILE is required when FCM is enabled")
+	}
+
+	// Check if credentials file exists
+	if _, err := os.Stat(c.FCMCredentialsFile); os.IsNotExist(err) {
+		return fmt.Errorf("FCM credentials file not found at: %s", c.FCMCredentialsFile)
+	}
+
+	if c.FCMBatchSize <= 0 || c.FCMBatchSize > 1000 {
+		return fmt.Errorf("FCM_BATCH_SIZE must be between 1 and 1000 (recommended: 500)")
+	}
+
+	if c.FCMMaxRetries < 0 || c.FCMMaxRetries > 5 {
+		return fmt.Errorf("FCM_MAX_RETRIES must be between 0 and 5")
 	}
 
 	return nil

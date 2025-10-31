@@ -27,6 +27,11 @@ go.work.sum
 # env file
 .env
 
+# Firebase credentials (NEVER commit these!)
+firebase-service-account.json
+config/firebase-service-account.json
+**/firebase-service-account.json
+
 # Editor/IDE
 # .idea/
 # .vscode/
