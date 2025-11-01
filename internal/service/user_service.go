@@ -703,7 +703,9 @@ func (s *userService) AddSkill(ctx context.Context, userID int64, req *user.AddU
 
 // AddSkills adds multiple skills for a user
 // Each skill can be from skills_master or custom input
-func (s *userService) AddSkills(ctx context.Context, userID int64, req *user.AddUserSkillsRequest) error {
+func (s *userService) AddSkills(ctx context.Context, userID int64, req *user.AddUserSkillsRequest) ([]user.UserSkill, error) {
+	addedSkills := make([]user.UserSkill, 0, len(req.Skills))
+
 	for i, skillReq := range req.Skills {
 		skill := &user.UserSkill{
 			UserID:     userID,
@@ -715,7 +717,7 @@ func (s *userService) AddSkills(ctx context.Context, userID int64, req *user.Add
 			// Query skills_master to get skill name by ID
 			skillMaster, err := s.skillsMasterRepo.FindByID(ctx, *skillReq.SkillID)
 			if err != nil {
-				return fmt.Errorf("skill #%d: skill_id %d not found in skills_master: %w", i+1, *skillReq.SkillID, err)
+				return nil, fmt.Errorf("skill #%d: skill_id %d not found in skills_master: %w", i+1, *skillReq.SkillID, err)
 			}
 			skill.SkillName = skillMaster.Name
 		} else {
@@ -729,11 +731,13 @@ func (s *userService) AddSkills(ctx context.Context, userID int64, req *user.Add
 		}
 
 		if err := s.userRepo.AddSkill(ctx, skill); err != nil {
-			return fmt.Errorf("failed to add skill #%d: %w", i+1, err)
+			return nil, fmt.Errorf("failed to add skill #%d: %w", i+1, err)
 		}
+
+		addedSkills = append(addedSkills, *skill)
 	}
 
-	return nil
+	return addedSkills, nil
 }
 
 // UpdateSkill updates a skill entry

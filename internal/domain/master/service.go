@@ -64,6 +64,10 @@ type SkillsMasterService interface {
 	GetTypeStats(ctx context.Context) ([]TypeStatResponse, error)
 	GetDifficultyStats(ctx context.Context) ([]DifficultyStatResponse, error)
 
+	// Batch Operations
+	GetSkillsByIDs(ctx context.Context, ids []int64) ([]SkillResponse, error)
+	GetSkillsByNames(ctx context.Context, names []string) ([]SkillResponse, error)
+
 	// Hierarchy Operations
 	GetRootSkills(ctx context.Context) ([]SkillResponse, error)
 	GetChildSkills(ctx context.Context, parentID int64) ([]SkillResponse, error)
@@ -114,22 +118,22 @@ type SkillsMasterService interface {
 
 // CreateBenefitRequest represents a request to create a benefit
 type CreateBenefitRequest struct {
-	Code        string  `json:"code" validate:"required,min=2,max=50"`
-	Name        string  `json:"name" validate:"required,min=2,max=150"`
-	Category    string  `json:"category" validate:"required,oneof=financial health career lifestyle flexibility other"`
-	Description string  `json:"description,omitempty"`
-	Icon        string  `json:"icon,omitempty" validate:"omitempty,max=100"`
-	IsActive    bool    `json:"is_active"`
+	Code        string `json:"code" validate:"required,min=2,max=50"`
+	Name        string `json:"name" validate:"required,min=2,max=150"`
+	Category    string `json:"category" validate:"required,oneof=financial health career lifestyle flexibility other"`
+	Description string `json:"description,omitempty"`
+	Icon        string `json:"icon,omitempty" validate:"omitempty,max=100"`
+	IsActive    bool   `json:"is_active"`
 }
 
 // UpdateBenefitRequest represents a request to update a benefit
 type UpdateBenefitRequest struct {
-	Code        string  `json:"code,omitempty" validate:"omitempty,min=2,max=50"`
-	Name        string  `json:"name,omitempty" validate:"omitempty,min=2,max=150"`
-	Category    string  `json:"category,omitempty" validate:"omitempty,oneof=financial health career lifestyle flexibility other"`
-	Description string  `json:"description,omitempty"`
-	Icon        string  `json:"icon,omitempty" validate:"omitempty,max=100"`
-	IsActive    *bool   `json:"is_active,omitempty"`
+	Code        string `json:"code,omitempty" validate:"omitempty,min=2,max=50"`
+	Name        string `json:"name,omitempty" validate:"omitempty,min=2,max=150"`
+	Category    string `json:"category,omitempty" validate:"omitempty,oneof=financial health career lifestyle flexibility other"`
+	Description string `json:"description,omitempty"`
+	Icon        string `json:"icon,omitempty" validate:"omitempty,max=100"`
+	IsActive    *bool  `json:"is_active,omitempty"`
 }
 
 // CreateSkillRequest represents a request to create a skill
@@ -162,12 +166,12 @@ type UpdateSkillRequest struct {
 
 // BenefitImportData represents data for importing benefits
 type BenefitImportData struct {
-	Code        string  `json:"code"`
-	Name        string  `json:"name"`
-	Category    string  `json:"category"`
-	Description string  `json:"description,omitempty"`
-	Icon        string  `json:"icon,omitempty"`
-	IsActive    bool    `json:"is_active"`
+	Code        string `json:"code"`
+	Name        string `json:"name"`
+	Category    string `json:"category"`
+	Description string `json:"description,omitempty"`
+	Icon        string `json:"icon,omitempty"`
+	IsActive    bool   `json:"is_active"`
 }
 
 // SkillImportData represents data for importing skills
@@ -244,29 +248,29 @@ type SkillTreeResponse struct {
 
 // BenefitStatsResponse represents statistics about benefits
 type BenefitStatsResponse struct {
-	TotalBenefits     int64                    `json:"total_benefits"`
-	ActiveBenefits    int64                    `json:"active_benefits"`
-	InactiveBenefits  int64                    `json:"inactive_benefits"`
-	ByCategory        map[string]int64         `json:"by_category"`
-	AveragePopularity float64                  `json:"average_popularity"`
-	MostPopular       *BenefitResponse         `json:"most_popular,omitempty"`
-	TopCategories     []CategoryStatResponse   `json:"top_categories"`
+	TotalBenefits     int64                  `json:"total_benefits"`
+	ActiveBenefits    int64                  `json:"active_benefits"`
+	InactiveBenefits  int64                  `json:"inactive_benefits"`
+	ByCategory        map[string]int64       `json:"by_category"`
+	AveragePopularity float64                `json:"average_popularity"`
+	MostPopular       *BenefitResponse       `json:"most_popular,omitempty"`
+	TopCategories     []CategoryStatResponse `json:"top_categories"`
 }
 
 // SkillStatsResponse represents statistics about skills
 type SkillStatsResponse struct {
-	TotalSkills       int64                     `json:"total_skills"`
-	ActiveSkills      int64                     `json:"active_skills"`
-	InactiveSkills    int64                     `json:"inactive_skills"`
-	ByType            map[string]int64          `json:"by_type"`
-	ByDifficulty      map[string]int64          `json:"by_difficulty"`
-	ByCategory        map[int64]int64           `json:"by_category"`
-	RootSkills        int64                     `json:"root_skills"`
-	ChildSkills       int64                     `json:"child_skills"`
-	AveragePopularity float64                   `json:"average_popularity"`
-	MostPopular       *SkillResponse            `json:"most_popular,omitempty"`
-	TopTypes          []TypeStatResponse        `json:"top_types"`
-	TopDifficulties   []DifficultyStatResponse  `json:"top_difficulties"`
+	TotalSkills       int64                    `json:"total_skills"`
+	ActiveSkills      int64                    `json:"active_skills"`
+	InactiveSkills    int64                    `json:"inactive_skills"`
+	ByType            map[string]int64         `json:"by_type"`
+	ByDifficulty      map[string]int64         `json:"by_difficulty"`
+	ByCategory        map[int64]int64          `json:"by_category"`
+	RootSkills        int64                    `json:"root_skills"`
+	ChildSkills       int64                    `json:"child_skills"`
+	AveragePopularity float64                  `json:"average_popularity"`
+	MostPopular       *SkillResponse           `json:"most_popular,omitempty"`
+	TopTypes          []TypeStatResponse       `json:"top_types"`
+	TopDifficulties   []DifficultyStatResponse `json:"top_difficulties"`
 }
 
 // CategoryInfo represents category information
@@ -299,11 +303,11 @@ type DifficultyStatResponse struct {
 
 // ImportResult represents the result of an import operation
 type ImportResult struct {
-	TotalRecords    int      `json:"total_records"`
-	SuccessCount    int      `json:"success_count"`
-	FailureCount    int      `json:"failure_count"`
-	Errors          []string `json:"errors,omitempty"`
-	DuplicateCount  int      `json:"duplicate_count"`
+	TotalRecords   int      `json:"total_records"`
+	SuccessCount   int      `json:"success_count"`
+	FailureCount   int      `json:"failure_count"`
+	Errors         []string `json:"errors,omitempty"`
+	DuplicateCount int      `json:"duplicate_count"`
 }
 
 // BenefitExportData represents data for exporting benefits

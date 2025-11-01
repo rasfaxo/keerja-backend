@@ -39,7 +39,7 @@ type UserService interface {
 
 	// Skill management
 	AddSkill(ctx context.Context, userID int64, req *AddUserSkillRequest) error
-	AddSkills(ctx context.Context, userID int64, req *AddUserSkillsRequest) error
+	AddSkills(ctx context.Context, userID int64, req *AddUserSkillsRequest) ([]UserSkill, error)
 	UpdateSkill(ctx context.Context, userID int64, skillID int64, req *UpdateSkillRequest) error
 	DeleteSkill(ctx context.Context, userID int64, skillID int64) error
 	GetSkills(ctx context.Context, userID int64) ([]UserSkill, error)

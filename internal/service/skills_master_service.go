@@ -111,6 +111,54 @@ func (s *skillsMasterService) GetSkillsByType(ctx context.Context, skillType str
 	return responses, nil
 }
 
+// GetSkillsByIDs retrieves multiple skills by their IDs
+func (s *skillsMasterService) GetSkillsByIDs(ctx context.Context, ids []int64) ([]master.SkillResponse, error) {
+	if len(ids) == 0 {
+		return []master.SkillResponse{}, nil
+	}
+
+	skills := make([]master.SkillResponse, 0, len(ids))
+
+	// Fetch each skill by ID
+	for _, id := range ids {
+		skill, err := s.repo.FindByID(ctx, id)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get skill with ID %d: %w", id, err)
+		}
+
+		// Skip if skill not found (don't fail the entire request)
+		if skill != nil {
+			skills = append(skills, s.toSkillResponse(skill))
+		}
+	}
+
+	return skills, nil
+}
+
+// GetSkillsByNames retrieves multiple skills by their names
+func (s *skillsMasterService) GetSkillsByNames(ctx context.Context, names []string) ([]master.SkillResponse, error) {
+	if len(names) == 0 {
+		return []master.SkillResponse{}, nil
+	}
+
+	skills := make([]master.SkillResponse, 0, len(names))
+
+	// Fetch each skill by name
+	for _, name := range names {
+		skill, err := s.repo.FindByName(ctx, name)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get skill '%s': %w", name, err)
+		}
+
+		// Skip if skill not found (don't fail the entire request)
+		if skill != nil {
+			skills = append(skills, s.toSkillResponse(skill))
+		}
+	}
+
+	return skills, nil
+}
+
 // Helper methods
 
 // toSkillResponse converts entity to response DTO
