@@ -18,32 +18,9 @@ import (
 	"keerja-backend/internal/service"
 	"keerja-backend/internal/utils"
 
-	_ "keerja-backend/docs" // Import generated docs
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
-	fiberSwagger "github.com/swaggo/fiber-swagger"
 )
-
-// @title Keerja Backend API
-// @version 1.0
-// @description Job platform backend API with authentication, job management, and push notifications
-// @termsOfService http://swagger.io/terms/
-
-// @contact.name API Support
-// @contact.email support@keerja.com
-
-// @license.name MIT
-// @license.url https://opensource.org/licenses/MIT
-
-// @host localhost:3000
-// @BasePath /
-// @schemes http https
-
-// @securityDefinitions.apikey BearerAuth
-// @in header
-// @name Authorization
-// @description Type "Bearer" followed by a space and JWT token
 
 func main() {
 	// Load environment variables
@@ -67,20 +44,7 @@ func main() {
 	}
 	defer config.CloseDatabase()
 	db := config.GetDB()
-	appLogger.Info("✓ Database connected successfully")
-
-	// Initialize FCM (Firebase Cloud Messaging)
-	if cfg.FCMEnabled {
-		appLogger.Info("Initializing Firebase Cloud Messaging...")
-		if err := config.InitFCM(cfg); err != nil {
-			appLogger.WithError(err).Error("Failed to initialize FCM - push notifications will be disabled")
-		} else {
-			appLogger.Info("✓ FCM initialized successfully")
-		}
-		defer config.CloseFCM()
-	} else {
-		appLogger.Info("FCM is disabled - push notifications will not be sent")
-	}
+	appLogger.Info(" Database connected successfully")
 
 	// Initialize validator
 	utils.InitValidator()
@@ -96,8 +60,9 @@ func main() {
 	oauthRepo := postgres.NewOAuthRepository(db)
 	otpCodeRepo := postgres.NewOTPCodeRepository(db)
 	refreshTokenRepo := postgres.NewRefreshTokenRepository(db)
-	notificationRepo := postgres.NewNotificationRepository(db)
-	deviceTokenRepo := postgres.NewDeviceTokenRepository(db) // FCM device tokens
+
+	// FCM Notification repository
+	deviceTokenRepo := postgres.NewDeviceTokenRepository(db)
 
 	// Initialize services
 	appLogger.Info("Initializing services...")
@@ -106,11 +71,14 @@ func main() {
 	// Initialize email service with config
 	emailService := service.NewEmailService(emailRepo, cfg)
 
-	// Initialize FCM push service
-	fcmPushService := service.NewFCMPushService(deviceTokenRepo, cfg)
-
-	// Initialize notification service with FCM support
-	notificationService := service.NewNotificationService(notificationRepo, fcmPushService, emailService)
+	// Initialize FCM service (Firebase Cloud Messaging)
+	appLogger.Info("Initializing Firebase Cloud Messaging (FCM)...")
+	fcmService := service.NewFCMPushService(deviceTokenRepo, cfg)
+	if config.IsFCMEnabled() {
+		appLogger.Info("FCM service initialized successfully")
+	} else {
+		appLogger.Warn("FCM service disabled (set FCM_ENABLED=true to enable)")
+	}
 
 	// Initialize upload service
 	uploadConfig := service.UploadServiceConfig{
@@ -174,7 +142,7 @@ func main() {
 	userService := service.NewUserService(userRepo, uploadService, skillsMasterRepo)
 	companyService := service.NewCompanyService(companyRepo, uploadService, cacheService, db)
 	jobService := service.NewJobService(jobRepo, companyRepo, userRepo)
-	applicationService := service.NewApplicationService(applicationRepo, jobRepo, userRepo, companyRepo, emailService, notificationService)
+	applicationService := service.NewApplicationService(applicationRepo, jobRepo, userRepo, companyRepo, emailService, nil) // notificationService disabled temporarily
 	skillsMasterService := service.NewSkillsMasterService(skillsMasterRepo)
 
 	// Initialize handlers
@@ -199,15 +167,11 @@ func main() {
 	appLogger.Info("Initializing master data handlers...")
 	skillsMasterHandler := http.NewSkillsMasterHandler(skillsMasterService)
 
-	// Initialize notification handler
-	appLogger.Info("Initializing notification handler...")
-	notificationHandler := http.NewNotificationHandler(notificationService)
-
-	// Initialize device token & push notification handlers
-	appLogger.Info("📱 Initializing FCM handlers...")
-	deviceTokenHandler := http.NewDeviceTokenHandler(deviceTokenRepo, fcmPushService, appLogger)
-	pushNotificationHandler := http.NewPushNotificationHandler(fcmPushService, appLogger)
-	appLogger.Info("✓ FCM handlers initialized successfully")
+	// Initialize FCM notification handlers
+	appLogger.Info("Initializing FCM notification handlers...")
+	deviceTokenHandler := http.NewDeviceTokenHandler(deviceTokenRepo, fcmService, appLogger)
+	pushNotificationHandler := http.NewPushNotificationHandler(fcmService, appLogger)
+	appLogger.Info("FCM handlers initialized successfully")
 
 	// Setup Fiber app
 	app := fiber.New(fiber.Config{
@@ -265,10 +229,7 @@ func main() {
 		// Master data handlers
 		SkillsMasterHandler: skillsMasterHandler,
 
-		// Notification handler
-		NotificationHandler: notificationHandler,
-
-		// Device Token & Push Notification handlers
+		// FCM Notification handlers
 		DeviceTokenHandler:      deviceTokenHandler,
 		PushNotificationHandler: pushNotificationHandler,
 
@@ -276,10 +237,6 @@ func main() {
 		CompanyService: companyService,
 	}
 	routes.SetupRoutes(app, deps)
-
-	// Swagger documentation
-	app.Get("/swagger/*", fiberSwagger.WrapHandler)
-	appLogger.Info("✓ Swagger documentation available at /swagger/index.html")
 
 	// 404 handler (must be last)
 	app.Use(middleware.NotFoundHandler())
@@ -296,19 +253,6 @@ func main() {
 	invitationExpiryJob := jobs.NewInvitationExpiryJob(companyService)
 	if err := scheduler.Register(invitationExpiryJob); err != nil {
 		appLogger.WithError(err).Fatal("Failed to register invitation expiry job")
-	}
-
-	// Register device token cleanup job
-	deviceTokenCleanupConfig := jobs.CleanupConfig{
-		InactiveDays:        90,  // Clean tokens inactive for 90+ days
-		MaxFailureCount:     10,  // Clean tokens with 10+ failures
-		BatchSize:           100, // Process 100 tokens per batch
-		EnableInactiveClean: true,
-		EnableFailureClean:  true,
-	}
-	deviceTokenCleanupJob := jobs.NewDeviceTokenCleanupJob(deviceTokenRepo, appLogger, deviceTokenCleanupConfig)
-	if err := scheduler.Register(deviceTokenCleanupJob); err != nil {
-		appLogger.WithError(err).Fatal("Failed to register device token cleanup job")
 	}
 
 	// Start scheduler

@@ -28,8 +28,9 @@ type Dependencies struct {
 	// Master data handlers
 	SkillsMasterHandler *http.SkillsMasterHandler // Skills master data (8 endpoints)
 
-	// Notification handler
-	NotificationHandler *http.NotificationHandler // Notification management (14 endpoints)
+	// FCM Notification handlers (Firebase Cloud Messaging)
+	DeviceTokenHandler      *http.DeviceTokenHandler      // Device token management (6 endpoints)
+	PushNotificationHandler *http.PushNotificationHandler // Push notifications (5 endpoints)
 
 	// Services (for middlewares)
 	CompanyService company.CompanyService
@@ -63,5 +64,12 @@ func SetupRoutes(app *fiber.App, deps *Dependencies) {
 	SetupCompanyRoutes(api, deps, authMw, permMw)    // company_routes.go
 	SetupAdminRoutes(api, deps, authMw)              // admin_routes.go
 	SetupSkillsRoutes(api, deps.SkillsMasterHandler) // skills_routes.go
-	SetupNotificationRoutes(api, deps, authMw)       // notification_routes.go
+
+	// FCM Notification routes
+	if deps.DeviceTokenHandler != nil {
+		SetupDeviceTokenRoutes(api, deps.DeviceTokenHandler, authMw) // device_token_routes.go
+	}
+	if deps.PushNotificationHandler != nil {
+		SetupPushNotificationRoutes(api, deps.PushNotificationHandler, authMw) // push_notification_routes.go
+	}
 }
