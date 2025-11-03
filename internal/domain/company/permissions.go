@@ -192,6 +192,7 @@ func ValidateRole(role string) bool {
 // GetRoleDescription returns a description for each role
 func GetRoleDescription(role string) string {
 	descriptions := map[string]string{
+		"owner":     "Company owner with full control including ability to delete company and transfer ownership",
 		"admin":     "Full access to all company features including employee management, job postings, applications, and company settings",
 		"recruiter": "Can create and manage job postings, review applications, and respond to reviews. Cannot manage company settings or employees",
 		"viewer":    "Read-only access to company data. Can view jobs, applications, reviews, and statistics but cannot make changes",
@@ -209,6 +210,7 @@ var RoleHierarchy = map[string]int{
 	"viewer":    1,
 	"recruiter": 2,
 	"admin":     3,
+	"owner":     4, // Highest privilege
 }
 
 // HasHigherRole checks if role1 has higher or equal hierarchy than role2

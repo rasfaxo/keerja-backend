@@ -123,9 +123,9 @@ func SetupCompanyRoutes(api fiber.Router, deps *Dependencies, authMw *middleware
 		deps.CompanyBasicHandler.UpdateCompany,
 	)
 
-	// Delete company (admin only)
+	// Delete company (owner or admin only)
 	protected.Delete("/:id",
-		permMw.RequireAdmin(),
+		permMw.RequireOwnerOrAdmin(),
 		deps.CompanyBasicHandler.DeleteCompany,
 	)
 

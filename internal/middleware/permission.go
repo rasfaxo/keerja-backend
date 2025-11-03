@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"keerja-backend/internal/domain/company"
 	"keerja-backend/internal/utils"
 
@@ -78,8 +79,15 @@ func (pm *PermissionMiddleware) RequireRole(requiredRole string) fiber.Handler {
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "You are not an employer of this company", err.Error())
 		}
 
+		// Debug logging
+		fmt.Printf("[DEBUG] Permission Check - UserID: %d, CompanyID: %d, UserRole: '%s', RequiredRole: '%s'\n", 
+			userID, companyID, employerUser.Role, requiredRole)
+
 		// Check if user has required role or higher
-		if !company.HasHigherRole(employerUser.Role, requiredRole) {
+		hasPermission := company.HasHigherRole(employerUser.Role, requiredRole)
+		fmt.Printf("[DEBUG] HasHigherRole('%s', '%s') = %v\n", employerUser.Role, requiredRole, hasPermission)
+		
+		if !hasPermission {
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "Insufficient role. Required: "+requiredRole+", Your role: "+employerUser.Role, "")
 		}
 
@@ -94,6 +102,11 @@ func (pm *PermissionMiddleware) RequireRole(requiredRole string) fiber.Handler {
 // RequireAdmin checks if the user is an admin
 func (pm *PermissionMiddleware) RequireAdmin() fiber.Handler {
 	return pm.RequireRole("admin")
+}
+
+// RequireOwnerOrAdmin checks if the user is an owner or admin 
+func (pm *PermissionMiddleware) RequireOwnerOrAdmin() fiber.Handler {
+	return pm.RequireRole("admin") // This will pass for both admin (level 3) and owner (level 4)
 }
 
 // RequireRecruiterOrAbove checks if the user is a recruiter or admin
