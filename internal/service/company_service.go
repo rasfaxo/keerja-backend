@@ -8,6 +8,7 @@ import (
 
 	"keerja-backend/internal/cache"
 	"keerja-backend/internal/domain/company"
+	"keerja-backend/internal/domain/master"
 	"keerja-backend/internal/utils"
 
 	"gorm.io/gorm"
@@ -27,19 +28,33 @@ const (
 
 // companyService implements the CompanyService interface
 type companyService struct {
-	companyRepo   company.CompanyRepository
-	uploadService UploadService
-	cache         cache.Cache
-	db            *gorm.DB // GORM DB for transaction support
+	companyRepo        company.CompanyRepository
+	uploadService      UploadService
+	cache              cache.Cache
+	db                 *gorm.DB // GORM DB for transaction support
+	industryService    master.IndustryService
+	companySizeService master.CompanySizeService
+	districtService    master.DistrictService
 }
 
 // NewCompanyService creates a new company service instance
-func NewCompanyService(companyRepo company.CompanyRepository, uploadService UploadService, cacheService cache.Cache, db *gorm.DB) company.CompanyService {
+func NewCompanyService(
+	companyRepo company.CompanyRepository,
+	uploadService UploadService,
+	cacheService cache.Cache,
+	db *gorm.DB,
+	industryService master.IndustryService,
+	companySizeService master.CompanySizeService,
+	districtService master.DistrictService,
+) company.CompanyService {
 	return &companyService{
-		companyRepo:   companyRepo,
-		uploadService: uploadService,
-		cache:         cacheService,
-		db:            db,
+		companyRepo:        companyRepo,
+		uploadService:      uploadService,
+		cache:              cacheService,
+		db:                 db,
+		industryService:    industryService,
+		companySizeService: companySizeService,
+		districtService:    districtService,
 	}
 }
 
@@ -51,8 +66,29 @@ func NewCompanyService(companyRepo company.CompanyRepository, uploadService Uplo
 func (s *companyService) RegisterCompany(ctx context.Context, req *company.RegisterCompanyRequest, userID int64) (*company.Company, error) {
 	var comp *company.Company
 
+	// Validate Master Data IDs
+	err := s.ValidateMasterDataIDs(ctx, req.IndustryID, req.CompanySizeID, req.DistrictID)
+	if err != nil {
+		return nil, fmt.Errorf("master data validation failed: %w", err)
+	}
+
+	// Auto-populate City and Province from District if provided
+	var cityID, provinceID *int64
+	if req.DistrictID != nil {
+		// Get district with relations to extract city and province IDs
+		district, err := s.districtService.GetByID(ctx, *req.DistrictID)
+		if err == nil && district != nil {
+			if district.City != nil {
+				cityID = &district.City.ID
+				if district.City.Province != nil {
+					provinceID = &district.City.Province.ID
+				}
+			}
+		}
+	}
+
 	// Execute in transaction
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err = s.db.Transaction(func(tx *gorm.DB) error {
 		// Generate unique slug from company name
 		slug := utils.GenerateSlug(req.CompanyName)
 
@@ -69,20 +105,33 @@ func (s *companyService) RegisterCompany(ctx context.Context, req *company.Regis
 			Slug:               slug,
 			LegalName:          req.LegalName,
 			RegistrationNumber: req.RegistrationNumber,
-			Industry:           req.Industry,
-			CompanyType:        req.CompanyType,
-			SizeCategory:       req.SizeCategory,
-			WebsiteURL:         req.WebsiteURL,
-			EmailDomain:        req.EmailDomain,
-			Phone:              req.Phone,
-			Address:            req.Address,
-			City:               req.City,
-			Province:           req.Province,
-			Country:            "Indonesia", // Default
-			PostalCode:         req.PostalCode,
-			About:              req.About,
-			IsActive:           true,
-			Verified:           false,
+
+			// Master Data Fields
+			IndustryID:    req.IndustryID,
+			CompanySizeID: req.CompanySizeID,
+			DistrictID:    req.DistrictID,
+			CityID:        cityID,     // Auto-populated from District
+			ProvinceID:    provinceID, // Auto-populated from District
+			FullAddress:   req.FullAddress,
+			Description:   req.Description,
+
+			// Legacy Fields (for backward compatibility)
+			Industry:     req.Industry,
+			SizeCategory: req.SizeCategory,
+			City:         req.City,
+			Province:     req.Province,
+			Address:      req.Address,
+
+			// Other Fields
+			CompanyType: req.CompanyType,
+			WebsiteURL:  req.WebsiteURL,
+			EmailDomain: req.EmailDomain,
+			Phone:       req.Phone,
+			Country:     "Indonesia", // Default
+			PostalCode:  req.PostalCode,
+			About:       req.About,
+			IsActive:    true,
+			Verified:    false,
 		}
 
 		if req.Country != nil {
@@ -136,6 +185,16 @@ func (s *companyService) RegisterCompany(ctx context.Context, req *company.Regis
 	s.cache.DeletePattern("companies:list:*")
 	if comp.Verified {
 		s.cache.DeletePattern("companies:verified:*")
+	}
+
+	// Return company with preloaded master data
+	// This ensures response includes full master data details
+	if comp.IndustryID != nil || comp.CompanySizeID != nil || comp.DistrictID != nil {
+		companyWithData, err := s.GetCompanyWithMasterData(ctx, comp.ID)
+		if err == nil {
+			return companyWithData, nil
+		}
+		// If preloading fails, still return the created company
 	}
 
 	return comp, nil
@@ -197,6 +256,29 @@ func (s *companyService) UpdateCompany(ctx context.Context, companyID int64, req
 		return fmt.Errorf("company not found: %w", err)
 	}
 
+	// Validate Master Data IDs if provided
+	if req.IndustryID != nil || req.CompanySizeID != nil || req.DistrictID != nil {
+		err := s.ValidateMasterDataIDs(ctx, req.IndustryID, req.CompanySizeID, req.DistrictID)
+		if err != nil {
+			return fmt.Errorf("master data validation failed: %w", err)
+		}
+
+		// Auto-populate City and Province from District if provided
+		if req.DistrictID != nil {
+			district, err := s.districtService.GetByID(ctx, *req.DistrictID)
+			if err == nil && district != nil {
+				if district.City != nil {
+					cityID := district.City.ID
+					comp.CityID = &cityID
+					if district.City.Province != nil {
+						provinceID := district.City.Province.ID
+						comp.ProvinceID = &provinceID
+					}
+				}
+			}
+		}
+	}
+
 	// Update fields if provided
 	if req.CompanyName != nil {
 		comp.CompanyName = *req.CompanyName
@@ -217,6 +299,25 @@ func (s *companyService) UpdateCompany(ctx context.Context, companyID int64, req
 	if req.RegistrationNumber != nil {
 		comp.RegistrationNumber = req.RegistrationNumber
 	}
+
+	// Master Data Fields (NEW - Phase 9)
+	if req.IndustryID != nil {
+		comp.IndustryID = req.IndustryID
+	}
+	if req.CompanySizeID != nil {
+		comp.CompanySizeID = req.CompanySizeID
+	}
+	if req.DistrictID != nil {
+		comp.DistrictID = req.DistrictID
+	}
+	if req.FullAddress != nil {
+		comp.FullAddress = *req.FullAddress
+	}
+	if req.Description != nil {
+		comp.Description = req.Description
+	}
+
+	// Legacy Fields (for backward compatibility)
 	if req.Industry != nil {
 		comp.Industry = req.Industry
 	}
@@ -226,15 +327,6 @@ func (s *companyService) UpdateCompany(ctx context.Context, companyID int64, req
 	if req.SizeCategory != nil {
 		comp.SizeCategory = req.SizeCategory
 	}
-	if req.WebsiteURL != nil {
-		comp.WebsiteURL = req.WebsiteURL
-	}
-	if req.EmailDomain != nil {
-		comp.EmailDomain = req.EmailDomain
-	}
-	if req.Phone != nil {
-		comp.Phone = req.Phone
-	}
 	if req.Address != nil {
 		comp.Address = req.Address
 	}
@@ -243,6 +335,17 @@ func (s *companyService) UpdateCompany(ctx context.Context, companyID int64, req
 	}
 	if req.Province != nil {
 		comp.Province = req.Province
+	}
+
+	// Other Fields
+	if req.WebsiteURL != nil {
+		comp.WebsiteURL = req.WebsiteURL
+	}
+	if req.EmailDomain != nil {
+		comp.EmailDomain = req.EmailDomain
+	}
+	if req.Phone != nil {
+		comp.Phone = req.Phone
 	}
 	if req.PostalCode != nil {
 		comp.PostalCode = req.PostalCode
@@ -1914,23 +2017,177 @@ func (s *companyService) ExpireOldInvitations(ctx context.Context) (int64, error
 
 // GetEmployerUser retrieves employer user by user ID and company ID
 func (s *companyService) GetEmployerUser(ctx context.Context, userID, companyID int64) (*company.EmployerUser, error) {
-	// Get all employer users
-	// Note: This could be optimized with a specific repository method
-	// For now, we use CheckEmployerPermission as a workaround
-	hasPermission, err := s.CheckEmployerPermission(ctx, userID, companyID, "viewer")
+	// Use repository method to get the actual employer user record with correct role
+	employerUser, err := s.companyRepo.FindEmployerUserByUserAndCompany(ctx, userID, companyID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to check employer status: %w", err)
+		return nil, fmt.Errorf("failed to get employer user: %w", err)
 	}
 
-	if !hasPermission {
+	if employerUser == nil {
 		return nil, fmt.Errorf("user is not an employer of this company")
 	}
 
-	// Create a basic employer user object
-	// TODO: Implement proper GetEmployerUser in repository
-	return &company.EmployerUser{
-		UserID:    userID,
-		CompanyID: companyID,
-		Role:      "viewer", // Default role, should be fetched from database
-	}, nil
+	return employerUser, nil
+}
+
+// =============================================================================
+// Master Data Validation Methods (NEW - Phase 8)
+// =============================================================================
+
+// ValidateIndustryID validates if industry ID exists and is active
+func (s *companyService) ValidateIndustryID(ctx context.Context, industryID int64) error {
+	// Get industry from master data service
+	industry, err := s.industryService.GetByID(ctx, industryID)
+	if err != nil {
+		return fmt.Errorf("failed to validate industry: %w", err)
+	}
+
+	if industry == nil {
+		return fmt.Errorf("industry with ID %d not found", industryID)
+	}
+
+	if !industry.IsActive {
+		return fmt.Errorf("industry with ID %d is not active", industryID)
+	}
+
+	return nil
+}
+
+// ValidateCompanySizeID validates if company size ID exists and is active
+func (s *companyService) ValidateCompanySizeID(ctx context.Context, companySizeID int64) error {
+	// Get company size from master data service
+	companySize, err := s.companySizeService.GetByID(ctx, companySizeID)
+	if err != nil {
+		return fmt.Errorf("failed to validate company size: %w", err)
+	}
+
+	if companySize == nil {
+		return fmt.Errorf("company size with ID %d not found", companySizeID)
+	}
+
+	if !companySize.IsActive {
+		return fmt.Errorf("company size with ID %d is not active", companySizeID)
+	}
+
+	return nil
+}
+
+// ValidateDistrictID validates if district ID exists and is active
+// This also validates the full location hierarchy (District -> City -> Province)
+func (s *companyService) ValidateDistrictID(ctx context.Context, districtID int64) error {
+	// Get district from master data service (includes City and Province relations)
+	district, err := s.districtService.GetByID(ctx, districtID)
+	if err != nil {
+		return fmt.Errorf("failed to validate district: %w", err)
+	}
+
+	if district == nil {
+		return fmt.Errorf("district with ID %d not found", districtID)
+	}
+
+	if !district.IsActive {
+		return fmt.Errorf("district with ID %d is not active", districtID)
+	}
+
+	// Validate City (should be included in response)
+	if district.City == nil {
+		return fmt.Errorf("district with ID %d has no associated city", districtID)
+	}
+
+	if !district.City.IsActive {
+		return fmt.Errorf("city associated with district %d is not active", districtID)
+	}
+
+	// Validate Province (should be included via City)
+	if district.City.Province == nil {
+		return fmt.Errorf("city associated with district %d has no associated province", districtID)
+	}
+
+	if !district.City.Province.IsActive {
+		return fmt.Errorf("province associated with district %d is not active", districtID)
+	}
+
+	return nil
+}
+
+// ValidateMasterDataIDs validates all master data IDs in a single call
+func (s *companyService) ValidateMasterDataIDs(ctx context.Context, industryID, companySizeID, districtID *int64) error {
+	// Validate Industry ID if provided
+	if industryID != nil {
+		if err := s.ValidateIndustryID(ctx, *industryID); err != nil {
+			return err
+		}
+	}
+
+	// Validate Company Size ID if provided
+	if companySizeID != nil {
+		if err := s.ValidateCompanySizeID(ctx, *companySizeID); err != nil {
+			return err
+		}
+	}
+
+	// Validate District ID (includes City and Province) if provided
+	if districtID != nil {
+		if err := s.ValidateDistrictID(ctx, *districtID); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// GetCompanyWithMasterData retrieves company by ID with all master data preloaded
+func (s *companyService) GetCompanyWithMasterData(ctx context.Context, id int64) (*company.Company, error) {
+	// Try cache first
+	cacheKey := fmt.Sprintf("company:masterdata:%d", id)
+
+	found, ok := s.cache.Get(cacheKey)
+	if ok && found != nil {
+		if cachedComp, ok := found.(*company.Company); ok && cachedComp != nil {
+			return cachedComp, nil
+		}
+	}
+
+	// Get from repository with master data preloaded
+	comp, err := s.companyRepo.FindByIDWithMasterData(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get company with master data: %w", err)
+	}
+
+	if comp == nil {
+		return nil, fmt.Errorf("company not found")
+	}
+
+	// Cache for 10 minutes
+	s.cache.Set(cacheKey, comp, CompanyDetailTTL)
+
+	return comp, nil
+}
+
+// GetCompanyBySlugWithMasterData retrieves company by slug with all master data preloaded
+func (s *companyService) GetCompanyBySlugWithMasterData(ctx context.Context, slug string) (*company.Company, error) {
+	// Try cache first
+	cacheKey := fmt.Sprintf("company:slug:masterdata:%s", slug)
+
+	found, ok := s.cache.Get(cacheKey)
+	if ok && found != nil {
+		if cachedComp, ok := found.(*company.Company); ok && cachedComp != nil {
+			return cachedComp, nil
+		}
+	}
+
+	// Get from repository with master data preloaded
+	comp, err := s.companyRepo.FindBySlugWithMasterData(ctx, slug)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get company by slug with master data: %w", err)
+	}
+
+	if comp == nil {
+		return nil, fmt.Errorf("company not found")
+	}
+
+	// Cache for 10 minutes
+	s.cache.Set(cacheKey, comp, CompanyDetailTTL)
+
+	return comp, nil
 }

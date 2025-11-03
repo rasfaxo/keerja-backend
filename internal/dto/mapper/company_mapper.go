@@ -52,28 +52,92 @@ func ToCompanyDetailResponse(c *company.Company) *response.CompanyDetailResponse
 		Slug:               c.Slug,
 		LegalName:          PtrToString(c.LegalName),
 		RegistrationNumber: PtrToString(c.RegistrationNumber),
-		Industry:           PtrToString(c.Industry),
-		CompanyType:        PtrToString(c.CompanyType),
-		SizeCategory:       PtrToString(c.SizeCategory),
-		WebsiteURL:         PtrToString(c.WebsiteURL),
-		EmailDomain:        PtrToString(c.EmailDomain),
-		Phone:              PtrToString(c.Phone),
-		Address:            PtrToString(c.Address),
-		City:               PtrToString(c.City),
-		Province:           PtrToString(c.Province),
-		Country:            c.Country,
-		PostalCode:         PtrToString(c.PostalCode),
-		Latitude:           c.Latitude,
-		Longitude:          c.Longitude,
-		LogoURL:            PtrToString(c.LogoURL),
-		BannerURL:          PtrToString(c.BannerURL),
-		About:              PtrToString(c.About),
-		Culture:            PtrToString(c.Culture),
-		Verified:           c.Verified,
-		VerifiedAt:         c.VerifiedAt,
-		IsActive:           c.IsActive,
-		CreatedAt:          c.CreatedAt,
-		UpdatedAt:          c.UpdatedAt,
+
+		// Master Data Fields (NEW - Phase 9)
+		FullAddress: c.FullAddress,
+		Description: PtrToString(c.Description),
+
+		// Legacy Fields (backward compatibility)
+		Industry:     c.GetIndustryName(),     // fallback for industry
+		SizeCategory: c.GetCompanySizeLabel(), // fallback for size category
+		City:         PtrToString(c.City),
+		Province:     PtrToString(c.Province),
+		Address:      PtrToString(c.Address),
+
+		// Other Fields
+		CompanyType: PtrToString(c.CompanyType),
+		WebsiteURL:  PtrToString(c.WebsiteURL),
+		EmailDomain: PtrToString(c.EmailDomain),
+		Phone:       PtrToString(c.Phone),
+		Country:     c.Country,
+		PostalCode:  PtrToString(c.PostalCode),
+		Latitude:    c.Latitude,
+		Longitude:   c.Longitude,
+		LogoURL:     PtrToString(c.LogoURL),
+		BannerURL:   PtrToString(c.BannerURL),
+		About:       PtrToString(c.About),
+		Culture:     PtrToString(c.Culture),
+		Verified:    c.Verified,
+		VerifiedAt:  c.VerifiedAt,
+		IsActive:    c.IsActive,
+		CreatedAt:   c.CreatedAt,
+		UpdatedAt:   c.UpdatedAt,
+	}
+
+	// Map Master Data Relations
+	if c.HasMasterDataRelations() {
+		// Map Industry
+		if industry := c.GetIndustry(); industry != nil {
+			resp.IndustryDetail = &response.MasterIndustryResponse{
+				ID:          industry.ID,
+				Name:        industry.Name,
+				Slug:        industry.Slug,
+				Description: industry.GetDescription(),
+				IconURL:     industry.GetIconURL(),
+			}
+		}
+
+		// Map Company Size
+		if companySize := c.GetCompanySize(); companySize != nil {
+			maxEmp := companySize.GetMaxEmployees()
+			resp.CompanySizeDetail = &response.MasterCompanySizeResponse{
+				ID:           companySize.ID,
+				Label:        companySize.Label,
+				Code:         companySize.Label, // Use label as code
+				MinEmployees: companySize.MinEmployees,
+				MaxEmployees: &maxEmp,
+				Description:  companySize.GetRange(), // Use GetRange() for description
+			}
+		}
+
+		// Map Location (District -> City -> Province)
+		if district := c.GetDistrict(); district != nil && c.GetCity() != nil && c.GetProvince() != nil {
+			city := c.GetCity()
+			province := c.GetProvince()
+
+			resp.LocationDetail = &response.CompanyLocationResponse{
+				Province: response.ProvinceResponse{
+					ID:   province.ID,
+					Code: province.Code,
+					Name: province.Name,
+				},
+				City: response.CityResponse{
+					ID:         city.ID,
+					Code:       city.Code,
+					Name:       city.Name,
+					Type:       city.Type,
+					FullName:   city.GetFullName(),
+					ProvinceID: city.ProvinceID,
+				},
+				District: response.DistrictResponse{
+					ID:     district.ID,
+					Code:   district.Code,
+					Name:   district.Name,
+					CityID: district.CityID,
+				},
+				FullLocation: c.GetFullLocation(), // e.g., "Batujajar, Kabupaten Bandung Barat, Jawa Barat"
+			}
+		}
 	}
 
 	// Map profile

@@ -115,39 +115,63 @@ type RegisterCompanyRequest struct {
 	CompanyName        string
 	LegalName          *string
 	RegistrationNumber *string
-	Industry           *string
-	CompanyType        *string
-	SizeCategory       *string
-	WebsiteURL         *string
-	EmailDomain        *string
-	Phone              *string
-	Address            *string
-	City               *string
-	Province           *string
-	Country            *string
-	PostalCode         *string
-	About              *string
+
+	// Master Data Relations
+	IndustryID    *int64
+	CompanySizeID *int64
+	DistrictID    *int64
+	FullAddress   string
+	Description   *string
+
+	// Legacy Fields (for backward compatibility)
+	Industry     *string
+	CompanyType  *string
+	SizeCategory *string
+	Address      *string
+	City         *string
+	Province     *string
+
+	// Other Fields
+	WebsiteURL  *string
+	EmailDomain *string
+	Phone       *string
+	Country     *string
+	PostalCode  *string
+	About       *string
 }
 
 type UpdateCompanyRequest struct {
 	CompanyName        *string
 	LegalName          *string
 	RegistrationNumber *string
-	Industry           *string
-	CompanyType        *string
-	SizeCategory       *string
-	WebsiteURL         *string
-	EmailDomain        *string
-	Phone              *string
-	Address            *string
-	City               *string
-	Province           *string
-	PostalCode         *string
-	Latitude           *float64
-	Longitude          *float64
-	About              *string
-	Culture            *string
-	Benefits           []string
+
+	// Master Data Relations
+	IndustryID    *int64
+	CompanySizeID *int64
+	DistrictID    *int64
+	FullAddress   *string
+	Description   *string
+
+	// Legacy Fields (for backward compatibility)
+	Industry     *string
+	CompanyType  *string
+	SizeCategory *string
+	Address      *string
+	City         *string
+	Province     *string
+
+	// Location
+	Latitude  *float64
+	Longitude *float64
+
+	// Other Fields
+	WebsiteURL  *string
+	EmailDomain *string
+	Phone       *string
+	PostalCode  *string
+	About       *string
+	Culture     *string
+	Benefits    []string
 }
 
 type CreateProfileRequest struct {

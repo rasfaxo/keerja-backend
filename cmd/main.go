@@ -11,6 +11,7 @@ import (
 	"keerja-backend/internal/cache"
 	"keerja-backend/internal/config"
 	"keerja-backend/internal/handler/http"
+	"keerja-backend/internal/handler/http/master"
 	"keerja-backend/internal/jobs"
 	"keerja-backend/internal/middleware"
 	"keerja-backend/internal/repository/postgres"
@@ -63,6 +64,15 @@ func main() {
 
 	// FCM Notification repository
 	deviceTokenRepo := postgres.NewDeviceTokenRepository(db)
+
+	// Master data repositories
+	appLogger.Info("Initializing master data repositories...")
+	industryRepo := postgres.NewIndustryRepository(db)
+	companySizeRepo := postgres.NewCompanySizeRepository(db)
+	provinceRepo := postgres.NewProvinceRepository(db)
+	cityRepo := postgres.NewCityRepository(db)
+	districtRepo := postgres.NewDistrictRepository(db)
+	appLogger.Info("✓ Master data repositories initialized")
 
 	// Initialize services
 	appLogger.Info("Initializing services...")
@@ -140,8 +150,34 @@ func main() {
 	)
 
 	userService := service.NewUserService(userRepo, uploadService, skillsMasterRepo)
-	companyService := service.NewCompanyService(companyRepo, uploadService, cacheService, db)
-	jobService := service.NewJobService(jobRepo, companyRepo, userRepo)
+
+	// Master data services
+	appLogger.Info("Initializing master data services...")
+	industryService := service.NewIndustryService(industryRepo, cacheService)
+	companySizeService := service.NewCompanySizeService(companySizeRepo, cacheService)
+	provinceService := service.NewProvinceService(provinceRepo, cacheService)
+	cityService := service.NewCityService(cityRepo, provinceRepo, cacheService)
+	districtService := service.NewDistrictService(districtRepo, cityRepo, provinceRepo, cacheService)
+	appLogger.Info("✓ Master data services initialized")
+
+	// Company service
+	companyService := service.NewCompanyService(
+		companyRepo,
+		uploadService,
+		cacheService,
+		db,
+		industryService,
+		companySizeService,
+		districtService,
+	)
+
+	jobService := service.NewJobService(
+		jobRepo,
+		companyRepo,
+		userRepo,
+		industryService,
+		districtService,
+	)
 	applicationService := service.NewApplicationService(applicationRepo, jobRepo, userRepo, companyRepo, emailService, nil) // notificationService disabled temporarily
 	skillsMasterService := service.NewSkillsMasterService(skillsMasterRepo)
 
@@ -152,7 +188,14 @@ func main() {
 
 	// Initialize company handlers (split by domain)
 	appLogger.Info("Initializing company handlers...")
-	companyBasicHandler := http.NewCompanyBasicHandler(companyService)
+	companyBasicHandler := http.NewCompanyBasicHandler(
+		companyService,
+		industryRepo,
+		companySizeRepo,
+		provinceRepo,
+		cityRepo,
+		districtRepo,
+	)
 	companyProfileHandler := http.NewCompanyProfileHandler(companyService)
 	companyReviewHandler := http.NewCompanyReviewHandler(companyService)
 	companyStatsHandler := http.NewCompanyStatsHandler(companyService)
@@ -166,6 +209,17 @@ func main() {
 	// Initialize master data handlers
 	appLogger.Info("Initializing master data handlers...")
 	skillsMasterHandler := http.NewSkillsMasterHandler(skillsMasterService)
+
+	// Initialize master data handlers (industries, company sizes, locations)
+	industryHandler := master.NewIndustryHandler(industryService)
+	companySizeHandler := master.NewCompanySizeHandler(companySizeService)
+	locationHandler := master.NewLocationHandler(provinceService, cityService, districtService)
+	masterDataHandlers := &routes.MasterDataHandlers{
+		IndustryHandler:    industryHandler,
+		CompanySizeHandler: companySizeHandler,
+		LocationHandler:    locationHandler,
+	}
+	appLogger.Info("✓ Master data handlers initialized")
 
 	// Initialize FCM notification handlers
 	appLogger.Info("Initializing FCM notification handlers...")
@@ -228,6 +282,7 @@ func main() {
 
 		// Master data handlers
 		SkillsMasterHandler: skillsMasterHandler,
+		MasterDataHandlers:  masterDataHandlers,
 
 		// FCM Notification handlers
 		DeviceTokenHandler:      deviceTokenHandler,

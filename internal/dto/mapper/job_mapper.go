@@ -85,21 +85,28 @@ func ToJobDetailResponse(j *job.Job) *response.JobDetailResponse {
 	}
 
 	resp := &response.JobDetailResponse{
-		ID:                j.ID,
-		UUID:              j.UUID.String(),
-		CompanyID:         j.CompanyID,
-		EmployerUserID:    j.EmployerUserID,
-		CategoryID:        j.CategoryID,
-		Title:             j.Title,
-		Slug:              j.Slug,
-		JobLevel:          j.JobLevel,
-		EmploymentType:    j.EmploymentType,
-		Description:       j.Description,
-		RequirementsText:  j.RequirementsText,
-		Responsibilities:  j.Responsibilities,
-		Location:          j.Location,
-		City:              j.City,
-		Province:          j.Province,
+		ID:               j.ID,
+		UUID:             j.UUID.String(),
+		CompanyID:        j.CompanyID,
+		EmployerUserID:   j.EmployerUserID,
+		CategoryID:       j.CategoryID,
+		Title:            j.Title,
+		Slug:             j.Slug,
+		JobLevel:         j.JobLevel,
+		EmploymentType:   j.EmploymentType,
+		Description:      j.Description,
+		RequirementsText: j.RequirementsText,
+		Responsibilities: j.Responsibilities,
+
+		// Master Data Fields
+		IndustryID: j.IndustryID,
+		DistrictID: j.DistrictID,
+
+		// Legacy Location Fields (backward compatibility)
+		Location: j.Location,
+		City:     j.City,
+		Province: j.Province,
+
 		RemoteOption:      j.RemoteOption,
 		SalaryMin:         j.SalaryMin,
 		SalaryMax:         j.SalaryMax,
@@ -117,6 +124,74 @@ func ToJobDetailResponse(j *job.Job) *response.JobDetailResponse {
 		UpdatedAt:         j.UpdatedAt,
 		IsExpired:         j.IsExpired(),
 		DaysRemaining:     daysRemaining,
+	}
+
+	// Map Industry Detail \
+	if j.HasMasterDataRelations() && j.Industry != nil {
+		resp.IndustryDetail = &response.MasterIndustryResponse{
+			ID:          j.Industry.ID,
+			Name:        j.Industry.Name,
+			Slug:        j.Industry.Slug,
+			Description: j.Industry.Description.String,
+			IconURL:     j.Industry.IconURL.String,
+		}
+	}
+
+	// Map Location Detail
+	if j.HasMasterDataRelations() && j.District != nil {
+		locationDetail := &response.JobLocationDetail{}
+
+		// Map District
+		locationDetail.District = &response.DistrictResponse{
+			ID:     j.District.ID,
+			Code:   j.District.Code,
+			Name:   j.District.Name,
+			CityID: j.District.CityID,
+		}
+
+		// Map City (prefer preloaded MCity over District.City)
+		if j.MCity != nil {
+			locationDetail.City = &response.CityResponse{
+				ID:         j.MCity.ID,
+				Code:       j.MCity.Code,
+				Name:       j.MCity.Name,
+				Type:       j.MCity.Type,
+				FullName:   j.MCity.GetFullName(),
+				ProvinceID: j.MCity.ProvinceID,
+			}
+		} else if j.District.City != nil {
+			locationDetail.City = &response.CityResponse{
+				ID:         j.District.City.ID,
+				Code:       j.District.City.Code,
+				Name:       j.District.City.Name,
+				Type:       j.District.City.Type,
+				FullName:   j.District.City.GetFullName(),
+				ProvinceID: j.District.City.ProvinceID,
+			}
+		}
+
+		// Map Province (prefer preloaded MProvince over nested relations)
+		if j.MProvince != nil {
+			locationDetail.Province = &response.ProvinceResponse{
+				ID:   j.MProvince.ID,
+				Code: j.MProvince.Code,
+				Name: j.MProvince.Name,
+			}
+		} else if j.MCity != nil && j.MCity.Province != nil {
+			locationDetail.Province = &response.ProvinceResponse{
+				ID:   j.MCity.Province.ID,
+				Code: j.MCity.Province.Code,
+				Name: j.MCity.Province.Name,
+			}
+		} else if j.District.City != nil && j.District.City.Province != nil {
+			locationDetail.Province = &response.ProvinceResponse{
+				ID:   j.District.City.Province.ID,
+				Code: j.District.City.Province.Code,
+				Name: j.District.City.Province.Name,
+			}
+		}
+
+		resp.LocationDetail = locationDetail
 	}
 
 	// Map skills

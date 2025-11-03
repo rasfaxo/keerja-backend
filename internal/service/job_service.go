@@ -10,15 +10,18 @@ import (
 
 	"keerja-backend/internal/domain/company"
 	"keerja-backend/internal/domain/job"
+	"keerja-backend/internal/domain/master"
 	"keerja-backend/internal/domain/user"
 	"keerja-backend/internal/utils"
 )
 
 // jobService implements job.JobService interface
 type jobService struct {
-	jobRepo     job.JobRepository
-	companyRepo company.CompanyRepository
-	userRepo    user.UserRepository
+	jobRepo         job.JobRepository
+	companyRepo     company.CompanyRepository
+	userRepo        user.UserRepository
+	industryService master.IndustryService
+	districtService master.DistrictService
 }
 
 // NewJobService creates a new job service instance
@@ -26,11 +29,15 @@ func NewJobService(
 	jobRepo job.JobRepository,
 	companyRepo company.CompanyRepository,
 	userRepo user.UserRepository,
+	industryService master.IndustryService,
+	districtService master.DistrictService,
 ) job.JobService {
 	return &jobService{
-		jobRepo:     jobRepo,
-		companyRepo: companyRepo,
-		userRepo:    userRepo,
+		jobRepo:         jobRepo,
+		companyRepo:     companyRepo,
+		userRepo:        userRepo,
+		industryService: industryService,
+		districtService: districtService,
 	}
 }
 
@@ -1603,4 +1610,34 @@ func (s *jobService) CheckJobStatus(ctx context.Context, jobID int64) (string, e
 	}
 
 	return j.Status, nil
+}
+
+// ===========================================
+// MASTER DATA VALIDATION
+// ===========================================
+
+// ValidateMasterDataIDs validates that provided master data IDs exist
+func (s *jobService) ValidateMasterDataIDs(ctx context.Context, industryID, districtID *int64) error {
+	// Validate Industry ID
+	if industryID != nil && *industryID > 0 {
+		_, err := s.industryService.GetByID(ctx, *industryID)
+		if err != nil {
+			return fmt.Errorf("invalid industry_id: %w", err)
+		}
+	}
+
+	// Validate District ID
+	if districtID != nil && *districtID > 0 {
+		_, err := s.districtService.GetByID(ctx, *districtID)
+		if err != nil {
+			return fmt.Errorf("invalid district_id: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// GetJobWithMasterData retrieves job with preloaded master data
+func (s *jobService) GetJobWithMasterData(ctx context.Context, jobID int64) (*job.Job, error) {
+	return s.jobRepo.FindByIDWithMasterData(ctx, jobID)
 }

@@ -15,6 +15,12 @@ type CompanyRepository interface {
 	Delete(ctx context.Context, id int64) error
 	List(ctx context.Context, filter *CompanyFilter) ([]Company, int64, error)
 
+	// Company CRUD with Master Data Preloading
+	FindByIDWithMasterData(ctx context.Context, id int64) (*Company, error)
+	FindByUUIDWithMasterData(ctx context.Context, uuid string) (*Company, error)
+	FindBySlugWithMasterData(ctx context.Context, slug string) (*Company, error)
+	ListWithMasterData(ctx context.Context, filter *CompanyFilter) ([]Company, int64, error)
+
 	// Profile operations
 	CreateProfile(ctx context.Context, profile *CompanyProfile) error
 	FindProfileByCompanyID(ctx context.Context, companyID int64) (*CompanyProfile, error)
@@ -104,6 +110,14 @@ type CompanyRepository interface {
 
 // CompanyFilter represents filters for querying companies
 type CompanyFilter struct {
+	// Master Data Filters
+	IndustryID    *int64
+	CompanySizeID *int64
+	ProvinceID    *int64
+	CityID        *int64
+	DistrictID    *int64
+
+	// Legacy Filters
 	Industry     *string
 	CompanyType  *string
 	SizeCategory *string

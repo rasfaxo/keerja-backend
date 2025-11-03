@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"keerja-backend/internal/domain/company"
+	"keerja-backend/internal/domain/master"
 	"keerja-backend/internal/dto/mapper"
 	"keerja-backend/internal/dto/request"
 	"keerja-backend/internal/dto/response"
@@ -19,12 +20,31 @@ import (
 // This includes listing, creating, getting, updating, deleting companies,
 // and managing company images (logo and banner).
 type CompanyBasicHandler struct {
-	companyService company.CompanyService
+	companyService  company.CompanyService
+	industryRepo    master.IndustryRepository
+	companySizeRepo master.CompanySizeRepository
+	provinceRepo    master.ProvinceRepository
+	cityRepo        master.CityRepository
+	districtRepo    master.DistrictRepository
 }
 
 // NewCompanyBasicHandler creates a new instance of CompanyBasicHandler
-func NewCompanyBasicHandler(companyService company.CompanyService) *CompanyBasicHandler {
-	return &CompanyBasicHandler{companyService: companyService}
+func NewCompanyBasicHandler(
+	companyService company.CompanyService,
+	industryRepo master.IndustryRepository,
+	companySizeRepo master.CompanySizeRepository,
+	provinceRepo master.ProvinceRepository,
+	cityRepo master.CityRepository,
+	districtRepo master.DistrictRepository,
+) *CompanyBasicHandler {
+	return &CompanyBasicHandler{
+		companyService:  companyService,
+		industryRepo:    industryRepo,
+		companySizeRepo: companySizeRepo,
+		provinceRepo:    provinceRepo,
+		cityRepo:        cityRepo,
+		districtRepo:    districtRepo,
+	}
 }
 
 // ListCompanies godoc
@@ -96,13 +116,20 @@ func (h *CompanyBasicHandler) ListCompanies(c *fiber.Ctx) error {
 
 // CreateCompany godoc
 // @Summary Create a new company profile
-// @Description Create a new company profile with basic details
+// @Description Create a new company profile with basic details and optional logo
 // @Tags companies
-// @Accept json
+// @Accept json,multipart/form-data
 // @Produce json
 // @Security BearerAuth
-// @Param request body request.RegisterCompanyRequest true "Register company request"
-// @Success 201 {object} utils.Response{data=response.CompanyResponse}
+// @Param request body request.RegisterCompanyRequest false "Register company request (for JSON)"
+// @Param company_name formData string false "Company name (for multipart)"
+// @Param industry_id formData int false "Industry ID"
+// @Param company_size_id formData int false "Company size ID"
+// @Param district_id formData int false "District ID"
+// @Param full_address formData string false "Full address"
+// @Param description formData string false "Description"
+// @Param logo formData file false "Company logo image"
+// @Success 201 {object} utils.Response{data=response.CompanyDetailResponse}
 // @Failure 400 {object} utils.Response
 // @Failure 401 {object} utils.Response
 // @Failure 500 {object} utils.Response
@@ -116,10 +143,86 @@ func (h *CompanyBasicHandler) CreateCompany(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "User not authenticated", "userID not found in context")
 	}
 
-	// Parse request body
+	// Check if user already owns a company (1 user = 1 company)
+	existingCompanies, err := h.companyService.GetUserCompanies(ctx, userID)
+	if err == nil && len(existingCompanies) > 0 {
+		return utils.ErrorResponse(c, fiber.StatusForbidden,
+			"User already owns a company",
+			"Business rule violation: Each user can only register one company. You already own a company.")
+	}
+
+	// Parse request body (support both JSON and multipart/form-data)
 	var req request.RegisterCompanyRequest
-	if err := c.BodyParser(&req); err != nil {
-		return utils.BadRequestResponse(c, ErrInvalidRequest)
+
+	// Check content type
+	contentType := string(c.Request().Header.ContentType())
+	isMultipart := strings.Contains(contentType, "multipart/form-data")
+
+	if isMultipart {
+		// Parse form data
+		req.CompanyName = c.FormValue("company_name")
+
+		// Parse optional integer fields (ID-based - backward compatibility)
+		if industryID := c.FormValue("industry_id"); industryID != "" {
+			if id, err := strconv.ParseInt(industryID, 10, 64); err == nil {
+				req.IndustryID = &id
+			}
+		}
+		if companySizeID := c.FormValue("company_size_id"); companySizeID != "" {
+			if id, err := strconv.ParseInt(companySizeID, 10, 64); err == nil {
+				req.CompanySizeID = &id
+			}
+		}
+		if districtID := c.FormValue("district_id"); districtID != "" {
+			if id, err := strconv.ParseInt(districtID, 10, 64); err == nil {
+				req.DistrictID = &id
+			}
+		}
+
+		// Parse location names (for mobile app dropdown)
+		if industryName := c.FormValue("industry_name"); industryName != "" {
+			req.IndustryName = &industryName
+		}
+		if companySizeName := c.FormValue("company_size_name"); companySizeName != "" {
+			req.CompanySizeName = &companySizeName
+		}
+		if provinceName := c.FormValue("province_name"); provinceName != "" {
+			req.ProvinceName = &provinceName
+		}
+		if cityName := c.FormValue("city_name"); cityName != "" {
+			req.CityName = &cityName
+		}
+		if districtName := c.FormValue("district_name"); districtName != "" {
+			req.DistrictName = &districtName
+		}
+
+		// Parse optional string fields
+		if fullAddress := c.FormValue("full_address"); fullAddress != "" {
+			req.FullAddress = fullAddress
+		}
+		if description := c.FormValue("description"); description != "" {
+			req.Description = &description
+		}
+		if legalName := c.FormValue("legal_name"); legalName != "" {
+			req.LegalName = &legalName
+		}
+		if registrationNumber := c.FormValue("registration_number"); registrationNumber != "" {
+			req.RegistrationNumber = &registrationNumber
+		}
+		if websiteURL := c.FormValue("website_url"); websiteURL != "" {
+			req.WebsiteURL = &websiteURL
+		}
+		if phone := c.FormValue("phone"); phone != "" {
+			req.Phone = &phone
+		}
+		if about := c.FormValue("about"); about != "" {
+			req.About = &about
+		}
+	} else {
+		// Parse JSON body
+		if err := c.BodyParser(&req); err != nil {
+			return utils.BadRequestResponse(c, ErrInvalidRequest)
+		}
 	}
 
 	// Validate request
@@ -143,6 +246,22 @@ func (h *CompanyBasicHandler) CreateCompany(c *fiber.Ctx) error {
 		}
 		req.About = &sanitized
 	}
+
+	// Sanitize FullAddress
+	if req.FullAddress != "" {
+		req.FullAddress = utils.SanitizeString(req.FullAddress)
+	}
+
+	// Sanitize Description
+	if req.Description != nil {
+		sanitized := utils.SanitizeHTML(*req.Description)
+		if !utils.ValidateNoXSS(sanitized) {
+			return utils.BadRequestResponse(c, ErrPotentialXSS)
+		}
+		req.Description = &sanitized
+	}
+
+	// Sanitize legacy address fields (for backward compatibility)
 	if req.Address != nil {
 		sanitized := utils.SanitizeString(*req.Address)
 		req.Address = &sanitized
@@ -160,23 +279,77 @@ func (h *CompanyBasicHandler) CreateCompany(c *fiber.Ctx) error {
 		req.Country = &sanitized
 	}
 
+	// Resolve location names to IDs (if name-based input is provided)
+	// This allows mobile app to send location names instead of IDs
+	if req.IndustryName != nil && *req.IndustryName != "" {
+		industry, err := h.industryRepo.GetByName(ctx, *req.IndustryName)
+		if err != nil {
+			return utils.BadRequestResponse(c, "Industry not found: "+*req.IndustryName)
+		}
+		req.IndustryID = &industry.ID
+	}
+
+	if req.CompanySizeName != nil && *req.CompanySizeName != "" {
+		companySize, err := h.companySizeRepo.GetByCategory(ctx, *req.CompanySizeName)
+		if err != nil {
+			return utils.BadRequestResponse(c, "Company size not found: "+*req.CompanySizeName)
+		}
+		req.CompanySizeID = &companySize.ID
+	}
+
+	// Resolve location hierarchy: Province -> City -> District
+	if req.ProvinceName != nil && *req.ProvinceName != "" {
+		province, err := h.provinceRepo.GetByName(ctx, *req.ProvinceName)
+		if err != nil {
+			return utils.BadRequestResponse(c, "Province not found: "+*req.ProvinceName)
+		}
+
+		// If city name provided, find city within the province
+		if req.CityName != nil && *req.CityName != "" {
+			city, err := h.cityRepo.GetByNameAndProvinceID(ctx, *req.CityName, province.ID)
+			if err != nil {
+				return utils.BadRequestResponse(c, "City not found: "+*req.CityName+" in province: "+*req.ProvinceName)
+			}
+
+			// If district name provided, find district within the city
+			if req.DistrictName != nil && *req.DistrictName != "" {
+				district, err := h.districtRepo.GetByNameAndCityID(ctx, *req.DistrictName, city.ID)
+				if err != nil {
+					return utils.BadRequestResponse(c, "District not found: "+*req.DistrictName+" in city: "+*req.CityName)
+				}
+				req.DistrictID = &district.ID
+			}
+		}
+	}
+
 	// Convert to domain request
 	domainReq := &company.RegisterCompanyRequest{
 		CompanyName:        req.CompanyName,
 		LegalName:          req.LegalName,
 		RegistrationNumber: req.RegistrationNumber,
-		Industry:           req.Industry,
-		CompanyType:        req.CompanyType,
-		SizeCategory:       req.SizeCategory,
-		WebsiteURL:         req.WebsiteURL,
-		EmailDomain:        req.EmailDomain,
-		Phone:              req.Phone,
-		Address:            req.Address,
-		City:               req.City,
-		Province:           req.Province,
-		Country:            req.Country,
-		PostalCode:         req.PostalCode,
-		About:              req.About,
+
+		// Master Data Relations
+		IndustryID:    req.IndustryID,
+		CompanySizeID: req.CompanySizeID,
+		DistrictID:    req.DistrictID,
+		FullAddress:   req.FullAddress,
+		Description:   req.Description,
+
+		// Legacy Fields (for backward compatibility)
+		Industry:     req.Industry,
+		CompanyType:  req.CompanyType,
+		SizeCategory: req.SizeCategory,
+		Address:      req.Address,
+		City:         req.City,
+		Province:     req.Province,
+
+		// Other Fields
+		WebsiteURL:  req.WebsiteURL,
+		EmailDomain: req.EmailDomain,
+		Phone:       req.Phone,
+		Country:     req.Country,
+		PostalCode:  req.PostalCode,
+		About:       req.About,
 	}
 
 	// Create the company with user as owner
@@ -185,8 +358,21 @@ func (h *CompanyBasicHandler) CreateCompany(c *fiber.Ctx) error {
 		return utils.InternalServerErrorResponse(c, ErrFailedOperation)
 	}
 
-	// Map to response DTO
-	response := mapper.ToCompanyResponse(createdCompany)
+	// Handle logo upload if provided (multipart/form-data only)
+	if isMultipart {
+		if logoFile, err := c.FormFile("logo"); err == nil && logoFile != nil {
+			// Upload logo (this will update the database)
+			logoURL, uploadErr := h.companyService.UploadLogo(ctx, createdCompany.ID, logoFile)
+			if uploadErr == nil && logoURL != "" {
+				// Update the company object with logo URL for response
+				createdCompany.LogoURL = &logoURL
+			}
+			// Don't fail the whole request if logo upload fails
+		}
+	}
+
+	// Map to response DTO with master data
+	response := mapper.ToCompanyDetailResponse(createdCompany)
 	return utils.CreatedResponse(c, MsgCreatedSuccess, response)
 }
 
@@ -324,6 +510,23 @@ func (h *CompanyBasicHandler) UpdateCompany(c *fiber.Ctx) error {
 		}
 		req.Culture = &sanitized
 	}
+
+	// Sanitize FullAddress
+	if req.FullAddress != nil {
+		sanitized := utils.SanitizeString(*req.FullAddress)
+		req.FullAddress = &sanitized
+	}
+
+	// Sanitize Description
+	if req.Description != nil {
+		sanitized := utils.SanitizeHTML(*req.Description)
+		if !utils.ValidateNoXSS(sanitized) {
+			return utils.BadRequestResponse(c, ErrPotentialXSS)
+		}
+		req.Description = &sanitized
+	}
+
+	// Sanitize legacy address fields (for backward compatibility)
 	if req.Address != nil {
 		sanitized := utils.SanitizeString(*req.Address)
 		req.Address = &sanitized
@@ -342,21 +545,34 @@ func (h *CompanyBasicHandler) UpdateCompany(c *fiber.Ctx) error {
 		CompanyName:        req.CompanyName,
 		LegalName:          req.LegalName,
 		RegistrationNumber: req.RegistrationNumber,
-		Industry:           req.Industry,
-		CompanyType:        req.CompanyType,
-		SizeCategory:       req.SizeCategory,
-		WebsiteURL:         req.WebsiteURL,
-		EmailDomain:        req.EmailDomain,
-		Phone:              req.Phone,
-		Address:            req.Address,
-		City:               req.City,
-		Province:           req.Province,
-		PostalCode:         req.PostalCode,
-		Latitude:           req.Latitude,
-		Longitude:          req.Longitude,
-		About:              req.About,
-		Culture:            req.Culture,
-		Benefits:           req.Benefits,
+
+		// Master Data Relations
+		IndustryID:    req.IndustryID,
+		CompanySizeID: req.CompanySizeID,
+		DistrictID:    req.DistrictID,
+		FullAddress:   req.FullAddress,
+		Description:   req.Description,
+
+		// Legacy Fields (for backward compatibility)
+		Industry:     req.Industry,
+		CompanyType:  req.CompanyType,
+		SizeCategory: req.SizeCategory,
+		Address:      req.Address,
+		City:         req.City,
+		Province:     req.Province,
+
+		// Location
+		Latitude:  req.Latitude,
+		Longitude: req.Longitude,
+
+		// Other Fields
+		WebsiteURL:  req.WebsiteURL,
+		EmailDomain: req.EmailDomain,
+		Phone:       req.Phone,
+		PostalCode:  req.PostalCode,
+		About:       req.About,
+		Culture:     req.Culture,
+		Benefits:    req.Benefits,
 	}
 
 	// Update the company profile

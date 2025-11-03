@@ -25,6 +25,24 @@ services:
       timeout: 5s
       retries: 5
 
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: keerja-redis
+    command: redis-server --appendonly yes --requirepass "keerja_redis_pass"
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - keerja-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   # Keerja Backend API
   api:
     build:
@@ -41,6 +59,10 @@ services:
       DB_NAME: keerja
       DB_SSLMODE: disable
       DB_TIMEZONE: Asia/Jakarta
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: keerja_redis_pass
+      REDIS_DB: 0
       JWT_SECRET: keerja_jwt_secret_key_minimum_32_characters_long_for_security
       LOG_LEVEL: info
       LOG_FORMAT: json
@@ -48,6 +70,8 @@ services:
       - "8080:8080"
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - keerja-network
@@ -68,6 +92,8 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
+  redis_data:
     driver: local
 
 networks:

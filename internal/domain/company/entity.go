@@ -1,44 +1,69 @@
 package company
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/lib/pq"
+
+	"keerja-backend/internal/domain/master"
 )
 
 // Company represents the main company entity
 type Company struct {
-	ID                 int64          `gorm:"primaryKey;autoIncrement" json:"id"`
-	UUID               uuid.UUID      `gorm:"type:uuid;default:gen_random_uuid();uniqueIndex" json:"uuid"`
-	CompanyName        string         `gorm:"type:varchar(200);not null" json:"company_name" validate:"required,min=2,max=200"`
-	Slug               string         `gorm:"type:varchar(200);uniqueIndex;not null" json:"slug" validate:"required"`
-	LegalName          *string        `gorm:"type:varchar(200)" json:"legal_name,omitempty"`
-	RegistrationNumber *string        `gorm:"type:varchar(100)" json:"registration_number,omitempty"`
-	Industry           *string        `gorm:"type:varchar(100)" json:"industry,omitempty"`
-	CompanyType        *string        `gorm:"type:varchar(50);check:company_type IN ('private','public','startup','ngo','government')" json:"company_type,omitempty" validate:"omitempty,oneof=private public startup ngo government"`
-	SizeCategory       *string        `gorm:"type:varchar(50);check:size_category IN ('1-10','11-50','51-200','201-1000','1000+')" json:"size_category,omitempty" validate:"omitempty,oneof=1-10 11-50 51-200 201-1000 1000+"`
-	WebsiteURL         *string        `gorm:"type:text" json:"website_url,omitempty" validate:"omitempty,url"`
-	EmailDomain        *string        `gorm:"type:varchar(100)" json:"email_domain,omitempty"`
-	Phone              *string        `gorm:"type:varchar(30)" json:"phone,omitempty"`
-	Address            *string        `gorm:"type:text" json:"address,omitempty"`
-	City               *string        `gorm:"type:varchar(100)" json:"city,omitempty"`
-	Province           *string        `gorm:"type:varchar(100)" json:"province,omitempty"`
-	Country            string         `gorm:"type:varchar(100);default:'Indonesia'" json:"country"`
-	PostalCode         *string        `gorm:"type:varchar(10)" json:"postal_code,omitempty"`
-	Latitude           *float64       `gorm:"type:numeric(10,6)" json:"latitude,omitempty"`
-	Longitude          *float64       `gorm:"type:numeric(10,6)" json:"longitude,omitempty"`
-	LogoURL            *string        `gorm:"type:text" json:"logo_url,omitempty"`
-	BannerURL          *string        `gorm:"type:text" json:"banner_url,omitempty"`
-	About              *string        `gorm:"type:text" json:"about,omitempty"`
-	Culture            *string        `gorm:"type:text" json:"culture,omitempty"`
-	Benefits           pq.StringArray `gorm:"type:text[]" json:"benefits,omitempty"` // PostgreSQL array
-	Verified           bool           `gorm:"default:false" json:"verified"`
-	VerifiedAt         *time.Time     `gorm:"type:timestamp" json:"verified_at,omitempty"`
-	VerifiedBy         *int64         `gorm:"type:bigint" json:"verified_by,omitempty"`
-	IsActive           bool           `gorm:"default:true" json:"is_active"`
-	CreatedAt          time.Time      `gorm:"type:timestamp;default:now()" json:"created_at"`
-	UpdatedAt          time.Time      `gorm:"type:timestamp;default:now()" json:"updated_at"`
+	ID                 int64     `gorm:"primaryKey;autoIncrement" json:"id"`
+	UUID               uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();uniqueIndex" json:"uuid"`
+	CompanyName        string    `gorm:"type:varchar(200);not null" json:"company_name" validate:"required,min=2,max=200"`
+	Slug               string    `gorm:"type:varchar(200);uniqueIndex;not null" json:"slug" validate:"required"`
+	LegalName          *string   `gorm:"type:varchar(200)" json:"legal_name,omitempty"`
+	RegistrationNumber *string   `gorm:"type:varchar(100)" json:"registration_number,omitempty"`
+
+	// Master Data Relations
+	IndustryID    *int64 `gorm:"type:bigint;index" json:"industry_id,omitempty"`
+	CompanySizeID *int64 `gorm:"type:bigint;index" json:"company_size_id,omitempty"`
+	ProvinceID    *int64 `gorm:"type:bigint;index" json:"province_id,omitempty"`
+	CityID        *int64 `gorm:"type:bigint;index" json:"city_id,omitempty"`
+	DistrictID    *int64 `gorm:"type:bigint;index" json:"district_id,omitempty"`
+
+	// Legacy fields (kept for backward compatibility)
+	Industry     *string `gorm:"type:varchar(100)" json:"industry,omitempty"`
+	CompanyType  *string `gorm:"type:varchar(50);check:company_type IN ('private','public','startup','ngo','government')" json:"company_type,omitempty" validate:"omitempty,oneof=private public startup ngo government"`
+	SizeCategory *string `gorm:"type:varchar(50);check:size_category IN ('1-10','11-50','51-200','201-1000','1000+')" json:"size_category,omitempty" validate:"omitempty,oneof=1-10 11-50 51-200 201-1000 1000+"`
+	WebsiteURL   *string `gorm:"type:text" json:"website_url,omitempty" validate:"omitempty,url"`
+	EmailDomain  *string `gorm:"type:varchar(100)" json:"email_domain,omitempty"`
+	Phone        *string `gorm:"type:varchar(30)" json:"phone,omitempty"`
+
+	// Location Information
+	FullAddress string  `gorm:"type:text" json:"full_address,omitempty"`
+	Description *string `gorm:"type:text" json:"description,omitempty"`
+
+	// Legacy location fields (kept for backward compatibility)
+	Address    *string        `gorm:"type:text" json:"address,omitempty"`
+	City       *string        `gorm:"type:varchar(100)" json:"city,omitempty"`
+	Province   *string        `gorm:"type:varchar(100)" json:"province,omitempty"`
+	Country    string         `gorm:"type:varchar(100);default:'Indonesia'" json:"country"`
+	PostalCode *string        `gorm:"type:varchar(10)" json:"postal_code,omitempty"`
+	Latitude   *float64       `gorm:"type:numeric(10,6)" json:"latitude,omitempty"`
+	Longitude  *float64       `gorm:"type:numeric(10,6)" json:"longitude,omitempty"`
+	LogoURL    *string        `gorm:"type:text" json:"logo_url,omitempty"`
+	BannerURL  *string        `gorm:"type:text" json:"banner_url,omitempty"`
+	About      *string        `gorm:"type:text" json:"about,omitempty"`
+	Culture    *string        `gorm:"type:text" json:"culture,omitempty"`
+	Benefits   pq.StringArray `gorm:"type:text[]" json:"benefits,omitempty"` // PostgreSQL array
+	Verified   bool           `gorm:"default:false" json:"verified"`
+	VerifiedAt *time.Time     `gorm:"type:timestamp" json:"verified_at,omitempty"`
+	VerifiedBy *int64         `gorm:"type:bigint" json:"verified_by,omitempty"`
+	IsActive   bool           `gorm:"default:true" json:"is_active"`
+	CreatedAt  time.Time      `gorm:"type:timestamp;default:now()" json:"created_at"`
+	UpdatedAt  time.Time      `gorm:"type:timestamp;default:now()" json:"updated_at"`
+
+	// Master Data Relationships 
+	IndustryRelation    *master.Industry    `gorm:"foreignKey:IndustryID;references:ID" json:"industry_relation,omitempty"`
+	CompanySizeRelation *master.CompanySize `gorm:"foreignKey:CompanySizeID;references:ID" json:"company_size_relation,omitempty"`
+	ProvinceRelation    *master.Province    `gorm:"foreignKey:ProvinceID;references:ID" json:"province_relation,omitempty"`
+	CityRelation        *master.City        `gorm:"foreignKey:CityID;references:ID" json:"city_relation,omitempty"`
+	DistrictRelation    *master.District    `gorm:"foreignKey:DistrictID;references:ID" json:"district_relation,omitempty"`
 
 	// Relationships
 	Profile       *CompanyProfile      `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE" json:"profile,omitempty"`
@@ -63,6 +88,118 @@ func (c *Company) IsVerified() bool {
 // IsStartup checks if company is a startup
 func (c *Company) IsStartup() bool {
 	return c.CompanyType != nil && *c.CompanyType == "startup"
+}
+
+// GetIndustry returns the industry relation 
+func (c *Company) GetIndustry() *master.Industry {
+	return c.IndustryRelation
+}
+
+// GetCompanySize returns the company size relation 
+func (c *Company) GetCompanySize() *master.CompanySize {
+	return c.CompanySizeRelation
+}
+
+// GetProvince returns the province relation 
+func (c *Company) GetProvince() *master.Province {
+	return c.ProvinceRelation
+}
+
+// GetCity returns the city relation 
+func (c *Company) GetCity() *master.City {
+	return c.CityRelation
+}
+
+// GetDistrict returns the district relation 
+func (c *Company) GetDistrict() *master.District {
+	return c.DistrictRelation
+}
+
+// GetFullLocation returns the complete location path 
+// Format: "District, City Type City, Province"
+// Example: "Batujajar, Kabupaten Bandung Barat, Jawa Barat"
+func (c *Company) GetFullLocation() string {
+	if c.DistrictRelation != nil && c.CityRelation != nil && c.ProvinceRelation != nil {
+		cityFullName := fmt.Sprintf("%s %s", c.CityRelation.Type, c.CityRelation.Name)
+		return fmt.Sprintf("%s, %s, %s",
+			c.DistrictRelation.Name,
+			cityFullName,
+			c.ProvinceRelation.Name,
+		)
+	}
+
+	// Fallback to legacy fields if master data relations not loaded
+	if c.City != nil && c.Province != nil {
+		return fmt.Sprintf("%s, %s", *c.City, *c.Province)
+	}
+
+	if c.Province != nil {
+		return *c.Province
+	}
+
+	return ""
+}
+
+// GetFullLocationWithDistrict returns location with district details 
+func (c *Company) GetFullLocationWithDistrict() string {
+	location := c.GetFullLocation()
+	if location != "" && c.FullAddress != "" {
+		return fmt.Sprintf("%s, %s", c.FullAddress, location)
+	}
+	if location != "" {
+		return location
+	}
+	if c.FullAddress != "" {
+		return c.FullAddress
+	}
+	return ""
+}
+
+// HasMasterDataRelations checks if company has master data relations loaded 
+func (c *Company) HasMasterDataRelations() bool {
+	return c.IndustryRelation != nil || c.CompanySizeRelation != nil ||
+		c.DistrictRelation != nil || c.CityRelation != nil || c.ProvinceRelation != nil
+}
+
+// GetIndustryName returns industry name from relation or legacy field 
+func (c *Company) GetIndustryName() string {
+	if c.IndustryRelation != nil {
+		return c.IndustryRelation.Name
+	}
+	if c.Industry != nil {
+		return *c.Industry
+	}
+	return ""
+}
+
+// GetCompanySizeLabel returns company size label 
+func (c *Company) GetCompanySizeLabel() string {
+	if c.CompanySizeRelation != nil {
+		return c.CompanySizeRelation.Label
+	}
+	if c.SizeCategory != nil {
+		return *c.SizeCategory
+	}
+	return ""
+}
+
+// GetLocationSummary returns a short location summary 
+// Format: "City, Province"
+func (c *Company) GetLocationSummary() string {
+	if c.CityRelation != nil && c.ProvinceRelation != nil {
+		return fmt.Sprintf("%s, %s", c.CityRelation.Name, c.ProvinceRelation.Name)
+	}
+
+	// Fallback to legacy fields
+	if c.City != nil && c.Province != nil {
+		return fmt.Sprintf("%s, %s", *c.City, *c.Province)
+	}
+
+	if c.Province != nil {
+		return *c.Province
+	}
+
+	return ""
 }
 
 // CompanyProfile represents detailed company profile information

@@ -5,41 +5,74 @@ type RegisterCompanyRequest struct {
 	CompanyName        string  `json:"company_name" validate:"required,min=2,max=200"`
 	LegalName          *string `json:"legal_name" validate:"omitempty,max=200"`
 	RegistrationNumber *string `json:"registration_number" validate:"omitempty,max=100"`
-	Industry           *string `json:"industry" validate:"omitempty,max=100"`
-	CompanyType        *string `json:"company_type" validate:"omitempty,oneof=private public startup ngo government"`
-	SizeCategory       *string `json:"size_category" validate:"omitempty,oneof='1-10' '11-50' '51-200' '201-1000' '1000+'"`
-	WebsiteURL         *string `json:"website_url" validate:"omitempty,url"`
-	EmailDomain        *string `json:"email_domain" validate:"omitempty,max=100"`
-	Phone              *string `json:"phone" validate:"omitempty,max=30"`
-	Address            *string `json:"address" validate:"omitempty"`
-	City               *string `json:"city" validate:"omitempty,max=100"`
-	Province           *string `json:"province" validate:"omitempty,max=100"`
-	Country            *string `json:"country" validate:"omitempty,max=100"`
-	PostalCode         *string `json:"postal_code" validate:"omitempty,max=10"`
-	About              *string `json:"about" validate:"omitempty"`
+
+	// Master Data Relations (ID-based - backward compatibility)
+	IndustryID    *int64 `json:"industry_id" validate:"omitempty"`
+	CompanySizeID *int64 `json:"company_size_id" validate:"omitempty"`
+	DistrictID    *int64 `json:"district_id" validate:"omitempty"`
+
+	// Master Data Relations (Name-based - for mobile UI dropdown)
+	IndustryName    *string `json:"industry_name" validate:"omitempty,max=100"`
+	CompanySizeName *string `json:"company_size_name" validate:"omitempty,max=50"`
+	ProvinceName    *string `json:"province_name" validate:"omitempty,max=100"`
+	CityName        *string `json:"city_name" validate:"omitempty,max=100"`
+	DistrictName    *string `json:"district_name" validate:"omitempty,max=100"`
+
+	// Location Details
+	FullAddress string  `json:"full_address" validate:"omitempty,max=500"`
+	Description *string `json:"description" validate:"omitempty"`
+
+	// Legacy Fields (kept for backward compatibility)
+	Industry     *string `json:"industry" validate:"omitempty,max=100"`
+	SizeCategory *string `json:"size_category" validate:"omitempty,oneof='1-10' '11-50' '51-200' '201-1000' '1000+'"`
+	City         *string `json:"city" validate:"omitempty,max=100"`
+	Province     *string `json:"province" validate:"omitempty,max=100"`
+	Address      *string `json:"address" validate:"omitempty"`
+
+	// Other Fields
+	CompanyType *string `json:"company_type" validate:"omitempty,oneof=private public startup ngo government"`
+	WebsiteURL  *string `json:"website_url" validate:"omitempty,url"`
+	EmailDomain *string `json:"email_domain" validate:"omitempty,max=100"`
+	Phone       *string `json:"phone" validate:"omitempty,max=30"`
+	Country     *string `json:"country" validate:"omitempty,max=100"`
+	PostalCode  *string `json:"postal_code" validate:"omitempty,max=10"`
+	About       *string `json:"about" validate:"omitempty"`
 }
 
 // UpdateCompanyRequest represents company update request
 type UpdateCompanyRequest struct {
-	CompanyName        *string  `json:"company_name" validate:"omitempty,min=2,max=200"`
-	LegalName          *string  `json:"legal_name" validate:"omitempty,max=200"`
-	RegistrationNumber *string  `json:"registration_number" validate:"omitempty,max=100"`
-	Industry           *string  `json:"industry" validate:"omitempty,max=100"`
-	CompanyType        *string  `json:"company_type" validate:"omitempty,oneof=private public startup ngo government"`
-	SizeCategory       *string  `json:"size_category" validate:"omitempty,oneof='1-10' '11-50' '51-200' '201-1000' '1000+'"`
-	WebsiteURL         *string  `json:"website_url" validate:"omitempty,url"`
-	EmailDomain        *string  `json:"email_domain" validate:"omitempty,max=100"`
-	Phone              *string  `json:"phone" validate:"omitempty,max=30"`
-	Address            *string  `json:"address" validate:"omitempty"`
-	City               *string  `json:"city" validate:"omitempty,max=100"`
-	Province           *string  `json:"province" validate:"omitempty,max=100"`
-	Country            *string  `json:"country" validate:"omitempty,max=100"`
-	PostalCode         *string  `json:"postal_code" validate:"omitempty,max=10"`
-	Latitude           *float64 `json:"latitude" validate:"omitempty"`
-	Longitude          *float64 `json:"longitude" validate:"omitempty"`
-	About              *string  `json:"about" validate:"omitempty"`
-	Culture            *string  `json:"culture" validate:"omitempty"`
-	Benefits           []string `json:"benefits" validate:"omitempty"`
+	CompanyName        *string `json:"company_name" validate:"omitempty,min=2,max=200"`
+	LegalName          *string `json:"legal_name" validate:"omitempty,max=200"`
+	RegistrationNumber *string `json:"registration_number" validate:"omitempty,max=100"`
+
+	// Master Data Relations
+	IndustryID    *int64 `json:"industry_id" validate:"omitempty"`
+	CompanySizeID *int64 `json:"company_size_id" validate:"omitempty"`
+	DistrictID    *int64 `json:"district_id" validate:"omitempty"`
+
+	// Location Details
+	FullAddress *string `json:"full_address" validate:"omitempty,max=500"`
+	Description *string `json:"description" validate:"omitempty"`
+
+	// Legacy Fields (kept for backward compatibility)
+	Industry     *string `json:"industry" validate:"omitempty,max=100"`
+	SizeCategory *string `json:"size_category" validate:"omitempty,oneof='1-10' '11-50' '51-200' '201-1000' '1000+'"`
+	City         *string `json:"city" validate:"omitempty,max=100"`
+	Province     *string `json:"province" validate:"omitempty,max=100"`
+	Address      *string `json:"address" validate:"omitempty"`
+
+	// Other Fields
+	CompanyType *string  `json:"company_type" validate:"omitempty,oneof=private public startup ngo government"`
+	WebsiteURL  *string  `json:"website_url" validate:"omitempty,url"`
+	EmailDomain *string  `json:"email_domain" validate:"omitempty,max=100"`
+	Phone       *string  `json:"phone" validate:"omitempty,max=30"`
+	Country     *string  `json:"country" validate:"omitempty,max=100"`
+	PostalCode  *string  `json:"postal_code" validate:"omitempty,max=10"`
+	Latitude    *float64 `json:"latitude" validate:"omitempty"`
+	Longitude   *float64 `json:"longitude" validate:"omitempty"`
+	About       *string  `json:"about" validate:"omitempty"`
+	Culture     *string  `json:"culture" validate:"omitempty"`
+	Benefits    []string `json:"benefits" validate:"omitempty"`
 }
 
 // UpdateCompanyProfileRequest represents company profile update request

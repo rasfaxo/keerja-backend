@@ -46,6 +46,29 @@ func (r *companyRepository) FindByID(ctx context.Context, id int64) (*company.Co
 	return &c, nil
 }
 
+// FindByIDWithMasterData finds a company by ID with all master data relations preloaded
+func (r *companyRepository) FindByIDWithMasterData(ctx context.Context, id int64) (*company.Company, error) {
+	var c company.Company
+	err := r.db.WithContext(ctx).
+		Preload("Profile").
+		Preload("Verification").
+		Preload("IndustryRelation").
+		Preload("CompanySizeRelation").
+		Preload("ProvinceRelation").
+		Preload("CityRelation").
+		Preload("DistrictRelation").
+		Preload("DistrictRelation.City").
+		Preload("DistrictRelation.City.Province").
+		First(&c, id).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &c, nil
+}
+
 // FindByUUID finds a company by UUID
 func (r *companyRepository) FindByUUID(ctx context.Context, uuid string) (*company.Company, error) {
 	var c company.Company
@@ -63,12 +86,60 @@ func (r *companyRepository) FindByUUID(ctx context.Context, uuid string) (*compa
 	return &c, nil
 }
 
+// FindByUUIDWithMasterData finds a company by UUID with all master data relations preloaded
+func (r *companyRepository) FindByUUIDWithMasterData(ctx context.Context, uuid string) (*company.Company, error) {
+	var c company.Company
+	err := r.db.WithContext(ctx).
+		Preload("Profile").
+		Preload("Verification").
+		Preload("IndustryRelation").
+		Preload("CompanySizeRelation").
+		Preload("ProvinceRelation").
+		Preload("CityRelation").
+		Preload("DistrictRelation").
+		Preload("DistrictRelation.City").          // Fix: Use City, not CityRelation
+		Preload("DistrictRelation.City.Province"). // Fix: Use Province, not ProvinceRelation
+		Where("uuid = ?", uuid).
+		First(&c).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &c, nil
+}
+
 // FindBySlug finds a company by slug (for public profiles)
 func (r *companyRepository) FindBySlug(ctx context.Context, slug string) (*company.Company, error) {
 	var c company.Company
 	err := r.db.WithContext(ctx).
 		Preload("Profile").
 		Preload("Verification").
+		Where("slug = ?", slug).
+		First(&c).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &c, nil
+}
+
+// FindBySlugWithMasterData finds a company by slug with all master data relations preloaded
+func (r *companyRepository) FindBySlugWithMasterData(ctx context.Context, slug string) (*company.Company, error) {
+	var c company.Company
+	err := r.db.WithContext(ctx).
+		Preload("Profile").
+		Preload("Verification").
+		Preload("IndustryRelation").
+		Preload("CompanySizeRelation").
+		Preload("ProvinceRelation").
+		Preload("CityRelation").
+		Preload("DistrictRelation").
+		Preload("DistrictRelation.City").          // Fix: Use City, not CityRelation
+		Preload("DistrictRelation.City.Province"). // Fix: Use Province, not ProvinceRelation
 		Where("slug = ?", slug).
 		First(&c).Error
 	if err != nil {
@@ -162,6 +233,109 @@ func (r *companyRepository) List(ctx context.Context, filter *company.CompanyFil
 	err := query.
 		Preload("Profile").
 		Preload("Verification").
+		Order(fmt.Sprintf("%s %s", sortBy, sortOrder)).
+		Limit(limit).
+		Offset(offset).
+		Find(&companies).Error
+
+	return companies, total, err
+}
+
+// ListWithMasterData retrieves companies with filtering, pagination, sorting, and master data preloaded
+func (r *companyRepository) ListWithMasterData(ctx context.Context, filter *company.CompanyFilter) ([]company.Company, int64, error) {
+	var companies []company.Company
+	var total int64
+
+	query := r.db.WithContext(ctx).Model(&company.Company{})
+
+	// Apply filters
+	if filter != nil {
+		// New master data filters
+		if filter.IndustryID != nil {
+			query = query.Where("industry_id = ?", *filter.IndustryID)
+		}
+		if filter.CompanySizeID != nil {
+			query = query.Where("company_size_id = ?", *filter.CompanySizeID)
+		}
+		if filter.ProvinceID != nil {
+			query = query.Where("province_id = ?", *filter.ProvinceID)
+		}
+		if filter.CityID != nil {
+			query = query.Where("city_id = ?", *filter.CityID)
+		}
+		if filter.DistrictID != nil {
+			query = query.Where("district_id = ?", *filter.DistrictID)
+		}
+
+		// Legacy filters (still supported)
+		if filter.Industry != nil {
+			query = query.Where("industry = ?", *filter.Industry)
+		}
+		if filter.CompanyType != nil {
+			query = query.Where("company_type = ?", *filter.CompanyType)
+		}
+		if filter.SizeCategory != nil {
+			query = query.Where("size_category = ?", *filter.SizeCategory)
+		}
+		if filter.City != nil {
+			query = query.Where("city = ?", *filter.City)
+		}
+		if filter.Province != nil {
+			query = query.Where("province = ?", *filter.Province)
+		}
+		if filter.Verified != nil {
+			query = query.Where("verified = ?", *filter.Verified)
+		}
+		if filter.IsActive != nil {
+			query = query.Where("is_active = ?", *filter.IsActive)
+		}
+
+		// Search by company name
+		if filter.SearchQuery != nil && *filter.SearchQuery != "" {
+			searchPattern := "%" + strings.ToLower(*filter.SearchQuery) + "%"
+			query = query.Where("LOWER(company_name) LIKE ? OR LOWER(legal_name) LIKE ?", searchPattern, searchPattern)
+		}
+	}
+
+	// Count total records
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// Apply pagination
+	page := 1
+	limit := 10
+	if filter != nil {
+		if filter.Page > 0 {
+			page = filter.Page
+		}
+		if filter.Limit > 0 {
+			limit = filter.Limit
+		}
+	}
+	offset := (page - 1) * limit
+
+	// Apply sorting
+	sortBy := "created_at"
+	sortOrder := "DESC"
+	if filter != nil {
+		if filter.SortBy != "" {
+			sortBy = filter.SortBy
+		}
+		if filter.SortOrder != "" {
+			sortOrder = strings.ToUpper(filter.SortOrder)
+		}
+	}
+
+	// Execute query with all preloads including master data
+	err := query.
+		Preload("Profile").
+		Preload("Verification").
+		Preload("IndustryRelation").
+		Preload("CompanySizeRelation").
+		Preload("ProvinceRelation").
+		Preload("CityRelation").
+		Preload("DistrictRelation").
 		Order(fmt.Sprintf("%s %s", sortBy, sortOrder)).
 		Limit(limit).
 		Offset(offset).
