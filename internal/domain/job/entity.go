@@ -3,28 +3,39 @@ package job
 import (
 	"time"
 
+	"keerja-backend/internal/domain/master"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 // Job represents a job posting entity
 type Job struct {
-	ID                int64      `gorm:"column:id;primaryKey;autoIncrement" json:"id"`
-	UUID              uuid.UUID  `gorm:"column:uuid;type:uuid;default:gen_random_uuid();unique" json:"uuid"`
-	CompanyID         int64      `gorm:"column:company_id;not null;index" json:"company_id" validate:"required"`
-	EmployerUserID    *int64     `gorm:"column:employer_user_id;index" json:"employer_user_id,omitempty"`
-	CategoryID        *int64     `gorm:"column:category_id;index" json:"category_id,omitempty"`
-	Title             string     `gorm:"column:title;type:varchar(200);not null" json:"title" validate:"required,max=200"`
-	Slug              string     `gorm:"column:slug;type:varchar(220);unique" json:"slug"`
-	JobLevel          string     `gorm:"column:job_level;type:varchar(50)" json:"job_level,omitempty" validate:"omitempty,oneof='Internship' 'Entry Level' 'Mid Level' 'Senior Level' 'Manager' 'Director'"`
-	EmploymentType    string     `gorm:"column:employment_type;type:varchar(30)" json:"employment_type,omitempty" validate:"omitempty,oneof='Full-Time' 'Part-Time' 'Contract' 'Internship' 'Freelance'"`
-	Description       string     `gorm:"column:description;type:text;not null" json:"description" validate:"required"`
-	RequirementsText  string     `gorm:"column:requirements;type:text" json:"requirements_text,omitempty"`
-	Responsibilities  string     `gorm:"column:responsibilities;type:text" json:"responsibilities,omitempty"`
-	Location          string     `gorm:"column:location;type:varchar(150)" json:"location,omitempty"`
-	City              string     `gorm:"column:city;type:varchar(100)" json:"city,omitempty"`
-	Province          string     `gorm:"column:province;type:varchar(100)" json:"province,omitempty"`
-	RemoteOption      bool       `gorm:"column:remote_option;default:false" json:"remote_option"`
+	ID               int64     `gorm:"column:id;primaryKey;autoIncrement" json:"id"`
+	UUID             uuid.UUID `gorm:"column:uuid;type:uuid;default:gen_random_uuid();unique" json:"uuid"`
+	CompanyID        int64     `gorm:"column:company_id;not null;index" json:"company_id" validate:"required"`
+	EmployerUserID   *int64    `gorm:"column:employer_user_id;index" json:"employer_user_id,omitempty"`
+	CategoryID       *int64    `gorm:"column:category_id;index" json:"category_id,omitempty"`
+	Title            string    `gorm:"column:title;type:varchar(200);not null" json:"title" validate:"required,max=200"`
+	Slug             string    `gorm:"column:slug;type:varchar(220);unique" json:"slug"`
+	JobLevel         string    `gorm:"column:job_level;type:varchar(50)" json:"job_level,omitempty" validate:"omitempty,oneof='Internship' 'Entry Level' 'Mid Level' 'Senior Level' 'Manager' 'Director'"`
+	EmploymentType   string    `gorm:"column:employment_type;type:varchar(30)" json:"employment_type,omitempty" validate:"omitempty,oneof='Full-Time' 'Part-Time' 'Contract' 'Internship' 'Freelance'"`
+	Description      string    `gorm:"column:description;type:text;not null" json:"description" validate:"required"`
+	RequirementsText string    `gorm:"column:requirements;type:text" json:"requirements_text,omitempty"`
+	Responsibilities string    `gorm:"column:responsibilities;type:text" json:"responsibilities,omitempty"`
+
+	// Master Data Relations
+	IndustryID *int64 `gorm:"column:industry_id;index" json:"industry_id,omitempty"`
+	DistrictID *int64 `gorm:"column:district_id;index" json:"district_id,omitempty"`
+	CityID     *int64 `gorm:"column:city_id;index" json:"city_id,omitempty"`
+	ProvinceID *int64 `gorm:"column:province_id;index" json:"province_id,omitempty"`
+
+	// Legacy Location Fields (for backward compatibility)
+	Location     string `gorm:"column:location;type:varchar(150)" json:"location,omitempty"`
+	City         string `gorm:"column:city;type:varchar(100)" json:"city,omitempty"`
+	Province     string `gorm:"column:province;type:varchar(100)" json:"province,omitempty"`
+	RemoteOption bool   `gorm:"column:remote_option;default:false" json:"remote_option"`
+
 	SalaryMin         *float64   `gorm:"column:salary_min;type:numeric(12,2)" json:"salary_min,omitempty"`
 	SalaryMax         *float64   `gorm:"column:salary_max;type:numeric(12,2)" json:"salary_max,omitempty"`
 	Currency          string     `gorm:"column:currency;type:varchar(10);default:'IDR'" json:"currency" validate:"omitempty,len=3"`
@@ -46,6 +57,12 @@ type Job struct {
 	Benefits        []JobBenefit     `gorm:"foreignKey:JobID;references:ID;constraint:OnDelete:CASCADE" json:"benefits,omitempty"`
 	Skills          []JobSkill       `gorm:"foreignKey:JobID;references:ID;constraint:OnDelete:CASCADE" json:"skills,omitempty"`
 	JobRequirements []JobRequirement `gorm:"foreignKey:JobID;references:ID;constraint:OnDelete:CASCADE" json:"job_requirements,omitempty"`
+
+	// Master Data Relations
+	Industry  *master.Industry `gorm:"foreignKey:IndustryID;references:ID;constraint:OnDelete:SET NULL" json:"industry,omitempty"`
+	District  *master.District `gorm:"foreignKey:DistrictID;references:ID;constraint:OnDelete:SET NULL" json:"district,omitempty"`
+	MCity     *master.City     `gorm:"foreignKey:CityID;references:ID;constraint:OnDelete:SET NULL" json:"m_city,omitempty"`
+	MProvince *master.Province `gorm:"foreignKey:ProvinceID;references:ID;constraint:OnDelete:SET NULL" json:"m_province,omitempty"`
 }
 
 // TableName specifies the table name for Job
@@ -87,6 +104,83 @@ func (j *Job) IsActive() bool {
 // CanApply checks if job accepts applications
 func (j *Job) CanApply() bool {
 	return j.IsActive()
+}
+
+// ==========================================
+// MASTER DATA HELPER METHODS
+// ==========================================
+
+// HasMasterDataRelations checks if job has master data relations loaded
+func (j *Job) HasMasterDataRelations() bool {
+	return j.Industry != nil || j.District != nil || j.MCity != nil || j.MProvince != nil
+}
+
+// GetIndustry returns the industry relation if loaded
+func (j *Job) GetIndustry() *master.Industry {
+	return j.Industry
+}
+
+// GetIndustryName returns industry name from master data or falls back to legacy field
+// This provides smart fallback for backward compatibility
+func (j *Job) GetIndustryName() string {
+	if j.Industry != nil {
+		return j.Industry.Name
+	}
+	// No legacy industry field in Job, return empty
+	return ""
+}
+
+// GetDistrict returns the district relation if loaded
+func (j *Job) GetDistrict() *master.District {
+	return j.District
+}
+
+// GetCity returns the city relation if loaded
+func (j *Job) GetCity() *master.City {
+	return j.MCity
+}
+
+// GetProvince returns the province relation if loaded
+func (j *Job) GetProvince() *master.Province {
+	return j.MProvince
+}
+
+// GetCityName returns city name from master data or falls back to legacy field
+func (j *Job) GetCityName() string {
+	if j.MCity != nil {
+		return j.MCity.Name
+	}
+	// Fallback to legacy field
+	return j.City
+}
+
+// GetProvinceName returns province name from master data or falls back to legacy field
+func (j *Job) GetProvinceName() string {
+	if j.MProvince != nil {
+		return j.MProvince.Name
+	}
+	// Fallback to legacy field
+	return j.Province
+}
+
+// GetFullLocation returns full location string with master data or legacy fields
+// Returns format: "District, City, Province" or legacy location string
+func (j *Job) GetFullLocation() string {
+	// Try master data first
+	if j.District != nil && j.MCity != nil && j.MProvince != nil {
+		districtName := j.District.Name
+		cityName := j.MCity.GetFullName() // e.g., "Kota Bandung"
+		provinceName := j.MProvince.Name
+		return districtName + ", " + cityName + ", " + provinceName
+	}
+
+	// Fallback to legacy fields
+	if j.City != "" && j.Province != "" {
+		return j.City + ", " + j.Province
+	}
+
+	// Last resort: use Location field
+	return j.Location
 }
 
 // JobCategory represents job category entity

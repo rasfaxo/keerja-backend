@@ -64,6 +64,10 @@ type SkillsMasterService interface {
 	GetTypeStats(ctx context.Context) ([]TypeStatResponse, error)
 	GetDifficultyStats(ctx context.Context) ([]DifficultyStatResponse, error)
 
+	// Batch Operations
+	GetSkillsByIDs(ctx context.Context, ids []int64) ([]SkillResponse, error)
+	GetSkillsByNames(ctx context.Context, names []string) ([]SkillResponse, error)
+
 	// Hierarchy Operations
 	GetRootSkills(ctx context.Context) ([]SkillResponse, error)
 	GetChildSkills(ctx context.Context, parentID int64) ([]SkillResponse, error)
@@ -114,22 +118,22 @@ type SkillsMasterService interface {
 
 // CreateBenefitRequest represents a request to create a benefit
 type CreateBenefitRequest struct {
-	Code        string  `json:"code" validate:"required,min=2,max=50"`
-	Name        string  `json:"name" validate:"required,min=2,max=150"`
-	Category    string  `json:"category" validate:"required,oneof=financial health career lifestyle flexibility other"`
-	Description string  `json:"description,omitempty"`
-	Icon        string  `json:"icon,omitempty" validate:"omitempty,max=100"`
-	IsActive    bool    `json:"is_active"`
+	Code        string `json:"code" validate:"required,min=2,max=50"`
+	Name        string `json:"name" validate:"required,min=2,max=150"`
+	Category    string `json:"category" validate:"required,oneof=financial health career lifestyle flexibility other"`
+	Description string `json:"description,omitempty"`
+	Icon        string `json:"icon,omitempty" validate:"omitempty,max=100"`
+	IsActive    bool   `json:"is_active"`
 }
 
 // UpdateBenefitRequest represents a request to update a benefit
 type UpdateBenefitRequest struct {
-	Code        string  `json:"code,omitempty" validate:"omitempty,min=2,max=50"`
-	Name        string  `json:"name,omitempty" validate:"omitempty,min=2,max=150"`
-	Category    string  `json:"category,omitempty" validate:"omitempty,oneof=financial health career lifestyle flexibility other"`
-	Description string  `json:"description,omitempty"`
-	Icon        string  `json:"icon,omitempty" validate:"omitempty,max=100"`
-	IsActive    *bool   `json:"is_active,omitempty"`
+	Code        string `json:"code,omitempty" validate:"omitempty,min=2,max=50"`
+	Name        string `json:"name,omitempty" validate:"omitempty,min=2,max=150"`
+	Category    string `json:"category,omitempty" validate:"omitempty,oneof=financial health career lifestyle flexibility other"`
+	Description string `json:"description,omitempty"`
+	Icon        string `json:"icon,omitempty" validate:"omitempty,max=100"`
+	IsActive    *bool  `json:"is_active,omitempty"`
 }
 
 // CreateSkillRequest represents a request to create a skill
@@ -162,12 +166,12 @@ type UpdateSkillRequest struct {
 
 // BenefitImportData represents data for importing benefits
 type BenefitImportData struct {
-	Code        string  `json:"code"`
-	Name        string  `json:"name"`
-	Category    string  `json:"category"`
-	Description string  `json:"description,omitempty"`
-	Icon        string  `json:"icon,omitempty"`
-	IsActive    bool    `json:"is_active"`
+	Code        string `json:"code"`
+	Name        string `json:"name"`
+	Category    string `json:"category"`
+	Description string `json:"description,omitempty"`
+	Icon        string `json:"icon,omitempty"`
+	IsActive    bool   `json:"is_active"`
 }
 
 // SkillImportData represents data for importing skills
@@ -244,29 +248,29 @@ type SkillTreeResponse struct {
 
 // BenefitStatsResponse represents statistics about benefits
 type BenefitStatsResponse struct {
-	TotalBenefits     int64                    `json:"total_benefits"`
-	ActiveBenefits    int64                    `json:"active_benefits"`
-	InactiveBenefits  int64                    `json:"inactive_benefits"`
-	ByCategory        map[string]int64         `json:"by_category"`
-	AveragePopularity float64                  `json:"average_popularity"`
-	MostPopular       *BenefitResponse         `json:"most_popular,omitempty"`
-	TopCategories     []CategoryStatResponse   `json:"top_categories"`
+	TotalBenefits     int64                  `json:"total_benefits"`
+	ActiveBenefits    int64                  `json:"active_benefits"`
+	InactiveBenefits  int64                  `json:"inactive_benefits"`
+	ByCategory        map[string]int64       `json:"by_category"`
+	AveragePopularity float64                `json:"average_popularity"`
+	MostPopular       *BenefitResponse       `json:"most_popular,omitempty"`
+	TopCategories     []CategoryStatResponse `json:"top_categories"`
 }
 
 // SkillStatsResponse represents statistics about skills
 type SkillStatsResponse struct {
-	TotalSkills       int64                     `json:"total_skills"`
-	ActiveSkills      int64                     `json:"active_skills"`
-	InactiveSkills    int64                     `json:"inactive_skills"`
-	ByType            map[string]int64          `json:"by_type"`
-	ByDifficulty      map[string]int64          `json:"by_difficulty"`
-	ByCategory        map[int64]int64           `json:"by_category"`
-	RootSkills        int64                     `json:"root_skills"`
-	ChildSkills       int64                     `json:"child_skills"`
-	AveragePopularity float64                   `json:"average_popularity"`
-	MostPopular       *SkillResponse            `json:"most_popular,omitempty"`
-	TopTypes          []TypeStatResponse        `json:"top_types"`
-	TopDifficulties   []DifficultyStatResponse  `json:"top_difficulties"`
+	TotalSkills       int64                    `json:"total_skills"`
+	ActiveSkills      int64                    `json:"active_skills"`
+	InactiveSkills    int64                    `json:"inactive_skills"`
+	ByType            map[string]int64         `json:"by_type"`
+	ByDifficulty      map[string]int64         `json:"by_difficulty"`
+	ByCategory        map[int64]int64          `json:"by_category"`
+	RootSkills        int64                    `json:"root_skills"`
+	ChildSkills       int64                    `json:"child_skills"`
+	AveragePopularity float64                  `json:"average_popularity"`
+	MostPopular       *SkillResponse           `json:"most_popular,omitempty"`
+	TopTypes          []TypeStatResponse       `json:"top_types"`
+	TopDifficulties   []DifficultyStatResponse `json:"top_difficulties"`
 }
 
 // CategoryInfo represents category information
@@ -299,11 +303,11 @@ type DifficultyStatResponse struct {
 
 // ImportResult represents the result of an import operation
 type ImportResult struct {
-	TotalRecords    int      `json:"total_records"`
-	SuccessCount    int      `json:"success_count"`
-	FailureCount    int      `json:"failure_count"`
-	Errors          []string `json:"errors,omitempty"`
-	DuplicateCount  int      `json:"duplicate_count"`
+	TotalRecords   int      `json:"total_records"`
+	SuccessCount   int      `json:"success_count"`
+	FailureCount   int      `json:"failure_count"`
+	Errors         []string `json:"errors,omitempty"`
+	DuplicateCount int      `json:"duplicate_count"`
 }
 
 // BenefitExportData represents data for exporting benefits
@@ -330,4 +334,139 @@ type SkillExportData struct {
 	Aliases         []string `json:"aliases"`
 	ParentID        *int64   `json:"parent_id"`
 	IsActive        bool     `json:"is_active"`
+}
+
+// ========================================
+// Company Refactor Service Interfaces
+// ========================================
+
+// IndustryService defines business logic for industry master data
+type IndustryService interface {
+	// GetAll retrieves all industries with optional search
+	GetAll(ctx context.Context, search string) ([]IndustryResponse, error)
+
+	// GetActive retrieves all active industries with optional search
+	GetActive(ctx context.Context, search string) ([]IndustryResponse, error)
+
+	// GetByID retrieves an industry by ID
+	GetByID(ctx context.Context, id int64) (*IndustryResponse, error)
+
+	// ValidateIndustryID checks if an industry ID exists and is active
+	ValidateIndustryID(ctx context.Context, id int64) error
+}
+
+// CompanySizeService defines business logic for company size master data
+type CompanySizeService interface {
+	// GetAll retrieves all company sizes
+	GetAll(ctx context.Context) ([]CompanySizeResponse, error)
+
+	// GetActive retrieves all active company sizes
+	GetActive(ctx context.Context) ([]CompanySizeResponse, error)
+
+	// GetByID retrieves a company size by ID
+	GetByID(ctx context.Context, id int64) (*CompanySizeResponse, error)
+
+	// ValidateCompanySizeID checks if a company size ID exists and is active
+	ValidateCompanySizeID(ctx context.Context, id int64) error
+}
+
+// ProvinceService defines business logic for province master data
+type ProvinceService interface {
+	// GetAll retrieves all provinces with optional search
+	GetAll(ctx context.Context, search string) ([]ProvinceResponse, error)
+
+	// GetActive retrieves all active provinces with optional search
+	GetActive(ctx context.Context, search string) ([]ProvinceResponse, error)
+
+	// GetByID retrieves a province by ID
+	GetByID(ctx context.Context, id int64) (*ProvinceResponse, error)
+
+	// ValidateProvinceID checks if a province ID exists and is active
+	ValidateProvinceID(ctx context.Context, id int64) error
+}
+
+// CityService defines business logic for city master data
+type CityService interface {
+	// GetByProvinceID retrieves all cities in a province with optional search
+	GetByProvinceID(ctx context.Context, provinceID int64, search string) ([]CityResponse, error)
+
+	// GetActiveByProvinceID retrieves all active cities in a province with optional search
+	GetActiveByProvinceID(ctx context.Context, provinceID int64, search string) ([]CityResponse, error)
+
+	// GetByID retrieves a city by ID with province info
+	GetByID(ctx context.Context, id int64) (*CityResponse, error)
+
+	// ValidateCityID checks if a city ID exists, is active, and belongs to the given province
+	ValidateCityID(ctx context.Context, cityID, provinceID int64) error
+}
+
+// DistrictService defines business logic for district master data
+type DistrictService interface {
+	// GetByCityID retrieves all districts in a city with optional search
+	GetByCityID(ctx context.Context, cityID int64, search string) ([]DistrictResponse, error)
+
+	// GetActiveByCityID retrieves all active districts in a city with optional search
+	GetActiveByCityID(ctx context.Context, cityID int64, search string) ([]DistrictResponse, error)
+
+	// GetByID retrieves a district by ID with full location hierarchy
+	GetByID(ctx context.Context, id int64) (*DistrictResponse, error)
+
+	// ValidateDistrictID checks if a district ID exists, is active, and belongs to the given city
+	ValidateDistrictID(ctx context.Context, districtID, cityID int64) error
+
+	// ValidateLocationHierarchy validates the complete location hierarchy (province -> city -> district)
+	ValidateLocationHierarchy(ctx context.Context, provinceID, cityID, districtID int64) error
+}
+
+// Response DTOs for Company Refactor
+
+// IndustryResponse represents an industry response
+type IndustryResponse struct {
+	ID          int64  `json:"id"`
+	Name        string `json:"name"`
+	Slug        string `json:"slug"`
+	Description string `json:"description,omitempty"`
+	IconURL     string `json:"icon_url,omitempty"`
+	IsActive    bool   `json:"is_active"`
+}
+
+// CompanySizeResponse represents a company size response
+type CompanySizeResponse struct {
+	ID           int64  `json:"id"`
+	Label        string `json:"label"`
+	MinEmployees int    `json:"min_employees"`
+	MaxEmployees *int   `json:"max_employees,omitempty"` // nil = unlimited
+	IsActive     bool   `json:"is_active"`
+}
+
+// ProvinceResponse represents a province response
+type ProvinceResponse struct {
+	ID       int64  `json:"id"`
+	Name     string `json:"name"`
+	Code     string `json:"code"`
+	IsActive bool   `json:"is_active"`
+}
+
+// CityResponse represents a city response
+type CityResponse struct {
+	ID         int64             `json:"id"`
+	Name       string            `json:"name"`
+	FullName   string            `json:"full_name"` // e.g., "Kota Bandung"
+	Type       string            `json:"type"`      // "Kota" or "Kabupaten"
+	Code       string            `json:"code"`
+	ProvinceID int64             `json:"province_id"`
+	Province   *ProvinceResponse `json:"province,omitempty"`
+	IsActive   bool              `json:"is_active"`
+}
+
+// DistrictResponse represents a district response
+type DistrictResponse struct {
+	ID               int64         `json:"id"`
+	Name             string        `json:"name"`
+	Code             string        `json:"code"`
+	PostalCode       string        `json:"postal_code,omitempty"`
+	CityID           int64         `json:"city_id"`
+	City             *CityResponse `json:"city,omitempty"`
+	FullLocationPath string        `json:"full_location_path,omitempty"` // e.g., "Batujajar, Kabupaten Bandung Barat, Jawa Barat"
+	IsActive         bool          `json:"is_active"`
 }

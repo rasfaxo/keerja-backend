@@ -8,7 +8,7 @@ import (
 // CompanyService defines the business logic interface for company operations
 type CompanyService interface {
 	// Company registration and management
-	RegisterCompany(ctx context.Context, req *RegisterCompanyRequest) (*Company, error)
+	RegisterCompany(ctx context.Context, req *RegisterCompanyRequest, userID int64) (*Company, error)
 	GetCompany(ctx context.Context, id int64) (*Company, error)
 	GetCompanyBySlug(ctx context.Context, slug string) (*Company, error)
 	UpdateCompany(ctx context.Context, companyID int64, req *UpdateCompanyRequest) error
@@ -72,7 +72,13 @@ type CompanyService interface {
 
 	// Employer user management
 	InviteEmployer(ctx context.Context, req *InviteEmployerRequest) error
-	AcceptInvitation(ctx context.Context, userID, companyID int64) error
+	AcceptInvitation(ctx context.Context, token string, userID int64) error
+	ResendInvitation(ctx context.Context, invitationID, requestedBy int64) error
+	CancelInvitation(ctx context.Context, invitationID, canceledBy int64) error
+	GetPendingInvitations(ctx context.Context, companyID int64) ([]CompanyInvitation, error)
+	GetUserPendingInvitations(ctx context.Context, email string) ([]CompanyInvitation, error)
+	ExpireOldInvitations(ctx context.Context) (int64, error)
+	GetEmployerUser(ctx context.Context, userID, companyID int64) (*EmployerUser, error)
 	UpdateEmployerRole(ctx context.Context, employerUserID int64, newRole string) error
 	RemoveEmployerUser(ctx context.Context, employerUserID, companyID int64) error
 	GetEmployerUsers(ctx context.Context, companyID int64) ([]EmployerUser, error)
@@ -109,39 +115,63 @@ type RegisterCompanyRequest struct {
 	CompanyName        string
 	LegalName          *string
 	RegistrationNumber *string
-	Industry           *string
-	CompanyType        *string
-	SizeCategory       *string
-	WebsiteURL         *string
-	EmailDomain        *string
-	Phone              *string
-	Address            *string
-	City               *string
-	Province           *string
-	Country            *string
-	PostalCode         *string
-	About              *string
+
+	// Master Data Relations
+	IndustryID    *int64
+	CompanySizeID *int64
+	DistrictID    *int64
+	FullAddress   string
+	Description   *string
+
+	// Legacy Fields (for backward compatibility)
+	Industry     *string
+	CompanyType  *string
+	SizeCategory *string
+	Address      *string
+	City         *string
+	Province     *string
+
+	// Other Fields
+	WebsiteURL  *string
+	EmailDomain *string
+	Phone       *string
+	Country     *string
+	PostalCode  *string
+	About       *string
 }
 
 type UpdateCompanyRequest struct {
 	CompanyName        *string
 	LegalName          *string
 	RegistrationNumber *string
-	Industry           *string
-	CompanyType        *string
-	SizeCategory       *string
-	WebsiteURL         *string
-	EmailDomain        *string
-	Phone              *string
-	Address            *string
-	City               *string
-	Province           *string
-	PostalCode         *string
-	Latitude           *float64
-	Longitude          *float64
-	About              *string
-	Culture            *string
-	Benefits           []string
+
+	// Master Data Relations
+	IndustryID    *int64
+	CompanySizeID *int64
+	DistrictID    *int64
+	FullAddress   *string
+	Description   *string
+
+	// Legacy Fields (for backward compatibility)
+	Industry     *string
+	CompanyType  *string
+	SizeCategory *string
+	Address      *string
+	City         *string
+	Province     *string
+
+	// Location
+	Latitude  *float64
+	Longitude *float64
+
+	// Other Fields
+	WebsiteURL  *string
+	EmailDomain *string
+	Phone       *string
+	PostalCode  *string
+	About       *string
+	Culture     *string
+	Benefits    []string
 }
 
 type CreateProfileRequest struct {

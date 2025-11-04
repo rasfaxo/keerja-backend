@@ -14,9 +14,26 @@ import (
 // - Profile & Social: CompanyProfileHandler (8 endpoints)
 // - Reviews & Ratings: CompanyReviewHandler (5 endpoints)
 // - Statistics & Queries: CompanyStatsHandler (3 endpoints)
-// Total: 26 endpoints
-func SetupCompanyRoutes(api fiber.Router, deps *Dependencies, authMw *middleware.AuthMiddleware) {
+// - Invitations: CompanyInviteHandler (5 endpoints)
+// Total: 31 endpoints
+func SetupCompanyRoutes(api fiber.Router, deps *Dependencies, authMw *middleware.AuthMiddleware, permMw *middleware.PermissionMiddleware) {
 	companies := api.Group("/companies")
+
+	// ==========================================
+	// PROTECTED ROUTES - User-Specific
+	// ==========================================
+
+	// Get my companies (where user is a member)
+	companies.Get("/my-companies",
+		authMw.AuthRequired(),
+		deps.CompanyBasicHandler.GetMyCompanies,
+	)
+
+	// Get user's followed companies
+	companies.Get("/followed",
+		authMw.AuthRequired(),
+		deps.CompanyProfileHandler.GetFollowedCompanies,
+	)
 
 	// ==========================================
 	// PUBLIC ROUTES - Basic CRUD (CompanyBasicHandler)
@@ -100,33 +117,39 @@ func SetupCompanyRoutes(api fiber.Router, deps *Dependencies, authMw *middleware
 		deps.CompanyBasicHandler.CreateCompany,
 	)
 
-	// Update company details
+	// Update company details (admin only)
 	protected.Put("/:id",
+		permMw.RequireAdmin(),
 		deps.CompanyBasicHandler.UpdateCompany,
 	)
 
-	// Delete company
+	// Delete company (owner or admin only)
 	protected.Delete("/:id",
+		permMw.RequireOwnerOrAdmin(),
 		deps.CompanyBasicHandler.DeleteCompany,
 	)
 
-	// Upload company logo
+	// Upload company logo (admin only)
 	protected.Post("/:id/logo",
+		permMw.RequireAdmin(),
 		deps.CompanyBasicHandler.UploadLogo,
 	)
 
-	// Delete company logo
+	// Delete company logo (admin only)
 	protected.Delete("/:id/logo",
+		permMw.RequireAdmin(),
 		deps.CompanyBasicHandler.DeleteLogo,
 	)
 
-	// Upload company banner
+	// Upload company banner (admin only)
 	protected.Post("/:id/banner",
+		permMw.RequireAdmin(),
 		deps.CompanyBasicHandler.UploadBanner,
 	)
 
-	// Delete company banner
+	// Delete company banner (admin only)
 	protected.Delete("/:id/banner",
+		permMw.RequireAdmin(),
 		deps.CompanyBasicHandler.DeleteBanner,
 	)
 
@@ -134,18 +157,21 @@ func SetupCompanyRoutes(api fiber.Router, deps *Dependencies, authMw *middleware
 	// Profile Management (CompanyProfileHandler)
 	// ------------------------------------------
 
-	// Update company profile
+	// Update company profile (admin only)
 	protected.Put("/:id/profile",
+		permMw.RequireAdmin(),
 		deps.CompanyProfileHandler.UpdateProfile,
 	)
 
-	// Publish company profile (make public)
+	// Publish company profile (admin only)
 	protected.Post("/:id/profile/publish",
+		permMw.RequireAdmin(),
 		deps.CompanyProfileHandler.PublishProfile,
 	)
 
-	// Unpublish company profile (make private)
+	// Unpublish company profile (admin only)
 	protected.Post("/:id/profile/unpublish",
+		permMw.RequireAdmin(),
 		deps.CompanyProfileHandler.UnpublishProfile,
 	)
 
@@ -161,11 +187,6 @@ func SetupCompanyRoutes(api fiber.Router, deps *Dependencies, authMw *middleware
 	// Unfollow company
 	protected.Delete("/:id/follow",
 		deps.CompanyProfileHandler.UnfollowCompany,
-	)
-
-	// Get user's followed companies
-	protected.Get("/followed",
-		deps.CompanyProfileHandler.GetFollowedCompanies,
 	)
 
 	// ------------------------------------------
@@ -189,22 +210,44 @@ func SetupCompanyRoutes(api fiber.Router, deps *Dependencies, authMw *middleware
 	)
 
 	// ------------------------------------------
-	// Additional Protected Routes (Future Implementation)
+	// Additional Protected Routes (Employee Invitations)
 	// ------------------------------------------
 
-	// TODO: Implement InviteEmployee handler
+	// Invite employee to company (admin only)
 	protected.Post("/:id/invite-employee",
 		middleware.EmailRateLimiter(), // Rate limit invitations - 3/hour
-		func(c *fiber.Ctx) error {
-			return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{
-				"message": "Invite employee endpoint - Coming soon",
-			})
-		},
+		permMw.CanManageEmployees(),
+		deps.CompanyInviteHandler.InviteEmployee,
+	)
+
+	// Accept invitation (global endpoint - not tied to specific company)
+	protected.Post("/invitations/accept",
+		deps.CompanyInviteHandler.AcceptInvitation,
+	)
+
+	// Get pending invitations for a company (admin only)
+	protected.Get("/:id/invitations",
+		permMw.CanManageEmployees(),
+		deps.CompanyInviteHandler.GetPendingInvitations,
+	)
+
+	// Resend invitation (admin only)
+	protected.Post("/:id/invitations/:invitationId/resend",
+		middleware.EmailRateLimiter(), // Rate limit resends
+		permMw.CanManageEmployees(),
+		deps.CompanyInviteHandler.ResendInvitation,
+	)
+
+	// Cancel invitation (admin only)
+	protected.Delete("/:id/invitations/:invitationId",
+		permMw.CanManageEmployees(),
+		deps.CompanyInviteHandler.CancelInvitation,
 	)
 
 	// TODO: Implement RequestVerification handler
 	protected.Post("/:id/verify",
 		middleware.APIRateLimiter(), // Rate limit verification requests
+		permMw.RequireAdmin(),
 		func(c *fiber.Ctx) error {
 			return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{
 				"message": "Request company verification endpoint - Coming soon",

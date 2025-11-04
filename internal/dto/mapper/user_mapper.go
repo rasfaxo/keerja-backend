@@ -135,6 +135,115 @@ func ToUserDetailResponse(u *user.User) *response.UserDetailResponse {
 	return resp
 }
 
+// ToUserResponseWithIncludes converts User entity with selective relations based on includes parameter
+// Supports: profile, educations, experiences, skills, certifications, languages, projects, documents, preference
+func ToUserResponseWithIncludes(u *user.User, includes []string) *response.UserDetailResponse {
+	if u == nil {
+		return nil
+	}
+
+	// Create a map for quick lookup
+	includeMap := make(map[string]bool)
+	for _, inc := range includes {
+		includeMap[inc] = true
+	}
+
+	resp := &response.UserDetailResponse{
+		ID:         u.ID,
+		UUID:       u.UUID.String(),
+		FullName:   u.FullName,
+		Email:      u.Email,
+		Phone:      PtrToString(u.Phone),
+		UserType:   u.UserType,
+		IsVerified: u.IsVerified,
+		Status:     u.Status,
+		LastLogin:  u.LastLogin,
+		CreatedAt:  u.CreatedAt,
+	}
+
+	// Always include basic profile (it's lightweight)
+	if u.Profile != nil {
+		resp.Profile = ToUserProfileResponse(u.Profile)
+	}
+
+	// Conditionally include preference
+	if includeMap["preference"] && u.Preference != nil {
+		resp.Preference = ToUserPreferenceResponse(u.Preference)
+	}
+
+	// Conditionally include educations
+	if includeMap["educations"] && len(u.Educations) > 0 {
+		resp.Educations = make([]response.UserEducationResponse, 0, len(u.Educations))
+		for _, edu := range u.Educations {
+			if mapped := ToUserEducationResponse(&edu); mapped != nil {
+				resp.Educations = append(resp.Educations, *mapped)
+			}
+		}
+	}
+
+	// Conditionally include experiences
+	if includeMap["experiences"] && len(u.Experiences) > 0 {
+		resp.Experiences = make([]response.UserExperienceResponse, 0, len(u.Experiences))
+		for _, exp := range u.Experiences {
+			if mapped := ToUserExperienceResponse(&exp); mapped != nil {
+				resp.Experiences = append(resp.Experiences, *mapped)
+			}
+		}
+	}
+
+	// Conditionally include skills
+	if includeMap["skills"] && len(u.Skills) > 0 {
+		resp.Skills = make([]response.UserSkillResponse, 0, len(u.Skills))
+		for _, skill := range u.Skills {
+			if mapped := ToUserSkillResponse(&skill); mapped != nil {
+				resp.Skills = append(resp.Skills, *mapped)
+			}
+		}
+	}
+
+	// Conditionally include certifications
+	if includeMap["certifications"] && len(u.Certifications) > 0 {
+		resp.Certifications = make([]response.UserCertificationResponse, 0, len(u.Certifications))
+		for _, cert := range u.Certifications {
+			if mapped := ToUserCertificationResponse(&cert); mapped != nil {
+				resp.Certifications = append(resp.Certifications, *mapped)
+			}
+		}
+	}
+
+	// Conditionally include languages
+	if includeMap["languages"] && len(u.Languages) > 0 {
+		resp.Languages = make([]response.UserLanguageResponse, 0, len(u.Languages))
+		for _, lang := range u.Languages {
+			if mapped := ToUserLanguageResponse(&lang); mapped != nil {
+				resp.Languages = append(resp.Languages, *mapped)
+			}
+		}
+	}
+
+	// Conditionally include projects
+	if includeMap["projects"] && len(u.Projects) > 0 {
+		resp.Projects = make([]response.UserProjectResponse, 0, len(u.Projects))
+		for _, proj := range u.Projects {
+			if mapped := ToUserProjectResponse(&proj); mapped != nil {
+				resp.Projects = append(resp.Projects, *mapped)
+			}
+		}
+	}
+
+	// Conditionally include documents
+	if includeMap["documents"] && len(u.Documents) > 0 {
+		resp.Documents = make([]response.UserDocumentResponse, 0, len(u.Documents))
+		for _, doc := range u.Documents {
+			if mapped := ToUserDocumentResponse(&doc); mapped != nil {
+				resp.Documents = append(resp.Documents, *mapped)
+			}
+		}
+	}
+
+	return resp
+}
+
 // ToUserProfileResponse converts UserProfile entity to UserProfileResponse DTO
 func ToUserProfileResponse(p *user.UserProfile) *response.UserProfileResponse {
 	if p == nil {
@@ -148,8 +257,15 @@ func ToUserProfileResponse(p *user.UserProfile) *response.UserProfileResponse {
 		Bio:                p.Bio,
 		Gender:             p.Gender,
 		BirthDate:          p.BirthDate,
+		Nationality:        p.Nationality,
+		Address:            p.Address,
 		LocationCity:       p.LocationCity,
+		LocationState:      p.LocationState,
 		LocationCountry:    p.LocationCountry,
+		PostalCode:         p.PostalCode,
+		LinkedInURL:        p.LinkedInURL,
+		PortfolioURL:       p.PortfolioURL,
+		GithubURL:          p.GithubURL,
 		DesiredPosition:    p.DesiredPosition,
 		DesiredSalaryMin:   p.DesiredSalaryMin,
 		DesiredSalaryMax:   p.DesiredSalaryMax,

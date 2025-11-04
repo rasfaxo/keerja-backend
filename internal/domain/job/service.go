@@ -101,34 +101,48 @@ type JobService interface {
 	ValidateJob(ctx context.Context, job *Job) error
 	CheckJobOwnership(ctx context.Context, jobID, employerUserID int64) error
 	CheckJobStatus(ctx context.Context, jobID int64) (string, error)
+
+	// Master Data Validation
+	ValidateMasterDataIDs(ctx context.Context, industryID, districtID *int64) error
+	GetJobWithMasterData(ctx context.Context, jobID int64) (*Job, error)
 }
 
 // ===== Request DTOs =====
 
 // CreateJobRequest represents request to create a new job
 type CreateJobRequest struct {
-	CompanyID        int64                   `json:"company_id" validate:"required"`
-	EmployerUserID   int64                   `json:"employer_user_id" validate:"required"`
-	CategoryID       *int64                  `json:"category_id,omitempty"`
-	Title            string                  `json:"title" validate:"required,max=200"`
-	JobLevel         string                  `json:"job_level,omitempty" validate:"omitempty,oneof='Internship' 'Entry Level' 'Mid Level' 'Senior Level' 'Manager' 'Director'"`
-	EmploymentType   string                  `json:"employment_type,omitempty" validate:"omitempty,oneof='Full-Time' 'Part-Time' 'Contract' 'Internship' 'Freelance'"`
-	Description      string                  `json:"description" validate:"required"`
-	RequirementsText string                  `json:"requirements_text,omitempty"`
-	Responsibilities string                  `json:"responsibilities,omitempty"`
-	RemoteOption     bool                    `json:"remote_option"`
-	SalaryMin        *float64                `json:"salary_min,omitempty"`
-	SalaryMax        *float64                `json:"salary_max,omitempty"`
-	Currency         string                  `json:"currency" validate:"omitempty,len=3"`
-	ExperienceMin    *int16                  `json:"experience_min,omitempty"`
-	ExperienceMax    *int16                  `json:"experience_max,omitempty"`
-	EducationLevel   string                  `json:"education_level,omitempty"`
-	TotalHires       int16                   `json:"total_hires" validate:"omitempty,min=1"`
-	ExpiredAt        *time.Time              `json:"expired_at,omitempty"`
-	Locations        []AddLocationRequest    `json:"locations,omitempty"`
-	Benefits         []AddBenefitRequest     `json:"benefits,omitempty"`
-	Skills           []AddSkillRequest       `json:"skills,omitempty"`
-	JobRequirements  []AddRequirementRequest `json:"job_requirements,omitempty"`
+	CompanyID        int64      `json:"company_id" validate:"required"`
+	EmployerUserID   int64      `json:"employer_user_id" validate:"required"`
+	CategoryID       *int64     `json:"category_id,omitempty"`
+	Title            string     `json:"title" validate:"required,max=200"`
+	JobLevel         string     `json:"job_level,omitempty" validate:"omitempty,oneof='Internship' 'Entry Level' 'Mid Level' 'Senior Level' 'Manager' 'Director'"`
+	EmploymentType   string     `json:"employment_type,omitempty" validate:"omitempty,oneof='Full-Time' 'Part-Time' 'Contract' 'Internship' 'Freelance'"`
+	Description      string     `json:"description" validate:"required"`
+	RequirementsText string     `json:"requirements_text,omitempty"`
+	Responsibilities string     `json:"responsibilities,omitempty"`
+	RemoteOption     bool       `json:"remote_option"`
+	SalaryMin        *float64   `json:"salary_min,omitempty"`
+	SalaryMax        *float64   `json:"salary_max,omitempty"`
+	Currency         string     `json:"currency" validate:"omitempty,len=3"`
+	ExperienceMin    *int16     `json:"experience_min,omitempty"`
+	ExperienceMax    *int16     `json:"experience_max,omitempty"`
+	EducationLevel   string     `json:"education_level,omitempty"`
+	TotalHires       int16      `json:"total_hires" validate:"omitempty,min=1"`
+	ExpiredAt        *time.Time `json:"expired_at,omitempty"`
+
+	// Master Data Fields
+	IndustryID *int64 `json:"industry_id,omitempty"`
+	DistrictID *int64 `json:"district_id,omitempty"`
+
+	// Legacy Fields (for backward compatibility)
+	Location string `json:"location,omitempty"`
+	City     string `json:"city,omitempty"`
+	Province string `json:"province,omitempty"`
+
+	Locations       []AddLocationRequest    `json:"locations,omitempty"`
+	Benefits        []AddBenefitRequest     `json:"benefits,omitempty"`
+	Skills          []AddSkillRequest       `json:"skills,omitempty"`
+	JobRequirements []AddRequirementRequest `json:"job_requirements,omitempty"`
 }
 
 // UpdateJobRequest represents request to update job
@@ -149,6 +163,15 @@ type UpdateJobRequest struct {
 	EducationLevel   string     `json:"education_level,omitempty"`
 	TotalHires       *int16     `json:"total_hires,omitempty"`
 	ExpiredAt        *time.Time `json:"expired_at,omitempty"`
+
+	// Master Data Fields
+	IndustryID *int64 `json:"industry_id,omitempty"`
+	DistrictID *int64 `json:"district_id,omitempty"`
+
+	// Legacy Fields (for backward compatibility)
+	Location string `json:"location,omitempty"`
+	City     string `json:"city,omitempty"`
+	Province string `json:"province,omitempty"`
 }
 
 // AddLocationRequest represents request to add job location

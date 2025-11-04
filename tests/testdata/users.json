@@ -1,0 +1,84 @@
+[
+  {
+    "id": 1,
+    "email": "jobseeker1@test.com",
+    "phone": "+628111111111",
+    "password": "Password123!",
+    "full_name": "John Doe",
+    "role": "job_seeker",
+    "is_email_verified": true,
+    "is_phone_verified": true,
+    "is_active": true,
+    "profile": {
+      "bio": "Experienced software engineer with 5+ years in backend development",
+      "location": "Jakarta, Indonesia",
+      "date_of_birth": "1995-01-15",
+      "gender": "male",
+      "skills": ["Go", "Python", "PostgreSQL", "Docker", "Kubernetes"],
+      "languages": ["Indonesian", "English"],
+      "resume_url": "https://storage.example.com/resumes/johndoe_resume.pdf"
+    }
+  },
+  {
+    "id": 2,
+    "email": "employer1@test.com",
+    "phone": "+628222222222",
+    "password": "Password123!",
+    "full_name": "Jane Smith",
+    "role": "employer",
+    "is_email_verified": true,
+    "is_phone_verified": true,
+    "is_active": true,
+    "profile": {
+      "bio": "HR Manager at Tech Company",
+      "location": "Jakarta, Indonesia",
+      "company_name": "Tech Innovators Inc"
+    }
+  },
+  {
+    "id": 3,
+    "email": "jobseeker2@test.com",
+    "phone": "+628333333333",
+    "password": "Password123!",
+    "full_name": "Alice Johnson",
+    "role": "job_seeker",
+    "is_email_verified": true,
+    "is_phone_verified": false,
+    "is_active": true,
+    "profile": {
+      "bio": "Junior developer looking for opportunities",
+      "location": "Bandung, Indonesia",
+      "date_of_birth": "1998-05-20",
+      "gender": "female",
+      "skills": ["JavaScript", "React", "Node.js", "MongoDB"],
+      "languages": ["Indonesian", "English"]
+    }
+  },
+  {
+    "id": 4,
+    "email": "unverified@test.com",
+    "phone": "+628444444444",
+    "password": "Password123!",
+    "full_name": "Bob Wilson",
+    "role": "job_seeker",
+    "is_email_verified": false,
+    "is_phone_verified": false,
+    "is_active": true
+  },
+  {
+    "id": 5,
+    "email": "employer2@test.com",
+    "phone": "+628555555555",
+    "password": "Password123!",
+    "full_name": "Sarah Brown",
+    "role": "employer",
+    "is_email_verified": true,
+    "is_phone_verified": true,
+    "is_active": true,
+    "profile": {
+      "bio": "Recruiter at Startup Company",
+      "location": "Surabaya, Indonesia",
+      "company_name": "Startup Ventures"
+    }
+  }
+]

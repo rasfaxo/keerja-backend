@@ -1,25 +1,23 @@
 package master
 
 import (
+	"database/sql"
 	"time"
-
-	"gorm.io/gorm"
 )
 
 // BenefitsMaster represents a master data entry for job benefits
 // Maps to: benefits_master table
 type BenefitsMaster struct {
-	ID              int64          `gorm:"primaryKey;autoIncrement" json:"id"`
-	Code            string         `gorm:"type:varchar(50);not null;uniqueIndex" json:"code" validate:"required,min=2,max=50"`
-	Name            string         `gorm:"type:varchar(150);not null;uniqueIndex" json:"name" validate:"required,min=2,max=150"`
-	Category        string         `gorm:"type:varchar(50);default:'other'" json:"category" validate:"oneof=financial health career lifestyle flexibility other"`
-	Description     string         `gorm:"type:text" json:"description,omitempty"`
-	Icon            string         `gorm:"type:varchar(100)" json:"icon,omitempty"`
-	IsActive        bool           `gorm:"default:true" json:"is_active"`
-	PopularityScore float64        `gorm:"type:numeric(5,2);default:0.00;index:idx_benefits_master_popularity,sort:desc" json:"popularity_score" validate:"min=0,max=100"`
-	CreatedAt       time.Time      `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt       time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
-	DeletedAt       gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+	ID              int64     `gorm:"primaryKey;autoIncrement" json:"id"`
+	Code            string    `gorm:"type:varchar(50);not null;uniqueIndex" json:"code" validate:"required,min=2,max=50"`
+	Name            string    `gorm:"type:varchar(150);not null;uniqueIndex" json:"name" validate:"required,min=2,max=150"`
+	Category        string    `gorm:"type:varchar(50);default:'other'" json:"category" validate:"oneof=financial health career lifestyle flexibility other"`
+	Description     string    `gorm:"type:text" json:"description,omitempty"`
+	Icon            string    `gorm:"type:varchar(100)" json:"icon,omitempty"`
+	IsActive        bool      `gorm:"default:true" json:"is_active"`
+	PopularityScore float64   `gorm:"type:numeric(5,2);default:0.00;index:idx_benefits_master_popularity,sort:desc" json:"popularity_score" validate:"min=0,max=100"`
+	CreatedAt       time.Time `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt       time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 }
 
 // TableName specifies the table name for BenefitsMaster
@@ -68,27 +66,26 @@ func (b *BenefitsMaster) IncrementPopularity(amount float64) {
 // SkillsMaster represents a master data entry for skills
 // Maps to: skills_master table
 type SkillsMaster struct {
-	ID              int64          `gorm:"primaryKey;autoIncrement" json:"id"`
-	Code            string         `gorm:"type:varchar(50);uniqueIndex" json:"code,omitempty" validate:"omitempty,min=2,max=50"`
-	Name            string         `gorm:"type:varchar(150);not null;uniqueIndex" json:"name" validate:"required,min=2,max=150"`
-	NormalizedName  string         `gorm:"type:varchar(150)" json:"normalized_name,omitempty"`
-	CategoryID      *int64         `gorm:"index" json:"category_id,omitempty"`
-	Description     string         `gorm:"type:text" json:"description,omitempty"`
-	SkillType       string         `gorm:"type:varchar(30);default:'technical'" json:"skill_type" validate:"oneof=technical soft language tool"`
-	DifficultyLevel string         `gorm:"type:varchar(20);default:'intermediate'" json:"difficulty_level" validate:"oneof=beginner intermediate advanced"`
-	PopularityScore float64        `gorm:"type:numeric(5,2);default:0.00;index:idx_skills_master_popularity,sort:desc" json:"popularity_score" validate:"min=0,max=100"`
-	Aliases         []string       `gorm:"type:text[]" json:"aliases,omitempty"`
-	ParentID        *int64         `gorm:"index" json:"parent_id,omitempty"`
-	IsActive        bool           `gorm:"default:true" json:"is_active"`
-	CreatedAt       time.Time      `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt       time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
-	DeletedAt       gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+	ID              int64     `gorm:"primaryKey;autoIncrement" json:"id"`
+	Code            string    `gorm:"type:varchar(50);uniqueIndex" json:"code,omitempty" validate:"omitempty,min=2,max=50"`
+	Name            string    `gorm:"type:varchar(150);not null;uniqueIndex" json:"name" validate:"required,min=2,max=150"`
+	NormalizedName  string    `gorm:"type:varchar(150)" json:"normalized_name,omitempty"`
+	CategoryID      *int64    `gorm:"index" json:"category_id,omitempty"`
+	Description     string    `gorm:"type:text" json:"description,omitempty"`
+	SkillType       string    `gorm:"type:varchar(30);default:'technical'" json:"skill_type" validate:"oneof=technical soft language tool"`
+	DifficultyLevel string    `gorm:"type:varchar(20);default:'intermediate'" json:"difficulty_level" validate:"oneof=beginner intermediate advanced"`
+	PopularityScore float64   `gorm:"type:numeric(5,2);default:0.00;index:idx_skills_master_popularity,sort:desc" json:"popularity_score" validate:"min=0,max=100"`
+	Aliases         []string  `gorm:"type:text[]" json:"aliases,omitempty"`
+	ParentID        *int64    `gorm:"index" json:"parent_id,omitempty"`
+	IsActive        bool      `gorm:"default:true" json:"is_active"`
+	CreatedAt       time.Time `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt       time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 
 	// Relationships
 	// Note: Category references job_categories table (not included here to avoid circular dependency)
 	// In implementation, use: Category *job.JobCategory `gorm:"foreignKey:CategoryID;constraint:OnDelete:SET NULL"`
-	Parent   *SkillsMaster   `gorm:"foreignKey:ParentID;constraint:OnDelete:SET NULL" json:"parent,omitempty"`
-	Children []SkillsMaster  `gorm:"foreignKey:ParentID;constraint:OnDelete:SET NULL" json:"children,omitempty"`
+	Parent   *SkillsMaster  `gorm:"foreignKey:ParentID;constraint:OnDelete:SET NULL" json:"parent,omitempty"`
+	Children []SkillsMaster `gorm:"foreignKey:ParentID;constraint:OnDelete:SET NULL" json:"children,omitempty"`
 }
 
 // TableName specifies the table name for SkillsMaster
@@ -182,4 +179,191 @@ func (s *SkillsMaster) HasAlias(alias string) bool {
 		}
 	}
 	return false
+}
+
+// ========================================
+// Company Refactor Master Data Entities
+// ========================================
+
+// Industry represents the master data for company industries
+// This table stores predefined industry categories that companies can select
+type Industry struct {
+	ID           int64          `gorm:"primaryKey;autoIncrement" json:"id"`
+	Name         string         `gorm:"type:varchar(100);not null;uniqueIndex:idx_industries_name" json:"name" validate:"required,min=2,max=100"`
+	Slug         string         `gorm:"type:varchar(100);not null;uniqueIndex:idx_industries_slug" json:"slug" validate:"required,slug,min=2,max=100"`
+	Description  sql.NullString `gorm:"type:text" json:"description,omitempty"`
+	IconURL      sql.NullString `gorm:"type:text" json:"icon_url,omitempty" validate:"omitempty,url"`
+	IsActive     bool           `gorm:"default:true;not null;index:idx_industries_active_deleted" json:"is_active"`
+	DisplayOrder int            `gorm:"default:0;not null;index:idx_industries_display_order" json:"display_order"`
+	CreatedAt    time.Time      `gorm:"autoCreateTime;not null" json:"created_at"`
+	UpdatedAt    time.Time      `gorm:"autoUpdateTime;not null" json:"updated_at"`
+	DeletedAt    sql.NullTime   `gorm:"index:idx_industries_active_deleted" json:"deleted_at,omitempty"`
+}
+
+// TableName specifies the table name for Industry entity
+func (Industry) TableName() string {
+	return "industries"
+}
+
+// IsDeleted checks if the industry is soft deleted
+func (i *Industry) IsDeleted() bool {
+	return i.DeletedAt.Valid
+}
+
+// GetDescription returns the description if valid, otherwise empty string
+func (i *Industry) GetDescription() string {
+	if i.Description.Valid {
+		return i.Description.String
+	}
+	return ""
+}
+
+// GetIconURL returns the icon URL if valid, otherwise empty string
+func (i *Industry) GetIconURL() string {
+	if i.IconURL.Valid {
+		return i.IconURL.String
+	}
+	return ""
+}
+
+// CompanySize represents the master data for company size categories
+// This table stores predefined company size ranges based on employee count
+type CompanySize struct {
+	ID           int64         `gorm:"primaryKey;autoIncrement" json:"id"`
+	Label        string        `gorm:"type:varchar(50);not null;uniqueIndex:idx_company_sizes_label" json:"label" validate:"required,min=2,max=50"`
+	MinEmployees int           `gorm:"not null" json:"min_employees" validate:"required,gte=1"`
+	MaxEmployees sql.NullInt32 `gorm:"" json:"max_employees,omitempty" validate:"omitempty,gtefield=MinEmployees"`
+	IsActive     bool          `gorm:"default:true;not null;index:idx_company_sizes_active" json:"is_active"`
+	DisplayOrder int           `gorm:"default:0;not null;index:idx_company_sizes_display_order" json:"display_order"`
+	CreatedAt    time.Time     `gorm:"autoCreateTime;not null" json:"created_at"`
+	UpdatedAt    time.Time     `gorm:"autoUpdateTime;not null" json:"updated_at"`
+}
+
+// TableName specifies the table name for CompanySize entity
+func (CompanySize) TableName() string {
+	return "company_sizes"
+}
+
+// GetMaxEmployees returns the max employees if valid, otherwise -1 (unlimited)
+func (cs *CompanySize) GetMaxEmployees() int {
+	if cs.MaxEmployees.Valid {
+		return int(cs.MaxEmployees.Int32)
+	}
+	return -1 // Indicates unlimited
+}
+
+// IsUnlimited checks if this size category has no upper limit
+func (cs *CompanySize) IsUnlimited() bool {
+	return !cs.MaxEmployees.Valid
+}
+
+// GetRange returns the employee range as a formatted string
+func (cs *CompanySize) GetRange() string {
+	return cs.Label
+}
+
+// Province represents the first-level location (Provinsi)
+// This table stores all Indonesian provinces with official BPS codes
+type Province struct {
+	ID        int64     `gorm:"primaryKey;autoIncrement" json:"id"`
+	Name      string    `gorm:"type:varchar(100);not null;index:idx_provinces_name" json:"name" validate:"required,min=2,max=100"`
+	Code      string    `gorm:"type:varchar(10);not null;uniqueIndex:idx_provinces_code" json:"code" validate:"required,min=2,max=10"`
+	IsActive  bool      `gorm:"default:true;not null;index:idx_provinces_active" json:"is_active"`
+	CreatedAt time.Time `gorm:"autoCreateTime;not null" json:"created_at"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime;not null" json:"updated_at"`
+
+	// Relations
+	Cities []City `gorm:"foreignKey:ProvinceID;constraint:OnDelete:RESTRICT" json:"cities,omitempty"`
+}
+
+// TableName specifies the table name for Province entity
+func (Province) TableName() string {
+	return "provinces"
+}
+
+// City represents the second-level location (Kota/Kabupaten)
+// This table stores cities and regencies with their parent province
+type City struct {
+	ID         int64     `gorm:"primaryKey;autoIncrement" json:"id"`
+	ProvinceID int64     `gorm:"not null;index:idx_cities_province_active" json:"province_id" validate:"required,gt=0"`
+	Name       string    `gorm:"type:varchar(100);not null;index:idx_cities_name" json:"name" validate:"required,min=2,max=100"`
+	Type       string    `gorm:"type:varchar(20);not null;index:idx_cities_type" json:"type" validate:"required,oneof=Kota Kabupaten"`
+	Code       string    `gorm:"type:varchar(10);not null;uniqueIndex:idx_cities_code" json:"code" validate:"required,min=2,max=10"`
+	IsActive   bool      `gorm:"default:true;not null;index:idx_cities_province_active" json:"is_active"`
+	CreatedAt  time.Time `gorm:"autoCreateTime;not null" json:"created_at"`
+	UpdatedAt  time.Time `gorm:"autoUpdateTime;not null" json:"updated_at"`
+
+	// Relations
+	Province  *Province  `gorm:"foreignKey:ProvinceID;constraint:OnDelete:RESTRICT" json:"province,omitempty"`
+	Districts []District `gorm:"foreignKey:CityID;constraint:OnDelete:RESTRICT" json:"districts,omitempty"`
+}
+
+// TableName specifies the table name for City entity
+func (City) TableName() string {
+	return "cities"
+}
+
+// GetFullName returns the city name with type prefix (e.g., "Kota Bandung", "Kabupaten Bandung Barat")
+func (c *City) GetFullName() string {
+	return c.Type + " " + c.Name
+}
+
+// IsKota checks if this is a city (Kota) as opposed to regency (Kabupaten)
+func (c *City) IsKota() bool {
+	return c.Type == "Kota"
+}
+
+// IsKabupaten checks if this is a regency (Kabupaten) as opposed to city (Kota)
+func (c *City) IsKabupaten() bool {
+	return c.Type == "Kabupaten"
+}
+
+// District represents the third-level location (Kecamatan)
+// This table stores districts with their parent city and postal codes
+type District struct {
+	ID         int64          `gorm:"primaryKey;autoIncrement" json:"id"`
+	CityID     int64          `gorm:"not null;index:idx_districts_city_active" json:"city_id" validate:"required,gt=0"`
+	Name       string         `gorm:"type:varchar(100);not null;index:idx_districts_name" json:"name" validate:"required,min=2,max=100"`
+	Code       string         `gorm:"type:varchar(10);not null;uniqueIndex:idx_districts_code" json:"code" validate:"required,min=2,max=10"`
+	PostalCode sql.NullString `gorm:"type:varchar(10);index:idx_districts_postal" json:"postal_code,omitempty" validate:"omitempty,len=5"`
+	IsActive   bool           `gorm:"default:true;not null;index:idx_districts_city_active" json:"is_active"`
+	CreatedAt  time.Time      `gorm:"autoCreateTime;not null" json:"created_at"`
+	UpdatedAt  time.Time      `gorm:"autoUpdateTime;not null" json:"updated_at"`
+
+	// Relations
+	City *City `gorm:"foreignKey:CityID;constraint:OnDelete:RESTRICT" json:"city,omitempty"`
+}
+
+// TableName specifies the table name for District entity
+func (District) TableName() string {
+	return "districts"
+}
+
+// GetPostalCode returns the postal code if valid, otherwise empty string
+func (d *District) GetPostalCode() string {
+	if d.PostalCode.Valid {
+		return d.PostalCode.String
+	}
+	return ""
+}
+
+// GetFullLocationPath returns the complete location hierarchy
+// Example: "Batujajar, Kabupaten Bandung Barat, Jawa Barat"
+func (d *District) GetFullLocationPath() string {
+	if d.City == nil {
+		return d.Name
+	}
+
+	result := d.Name + ", " + d.City.GetFullName()
+
+	if d.City.Province != nil {
+		result += ", " + d.City.Province.Name
+	}
+
+	return result
+}
+
+// HasPostalCode checks if this district has a postal code
+func (d *District) HasPostalCode() bool {
+	return d.PostalCode.Valid && d.PostalCode.String != ""
 }

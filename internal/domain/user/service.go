@@ -38,7 +38,8 @@ type UserService interface {
 	GetExperiences(ctx context.Context, userID int64) ([]UserExperience, error)
 
 	// Skill management
-	AddSkills(ctx context.Context, userID int64, skillNames []string) error
+	AddSkill(ctx context.Context, userID int64, req *AddUserSkillRequest) error
+	AddSkills(ctx context.Context, userID int64, req *AddUserSkillsRequest) ([]UserSkill, error)
 	UpdateSkill(ctx context.Context, userID int64, skillID int64, req *UpdateSkillRequest) error
 	DeleteSkill(ctx context.Context, userID int64, skillID int64) error
 	GetSkills(ctx context.Context, userID int64) ([]UserSkill, error)
@@ -92,12 +93,21 @@ type RegisterRequest struct {
 }
 
 type UpdateProfileRequest struct {
+	FullName           *string
+	Phone              *string
 	Headline           *string
 	Bio                *string
 	Gender             *string
 	BirthDate          *string
+	Nationality        *string
+	Address            *string
 	LocationCity       *string
+	LocationState      *string
 	LocationCountry    *string
+	PostalCode         *string
+	LinkedinURL        *string
+	PortfolioURL       *string
+	GithubURL          *string
 	DesiredPosition    *string
 	DesiredSalaryMin   *float64
 	DesiredSalaryMax   *float64
@@ -174,6 +184,20 @@ type UpdateExperienceRequest struct {
 	Achievements    *string
 	LocationCity    *string
 	LocationCountry *string
+}
+
+// AddUserSkillRequest represents add single skill request
+// User can either select from skills_master (using SkillID) or input custom skill (using SkillName)
+type AddUserSkillRequest struct {
+	SkillID           *int64
+	SkillName         string
+	ProficiencyLevel  string
+	YearsOfExperience *int16
+}
+
+// AddUserSkillsRequest represents add multiple skills request
+type AddUserSkillsRequest struct {
+	Skills []AddUserSkillRequest
 }
 
 type UpdateSkillRequest struct {

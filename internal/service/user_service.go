@@ -6,21 +6,28 @@ import (
 	"mime/multipart"
 	"time"
 
+	"keerja-backend/internal/domain/master"
 	"keerja-backend/internal/domain/user"
 	"keerja-backend/internal/utils"
 )
 
 // userService implements the UserService interface
 type userService struct {
-	userRepo      user.UserRepository
-	uploadService UploadService
+	userRepo         user.UserRepository
+	uploadService    UploadService
+	skillsMasterRepo master.SkillsMasterRepository
 }
 
 // NewUserService creates a new user service instance
-func NewUserService(userRepo user.UserRepository, uploadService UploadService) user.UserService {
+func NewUserService(
+	userRepo user.UserRepository,
+	uploadService UploadService,
+	skillsMasterRepo master.SkillsMasterRepository,
+) user.UserService {
 	return &userService{
-		userRepo:      userRepo,
-		uploadService: uploadService,
+		userRepo:         userRepo,
+		uploadService:    uploadService,
+		skillsMasterRepo: skillsMasterRepo,
 	}
 }
 
@@ -77,13 +84,50 @@ func (s *userService) GetProfileBySlug(ctx context.Context, slug string) (*user.
 
 // UpdateProfile updates user profile information
 func (s *userService) UpdateProfile(ctx context.Context, userID int64, req *user.UpdateProfileRequest) error {
-	// Get existing profile
-	profile, err := s.userRepo.FindProfileByUserID(ctx, userID)
+	// Get user data first (for full_name and phone updates)
+	usr, err := s.userRepo.FindByID(ctx, userID)
 	if err != nil {
-		return fmt.Errorf("profile not found: %w", err)
+		return fmt.Errorf("failed to find user: %w", err)
+	}
+	if usr == nil {
+		return fmt.Errorf("user not found")
 	}
 
-	// Update fields if provided
+	// Update user table fields (full_name, phone)
+	userUpdated := false
+	if req.FullName != nil {
+		usr.FullName = *req.FullName
+		userUpdated = true
+	}
+	if req.Phone != nil {
+		usr.Phone = req.Phone
+		userUpdated = true
+	}
+
+	// Save user updates if any
+	if userUpdated {
+		if err := s.userRepo.Update(ctx, usr); err != nil {
+			return fmt.Errorf("failed to update user: %w", err)
+		}
+	}
+
+	// Get existing profile or create new one
+	profile, err := s.userRepo.FindProfileByUserID(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("failed to find profile: %w", err)
+	}
+
+	// If profile doesn't exist, create a new one
+	if profile == nil {
+		profile = &user.UserProfile{
+			UserID: userID,
+		}
+		if err := s.userRepo.CreateProfile(ctx, profile); err != nil {
+			return fmt.Errorf("failed to create profile: %w", err)
+		}
+	}
+
+	// Update profile fields if provided
 	if req.Headline != nil {
 		profile.Headline = req.Headline
 	}
@@ -100,11 +144,32 @@ func (s *userService) UpdateProfile(ctx context.Context, userID int64, req *user
 		}
 		profile.BirthDate = &birthDate
 	}
+	if req.Nationality != nil {
+		profile.Nationality = req.Nationality
+	}
+	if req.Address != nil {
+		profile.Address = req.Address
+	}
 	if req.LocationCity != nil {
 		profile.LocationCity = req.LocationCity
 	}
+	if req.LocationState != nil {
+		profile.LocationState = req.LocationState
+	}
 	if req.LocationCountry != nil {
 		profile.LocationCountry = req.LocationCountry
+	}
+	if req.PostalCode != nil {
+		profile.PostalCode = req.PostalCode
+	}
+	if req.LinkedinURL != nil {
+		profile.LinkedInURL = req.LinkedinURL
+	}
+	if req.PortfolioURL != nil {
+		profile.PortfolioURL = req.PortfolioURL
+	}
+	if req.GithubURL != nil {
+		profile.GithubURL = req.GithubURL
 	}
 	if req.DesiredPosition != nil {
 		profile.DesiredPosition = req.DesiredPosition
@@ -603,20 +668,76 @@ func (s *userService) GetExperiences(ctx context.Context, userID int64) ([]user.
 // Skill Management
 // =============================================================================
 
-// AddSkills adds multiple skills for a user
-func (s *userService) AddSkills(ctx context.Context, userID int64, skillNames []string) error {
-	for _, skillName := range skillNames {
-		skill := &user.UserSkill{
-			UserID:    userID,
-			SkillName: skillName,
-		}
+// AddSkill adds a single skill for a user
+// User can either select from skills_master (using skill_id) or input custom skill (using skill_name)
+func (s *userService) AddSkill(ctx context.Context, userID int64, req *user.AddUserSkillRequest) error {
+	skill := &user.UserSkill{
+		UserID:     userID,
+		SkillLevel: &req.ProficiencyLevel,
+	}
 
-		if err := s.userRepo.AddSkill(ctx, skill); err != nil {
-			return fmt.Errorf("failed to add skill %s: %w", skillName, err)
+	// Determine skill name: either from skills_master or custom input
+	if req.SkillID != nil {
+		// Query skills_master to get skill name by ID
+		skillMaster, err := s.skillsMasterRepo.FindByID(ctx, *req.SkillID)
+		if err != nil {
+			return fmt.Errorf("skill_id %d not found in skills_master: %w", *req.SkillID, err)
 		}
+		skill.SkillName = skillMaster.Name
+	} else {
+		// Use custom skill name provided by user
+		skill.SkillName = req.SkillName
+	}
+
+	if req.YearsOfExperience != nil {
+		years := int(*req.YearsOfExperience)
+		skill.YearsExperience = &years
+	}
+
+	if err := s.userRepo.AddSkill(ctx, skill); err != nil {
+		return fmt.Errorf("failed to add skill: %w", err)
 	}
 
 	return nil
+}
+
+// AddSkills adds multiple skills for a user
+// Each skill can be from skills_master or custom input
+func (s *userService) AddSkills(ctx context.Context, userID int64, req *user.AddUserSkillsRequest) ([]user.UserSkill, error) {
+	addedSkills := make([]user.UserSkill, 0, len(req.Skills))
+
+	for i, skillReq := range req.Skills {
+		skill := &user.UserSkill{
+			UserID:     userID,
+			SkillLevel: &skillReq.ProficiencyLevel,
+		}
+
+		// Determine skill name: either from skills_master or custom input
+		if skillReq.SkillID != nil {
+			// Query skills_master to get skill name by ID
+			skillMaster, err := s.skillsMasterRepo.FindByID(ctx, *skillReq.SkillID)
+			if err != nil {
+				return nil, fmt.Errorf("skill #%d: skill_id %d not found in skills_master: %w", i+1, *skillReq.SkillID, err)
+			}
+			skill.SkillName = skillMaster.Name
+		} else {
+			// Use custom skill name provided by user
+			skill.SkillName = skillReq.SkillName
+		}
+
+		if skillReq.YearsOfExperience != nil {
+			years := int(*skillReq.YearsOfExperience)
+			skill.YearsExperience = &years
+		}
+
+		if err := s.userRepo.AddSkill(ctx, skill); err != nil {
+			return nil, fmt.Errorf("failed to add skill #%d: %w", i+1, err)
+		}
+
+		addedSkills = append(addedSkills, *skill)
+	}
+
+	return addedSkills, nil
 }
 
 // UpdateSkill updates a skill entry

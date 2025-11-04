@@ -56,7 +56,7 @@ type AddExperienceRequest struct {
 	CompanyName     string  `json:"company_name" validate:"required,max=200"`
 	PositionTitle   string  `json:"position_title" validate:"required,max=150"`
 	Industry        *string `json:"industry" validate:"omitempty,max=100"`
-	EmploymentType  *string `json:"employment_type" validate:"omitempty,oneof='Full-Time' 'Part-Time' 'Contract' 'Internship' 'Freelance'"`
+	EmploymentType  *string `json:"employment_type" validate:"omitempty,oneof='full-time' 'part-time' 'contract' 'internship' 'freelance'"`
 	StartDate       string  `json:"start_date" validate:"required"`
 	EndDate         *string `json:"end_date" validate:"omitempty"`
 	IsCurrent       bool    `json:"is_current"`
@@ -71,7 +71,7 @@ type UpdateExperienceRequest struct {
 	CompanyName     *string `json:"company_name" validate:"omitempty,max=200"`
 	PositionTitle   *string `json:"position_title" validate:"omitempty,max=150"`
 	Industry        *string `json:"industry" validate:"omitempty,max=100"`
-	EmploymentType  *string `json:"employment_type" validate:"omitempty,oneof='Full-Time' 'Part-Time' 'Contract' 'Internship' 'Freelance'"`
+	EmploymentType  *string `json:"employment_type" validate:"omitempty,oneof='full-time' 'part-time' 'contract' 'internship' 'freelance'"`
 	StartDate       *string `json:"start_date" validate:"omitempty"`
 	EndDate         *string `json:"end_date" validate:"omitempty"`
 	IsCurrent       *bool   `json:"is_current"`
@@ -81,11 +81,18 @@ type UpdateExperienceRequest struct {
 	LocationCountry *string `json:"location_country" validate:"omitempty,max=100"`
 }
 
-// AddUserSkillRequest represents add skill request
+// AddUserSkillRequest represents add single skill request
+// User can either select from skills_master (using skill_id) or input custom skill (using skill_name)
 type AddUserSkillRequest struct {
-	SkillID           int64  `json:"skill_id" validate:"required,min=1"`
+	SkillID           *int64 `json:"skill_id" validate:"omitempty,min=1"`
+	SkillName         string `json:"skill_name" validate:"required_without=SkillID,max=100"`
 	ProficiencyLevel  string `json:"proficiency_level" validate:"required,oneof=beginner intermediate advanced expert"`
 	YearsOfExperience *int16 `json:"years_of_experience" validate:"omitempty,min=0"`
+}
+
+// AddUserSkillsRequest represents add multiple skills request
+type AddUserSkillsRequest struct {
+	Skills []AddUserSkillRequest `json:"skills" validate:"required,min=1,dive"`
 }
 
 // UpdateSkillRequest represents update skill request

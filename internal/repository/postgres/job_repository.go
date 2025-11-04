@@ -1133,6 +1133,48 @@ func (r *jobRepository) GetJobsByDateRange(ctx context.Context, startDate, endDa
 }
 
 // ===========================================
+// MASTER DATA PRELOAD
+// ===========================================
+
+// PreloadMasterData preloads all master data relations for a job
+func (r *jobRepository) PreloadMasterData(ctx context.Context, j *job.Job) error {
+	if j == nil {
+		return nil
+	}
+
+	return r.db.WithContext(ctx).
+		Preload("Industry").
+		Preload("District.City.Province").
+		Preload("MCity.Province").
+		Preload("MProvince").
+		First(j, j.ID).Error
+}
+
+// FindByIDWithMasterData retrieves job with all master data preloaded
+func (r *jobRepository) FindByIDWithMasterData(ctx context.Context, id int64) (*job.Job, error) {
+	var j job.Job
+
+	err := r.db.WithContext(ctx).
+		Preload("Industry").
+		Preload("District.City.Province").
+		Preload("MCity.Province").
+		Preload("MProvince").
+		Preload("Category").
+		Preload("Skills").
+		Preload("Benefits").
+		Preload("Locations").
+		Preload("JobRequirements").
+		Where("id = ?", id).
+		First(&j).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &j, nil
+}
+
+// ===========================================
 // HELPER FUNCTIONS
 // ===========================================
 

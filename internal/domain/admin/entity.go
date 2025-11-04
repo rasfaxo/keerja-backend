@@ -9,19 +9,18 @@ import (
 // AdminRole represents an administrative role with specific permissions
 // Maps to: admin_roles table
 type AdminRole struct {
-	ID              int64          `gorm:"primaryKey;autoIncrement" json:"id"`
-	RoleName        string         `gorm:"type:varchar(100);not null;uniqueIndex" json:"role_name" validate:"required,min=3,max=100"`
-	RoleDescription string         `gorm:"type:text" json:"role_description,omitempty"`
-	AccessLevel     int16          `gorm:"type:smallint;default:5" json:"access_level" validate:"min=1,max=10"`
-	IsSystemRole    bool           `gorm:"default:false" json:"is_system_role"`
-	CreatedBy       *int64         `gorm:"index" json:"created_by,omitempty"`
-	CreatedAt       time.Time      `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt       time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
-	DeletedAt       gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+	ID              int64     `gorm:"primaryKey;autoIncrement" json:"id"`
+	RoleName        string    `gorm:"type:varchar(100);not null;uniqueIndex" json:"role_name" validate:"required,min=3,max=100"`
+	RoleDescription string    `gorm:"type:text" json:"role_description,omitempty"`
+	AccessLevel     int16     `gorm:"type:smallint;default:5" json:"access_level" validate:"min=1,max=10"`
+	IsSystemRole    bool      `gorm:"default:false" json:"is_system_role"`
+	CreatedBy       *int64    `gorm:"index" json:"created_by,omitempty"`
+	CreatedAt       time.Time `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt       time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 
 	// Relationships
-	Creator *AdminUser   `gorm:"foreignKey:CreatedBy;constraint:OnDelete:SET NULL" json:"creator,omitempty"`
-	Users   []AdminUser  `gorm:"foreignKey:RoleID;constraint:OnDelete:SET NULL" json:"users,omitempty"`
+	Creator *AdminUser  `gorm:"foreignKey:CreatedBy;constraint:OnDelete:SET NULL" json:"creator,omitempty"`
+	Users   []AdminUser `gorm:"foreignKey:RoleID;constraint:OnDelete:SET NULL" json:"users,omitempty"`
 }
 
 // TableName specifies the table name for AdminRole
@@ -52,27 +51,27 @@ func (r *AdminRole) CanModifyRole(targetRole *AdminRole) bool {
 // AdminUser represents an administrative user in the system
 // Maps to: admin_users table
 type AdminUser struct {
-	ID               int64          `gorm:"primaryKey;autoIncrement" json:"id"`
-	UUID             string         `gorm:"type:uuid;default:gen_random_uuid();uniqueIndex" json:"uuid"`
-	FullName         string         `gorm:"type:varchar(100);not null" json:"full_name" validate:"required,min=2,max=100"`
-	Email            string         `gorm:"type:varchar(150);not null;uniqueIndex" json:"email" validate:"required,email,max=150"`
-	Phone            string         `gorm:"type:varchar(20)" json:"phone,omitempty" validate:"omitempty,min=10,max=20"`
-	PasswordHash     string         `gorm:"type:text;not null" json:"-"`
-	RoleID           *int64         `gorm:"index" json:"role_id,omitempty"`
-	Status           string         `gorm:"type:varchar(20);default:'active';index" json:"status" validate:"oneof=active inactive suspended"`
-	LastLogin        *time.Time     `json:"last_login,omitempty"`
-	TwoFactorSecret  string         `gorm:"type:varchar(100)" json:"-"`
-	ProfileImageURL  string         `gorm:"type:text" json:"profile_image_url,omitempty"`
-	CreatedBy        *int64         `gorm:"index" json:"created_by,omitempty"`
-	CreatedAt        time.Time      `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt        time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
-	DeletedAt        gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+	ID              int64          `gorm:"primaryKey;autoIncrement" json:"id"`
+	UUID            string         `gorm:"type:uuid;default:gen_random_uuid();uniqueIndex" json:"uuid"`
+	FullName        string         `gorm:"type:varchar(100);not null" json:"full_name" validate:"required,min=2,max=100"`
+	Email           string         `gorm:"type:varchar(150);not null;uniqueIndex" json:"email" validate:"required,email,max=150"`
+	Phone           string         `gorm:"type:varchar(20)" json:"phone,omitempty" validate:"omitempty,min=10,max=20"`
+	PasswordHash    string         `gorm:"type:text;not null" json:"-"`
+	RoleID          *int64         `gorm:"index" json:"role_id,omitempty"`
+	Status          string         `gorm:"type:varchar(20);default:'active';index" json:"status" validate:"oneof=active inactive suspended"`
+	LastLogin       *time.Time     `json:"last_login,omitempty"`
+	TwoFactorSecret string         `gorm:"type:varchar(100)" json:"-"`
+	ProfileImageURL string         `gorm:"type:text" json:"profile_image_url,omitempty"`
+	CreatedBy       *int64         `gorm:"index" json:"created_by,omitempty"`
+	CreatedAt       time.Time      `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt       time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
+	DeletedAt       gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
 
 	// Relationships
-	Role           *AdminRole  `gorm:"foreignKey:RoleID;constraint:OnDelete:SET NULL" json:"role,omitempty"`
-	Creator        *AdminUser  `gorm:"foreignKey:CreatedBy;constraint:OnDelete:SET NULL" json:"creator,omitempty"`
-	CreatedUsers   []AdminUser `gorm:"foreignKey:CreatedBy;constraint:OnDelete:SET NULL" json:"created_users,omitempty"`
-	CreatedRoles   []AdminRole `gorm:"foreignKey:CreatedBy;constraint:OnDelete:SET NULL" json:"created_roles,omitempty"`
+	Role         *AdminRole  `gorm:"foreignKey:RoleID;constraint:OnDelete:SET NULL" json:"role,omitempty"`
+	Creator      *AdminUser  `gorm:"foreignKey:CreatedBy;constraint:OnDelete:SET NULL" json:"creator,omitempty"`
+	CreatedUsers []AdminUser `gorm:"foreignKey:CreatedBy;constraint:OnDelete:SET NULL" json:"created_users,omitempty"`
+	CreatedRoles []AdminRole `gorm:"foreignKey:CreatedBy;constraint:OnDelete:SET NULL" json:"created_roles,omitempty"`
 }
 
 // TableName specifies the table name for AdminUser

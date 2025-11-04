@@ -36,26 +36,35 @@ type JobResponse struct {
 
 // JobDetailResponse represents detailed job response
 type JobDetailResponse struct {
-	ID                int64                    `json:"id"`
-	UUID              string                   `json:"uuid"`
-	CompanyID         int64                    `json:"company_id"`
-	CompanyName       string                   `json:"company_name"`
-	CompanyLogoURL    string                   `json:"company_logo_url,omitempty"`
-	CompanyVerified   bool                     `json:"company_verified"`
-	CompanySlug       string                   `json:"company_slug"`
-	EmployerUserID    *int64                   `json:"employer_user_id,omitempty"`
-	CategoryID        *int64                   `json:"category_id,omitempty"`
-	CategoryName      string                   `json:"category_name,omitempty"`
-	Title             string                   `json:"title"`
-	Slug              string                   `json:"slug"`
-	JobLevel          string                   `json:"job_level,omitempty"`
-	EmploymentType    string                   `json:"employment_type"`
-	Description       string                   `json:"description"`
-	RequirementsText  string                   `json:"requirements_text,omitempty"`
-	Responsibilities  string                   `json:"responsibilities,omitempty"`
-	Location          string                   `json:"location,omitempty"`
-	City              string                   `json:"city,omitempty"`
-	Province          string                   `json:"province,omitempty"`
+	ID               int64  `json:"id"`
+	UUID             string `json:"uuid"`
+	CompanyID        int64  `json:"company_id"`
+	CompanyName      string `json:"company_name"`
+	CompanyLogoURL   string `json:"company_logo_url,omitempty"`
+	CompanyVerified  bool   `json:"company_verified"`
+	CompanySlug      string `json:"company_slug"`
+	EmployerUserID   *int64 `json:"employer_user_id,omitempty"`
+	CategoryID       *int64 `json:"category_id,omitempty"`
+	CategoryName     string `json:"category_name,omitempty"`
+	Title            string `json:"title"`
+	Slug             string `json:"slug"`
+	JobLevel         string `json:"job_level,omitempty"`
+	EmploymentType   string `json:"employment_type"`
+	Description      string `json:"description"`
+	RequirementsText string `json:"requirements_text,omitempty"`
+	Responsibilities string `json:"responsibilities,omitempty"`
+
+	// Master Data Fields
+	IndustryID     *int64                  `json:"industry_id,omitempty"`
+	IndustryDetail *MasterIndustryResponse `json:"industry,omitempty"`
+	DistrictID     *int64                  `json:"district_id,omitempty"`
+	LocationDetail *JobLocationDetail      `json:"location_detail,omitempty"`
+
+	// Legacy Location Fields (for backward compatibility)
+	Location string `json:"location,omitempty"`
+	City     string `json:"city,omitempty"`
+	Province string `json:"province,omitempty"`
+
 	RemoteOption      bool                     `json:"remote_option"`
 	SalaryMin         *float64                 `json:"salary_min,omitempty"`
 	SalaryMax         *float64                 `json:"salary_max,omitempty"`
@@ -173,4 +182,11 @@ type JobRecommendationResponse struct {
 // SimilarJobsResponse represents similar jobs response
 type SimilarJobsResponse struct {
 	Jobs []JobResponse `json:"jobs"`
+}
+
+// JobLocationDetail represents hierarchical location information from master data
+type JobLocationDetail struct {
+	District *DistrictResponse `json:"district,omitempty"`
+	City     *CityResponse     `json:"city,omitempty"`
+	Province *ProvinceResponse `json:"province,omitempty"`
 }

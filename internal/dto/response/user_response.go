@@ -25,8 +25,15 @@ type UserProfileResponse struct {
 	Bio                *string    `json:"bio,omitempty"`
 	Gender             *string    `json:"gender,omitempty"`
 	BirthDate          *time.Time `json:"birth_date,omitempty"`
+	Nationality        *string    `json:"nationality,omitempty"`
+	Address            *string    `json:"address,omitempty"`
 	LocationCity       *string    `json:"location_city,omitempty"`
+	LocationState      *string    `json:"location_state,omitempty"`
 	LocationCountry    *string    `json:"location_country,omitempty"`
+	PostalCode         *string    `json:"postal_code,omitempty"`
+	LinkedInURL        *string    `json:"linkedin_url,omitempty"`
+	PortfolioURL       *string    `json:"portfolio_url,omitempty"`
+	GithubURL          *string    `json:"github_url,omitempty"`
 	DesiredPosition    *string    `json:"desired_position,omitempty"`
 	DesiredSalaryMin   *float64   `json:"desired_salary_min,omitempty"`
 	DesiredSalaryMax   *float64   `json:"desired_salary_max,omitempty"`

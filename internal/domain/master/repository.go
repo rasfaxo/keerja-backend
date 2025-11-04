@@ -106,15 +106,15 @@ type SkillsMasterRepository interface {
 
 // BenefitsFilter defines filter options for benefits queries
 type BenefitsFilter struct {
-	Search          string
-	Category        string
-	IsActive        *bool
-	MinPopularity   *float64
-	MaxPopularity   *float64
-	Page            int
-	PageSize        int
-	SortBy          string
-	SortOrder       string
+	Search        string
+	Category      string
+	IsActive      *bool
+	MinPopularity *float64
+	MaxPopularity *float64
+	Page          int
+	PageSize      int
+	SortBy        string
+	SortOrder     string
 }
 
 // SkillsFilter defines filter options for skills queries
@@ -137,13 +137,13 @@ type SkillsFilter struct {
 
 // BenefitStats contains statistics about benefits
 type BenefitStats struct {
-	TotalBenefits    int64
-	ActiveBenefits   int64
-	InactiveBenefits int64
-	ByCategory       map[string]int64
+	TotalBenefits     int64
+	ActiveBenefits    int64
+	InactiveBenefits  int64
+	ByCategory        map[string]int64
 	AveragePopularity float64
-	MostPopular      *BenefitsMaster
-	TopCategories    []CategoryStat
+	MostPopular       *BenefitsMaster
+	TopCategories     []CategoryStat
 }
 
 // SkillStats contains statistics about skills
@@ -163,8 +163,8 @@ type SkillStats struct {
 
 // CategoryStat contains statistics for a benefit category
 type CategoryStat struct {
-	Category string
-	Count    int64
+	Category   string
+	Count      int64
 	Percentage float64
 }
 
@@ -173,4 +173,188 @@ type TypeStat struct {
 	Type       string
 	Count      int64
 	Percentage float64
+}
+
+// ========================================
+// Company Refactor Repository Interfaces
+// ========================================
+
+// IndustryRepository defines the interface for industry data access
+type IndustryRepository interface {
+	// GetAll retrieves all industries
+	GetAll(ctx context.Context) ([]Industry, error)
+
+	// GetActive retrieves all active industries
+	GetActive(ctx context.Context) ([]Industry, error)
+
+	// GetByID retrieves an industry by ID
+	GetByID(ctx context.Context, id int64) (*Industry, error)
+
+	// GetBySlug retrieves an industry by slug
+	GetBySlug(ctx context.Context, slug string) (*Industry, error)
+
+	// GetByName retrieves an industry by exact name (case-insensitive)
+	GetByName(ctx context.Context, name string) (*Industry, error)
+
+	// Search searches industries by name
+	Search(ctx context.Context, query string) ([]Industry, error)
+
+	// Create creates a new industry
+	Create(ctx context.Context, industry *Industry) error
+
+	// Update updates an existing industry
+	Update(ctx context.Context, industry *Industry) error
+
+	// Delete soft deletes an industry
+	Delete(ctx context.Context, id int64) error
+
+	// ExistsByID checks if an industry exists by ID
+	ExistsByID(ctx context.Context, id int64) (bool, error)
+}
+
+// CompanySizeRepository defines the interface for company size data access
+type CompanySizeRepository interface {
+	// GetAll retrieves all company sizes
+	GetAll(ctx context.Context) ([]CompanySize, error)
+
+	// GetActive retrieves all active company sizes
+	GetActive(ctx context.Context) ([]CompanySize, error)
+
+	// GetByID retrieves a company size by ID
+	GetByID(ctx context.Context, id int64) (*CompanySize, error)
+
+	// GetByCategory retrieves a company size by category name (exact match, case-insensitive)
+	GetByCategory(ctx context.Context, category string) (*CompanySize, error)
+
+	// Create creates a new company size
+	Create(ctx context.Context, size *CompanySize) error
+
+	// Update updates an existing company size
+	Update(ctx context.Context, size *CompanySize) error
+
+	// Delete deletes a company size
+	Delete(ctx context.Context, id int64) error
+
+	// ExistsByID checks if a company size exists by ID
+	ExistsByID(ctx context.Context, id int64) (bool, error)
+}
+
+// ProvinceRepository defines the interface for province data access
+type ProvinceRepository interface {
+	// GetAll retrieves all provinces
+	GetAll(ctx context.Context) ([]Province, error)
+
+	// GetActive retrieves all active provinces
+	GetActive(ctx context.Context) ([]Province, error)
+
+	// GetByID retrieves a province by ID
+	GetByID(ctx context.Context, id int64) (*Province, error)
+
+	// GetByCode retrieves a province by code
+	GetByCode(ctx context.Context, code string) (*Province, error)
+
+	// GetByName retrieves a province by exact name (case-insensitive)
+	GetByName(ctx context.Context, name string) (*Province, error)
+
+	// Search searches provinces by name
+	Search(ctx context.Context, query string) ([]Province, error)
+
+	// Create creates a new province
+	Create(ctx context.Context, province *Province) error
+
+	// Update updates an existing province
+	Update(ctx context.Context, province *Province) error
+
+	// Delete deletes a province
+	Delete(ctx context.Context, id int64) error
+
+	// ExistsByID checks if a province exists by ID
+	ExistsByID(ctx context.Context, id int64) (bool, error)
+}
+
+// CityRepository defines the interface for city data access
+type CityRepository interface {
+	// GetAll retrieves all cities
+	GetAll(ctx context.Context) ([]City, error)
+
+	// GetActive retrieves all active cities
+	GetActive(ctx context.Context) ([]City, error)
+
+	// GetByID retrieves a city by ID
+	GetByID(ctx context.Context, id int64) (*City, error)
+
+	// GetByCode retrieves a city by code
+	GetByCode(ctx context.Context, code string) (*City, error)
+
+	// GetByNameAndProvinceID retrieves a city by exact name and province ID (case-insensitive)
+	GetByNameAndProvinceID(ctx context.Context, name string, provinceID int64) (*City, error)
+
+	// GetByProvinceID retrieves all cities in a province
+	GetByProvinceID(ctx context.Context, provinceID int64) ([]City, error)
+
+	// GetActiveByProvinceID retrieves all active cities in a province
+	GetActiveByProvinceID(ctx context.Context, provinceID int64) ([]City, error)
+
+	// Search searches cities by name within a province (optional)
+	Search(ctx context.Context, query string, provinceID *int64) ([]City, error)
+
+	// GetWithProvince retrieves a city with its province preloaded
+	GetWithProvince(ctx context.Context, id int64) (*City, error)
+
+	// Create creates a new city
+	Create(ctx context.Context, city *City) error
+
+	// Update updates an existing city
+	Update(ctx context.Context, city *City) error
+
+	// Delete deletes a city
+	Delete(ctx context.Context, id int64) error
+
+	// ExistsByID checks if a city exists by ID
+	ExistsByID(ctx context.Context, id int64) (bool, error)
+}
+
+// DistrictRepository defines the interface for district data access
+type DistrictRepository interface {
+	// GetAll retrieves all districts
+	GetAll(ctx context.Context) ([]District, error)
+
+	// GetActive retrieves all active districts
+	GetActive(ctx context.Context) ([]District, error)
+
+	// GetByID retrieves a district by ID
+	GetByID(ctx context.Context, id int64) (*District, error)
+
+	// GetByCode retrieves a district by code
+	GetByCode(ctx context.Context, code string) (*District, error)
+
+	// GetByNameAndCityID retrieves a district by exact name and city ID (case-insensitive)
+	GetByNameAndCityID(ctx context.Context, name string, cityID int64) (*District, error)
+
+	// GetByCityID retrieves all districts in a city
+	GetByCityID(ctx context.Context, cityID int64) ([]District, error)
+
+	// GetActiveByCityID retrieves all active districts in a city
+	GetActiveByCityID(ctx context.Context, cityID int64) ([]District, error)
+
+	// Search searches districts by name within a city (optional)
+	Search(ctx context.Context, query string, cityID *int64) ([]District, error)
+
+	// GetWithFullLocation retrieves a district with city and province preloaded
+	GetWithFullLocation(ctx context.Context, id int64) (*District, error)
+
+	// GetByPostalCode retrieves districts by postal code
+	GetByPostalCode(ctx context.Context, postalCode string) ([]District, error)
+
+	// Create creates a new district
+	Create(ctx context.Context, district *District) error
+
+	// Update updates an existing district
+	Update(ctx context.Context, district *District) error
+
+	// Delete deletes a district
+	Delete(ctx context.Context, id int64) error
+
+	// ExistsByID checks if a district exists by ID
+	ExistsByID(ctx context.Context, id int64) (bool, error)
 }

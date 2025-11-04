@@ -11,6 +11,8 @@ import (
 	"keerja-backend/internal/cache"
 	"keerja-backend/internal/config"
 	"keerja-backend/internal/handler/http"
+	"keerja-backend/internal/handler/http/master"
+	"keerja-backend/internal/jobs"
 	"keerja-backend/internal/middleware"
 	"keerja-backend/internal/repository/postgres"
 	"keerja-backend/internal/routes"
@@ -55,6 +57,22 @@ func main() {
 	companyRepo := postgres.NewCompanyRepository(db)
 	jobRepo := postgres.NewJobRepository(db)
 	applicationRepo := postgres.NewApplicationRepository(db)
+	skillsMasterRepo := postgres.NewSkillsMasterRepository(db)
+	oauthRepo := postgres.NewOAuthRepository(db)
+	otpCodeRepo := postgres.NewOTPCodeRepository(db)
+	refreshTokenRepo := postgres.NewRefreshTokenRepository(db)
+
+	// FCM Notification repository
+	deviceTokenRepo := postgres.NewDeviceTokenRepository(db)
+
+	// Master data repositories
+	appLogger.Info("Initializing master data repositories...")
+	industryRepo := postgres.NewIndustryRepository(db)
+	companySizeRepo := postgres.NewCompanySizeRepository(db)
+	provinceRepo := postgres.NewProvinceRepository(db)
+	cityRepo := postgres.NewCityRepository(db)
+	districtRepo := postgres.NewDistrictRepository(db)
+	appLogger.Info("✓ Master data repositories initialized")
 
 	// Initialize services
 	appLogger.Info("Initializing services...")
@@ -62,6 +80,15 @@ func main() {
 
 	// Initialize email service with config
 	emailService := service.NewEmailService(emailRepo, cfg)
+
+	// Initialize FCM service (Firebase Cloud Messaging)
+	appLogger.Info("Initializing Firebase Cloud Messaging (FCM)...")
+	fcmService := service.NewFCMPushService(deviceTokenRepo, cfg)
+	if config.IsFCMEnabled() {
+		appLogger.Info("FCM service initialized successfully")
+	} else {
+		appLogger.Warn("FCM service disabled (set FCM_ENABLED=true to enable)")
+	}
 
 	// Initialize upload service
 	uploadConfig := service.UploadServiceConfig{
@@ -91,27 +118,114 @@ func main() {
 
 	// Create auth service with email service
 	authService := service.NewAuthService(userRepo, emailService, tokenStore, authServiceConfig)
-	userService := service.NewUserService(userRepo, uploadService)
-	companyService := service.NewCompanyService(companyRepo, uploadService, cacheService)
-	jobService := service.NewJobService(jobRepo, companyRepo, userRepo)
-	applicationService := service.NewApplicationService(applicationRepo, jobRepo, userRepo, companyRepo)
+
+	// Create OAuth service
+	googleConfig := service.OAuthConfig{
+		ClientID:     cfg.GoogleClientID,
+		ClientSecret: cfg.GoogleClientSecret,
+		RedirectURI:  cfg.GoogleRedirectURI,
+	}
+	oauthService := service.NewOAuthService(
+		oauthRepo,
+		userRepo,
+		googleConfig,
+		cfg.JWTSecret,
+		time.Duration(cfg.JWTExpirationHours)*time.Hour,
+	)
+
+	// Create registration service (for OTP-based registration)
+	registrationService := service.NewRegistrationService(
+		userRepo,
+		otpCodeRepo,
+		emailService,
+		cfg.JWTSecret,
+		time.Duration(cfg.JWTExpirationHours)*time.Hour,
+	)
+
+	// Create refresh token service (for remember me)
+	refreshTokenService := service.NewRefreshTokenService(
+		refreshTokenRepo,
+		cfg.JWTSecret,
+		time.Duration(cfg.JWTExpirationHours)*time.Hour,
+	)
+
+	userService := service.NewUserService(userRepo, uploadService, skillsMasterRepo)
+
+	// Master data services
+	appLogger.Info("Initializing master data services...")
+	industryService := service.NewIndustryService(industryRepo, cacheService)
+	companySizeService := service.NewCompanySizeService(companySizeRepo, cacheService)
+	provinceService := service.NewProvinceService(provinceRepo, cacheService)
+	cityService := service.NewCityService(cityRepo, provinceRepo, cacheService)
+	districtService := service.NewDistrictService(districtRepo, cityRepo, provinceRepo, cacheService)
+	appLogger.Info("✓ Master data services initialized")
+
+	// Company service
+	companyService := service.NewCompanyService(
+		companyRepo,
+		uploadService,
+		cacheService,
+		db,
+		industryService,
+		companySizeService,
+		districtService,
+	)
+
+	jobService := service.NewJobService(
+		jobRepo,
+		companyRepo,
+		userRepo,
+		industryService,
+		districtService,
+	)
+	applicationService := service.NewApplicationService(applicationRepo, jobRepo, userRepo, companyRepo, emailService, nil) // notificationService disabled temporarily
+	skillsMasterService := service.NewSkillsMasterService(skillsMasterRepo)
 
 	// Initialize handlers
-	appLogger.Info("🎮 Initializing handlers...")
-	authHandler := http.NewAuthHandler(authService, userRepo)
+	appLogger.Info("Initializing handlers...")
+	authHandler := http.NewAuthHandler(authService, oauthService, registrationService, refreshTokenService, userRepo, companyRepo)
 	userHandler := http.NewUserHandler(userService)
 
 	// Initialize company handlers (split by domain)
-	appLogger.Info("🏢 Initializing company handlers...")
-	companyBasicHandler := http.NewCompanyBasicHandler(companyService)
+	appLogger.Info("Initializing company handlers...")
+	companyBasicHandler := http.NewCompanyBasicHandler(
+		companyService,
+		industryRepo,
+		companySizeRepo,
+		provinceRepo,
+		cityRepo,
+		districtRepo,
+	)
 	companyProfileHandler := http.NewCompanyProfileHandler(companyService)
 	companyReviewHandler := http.NewCompanyReviewHandler(companyService)
 	companyStatsHandler := http.NewCompanyStatsHandler(companyService)
+	companyInviteHandler := http.NewCompanyInviteHandler(companyService, emailService, userService)
 
 	// Initialize job & application handlers
-	appLogger.Info("💼 Initializing job & application handlers...")
+	appLogger.Info("Initializing job & application handlers...")
 	jobHandler := http.NewJobHandler(jobService)
 	applicationHandler := http.NewApplicationHandler(applicationService)
+
+	// Initialize master data handlers
+	appLogger.Info("Initializing master data handlers...")
+	skillsMasterHandler := http.NewSkillsMasterHandler(skillsMasterService)
+
+	// Initialize master data handlers (industries, company sizes, locations)
+	industryHandler := master.NewIndustryHandler(industryService)
+	companySizeHandler := master.NewCompanySizeHandler(companySizeService)
+	locationHandler := master.NewLocationHandler(provinceService, cityService, districtService)
+	masterDataHandlers := &routes.MasterDataHandlers{
+		IndustryHandler:    industryHandler,
+		CompanySizeHandler: companySizeHandler,
+		LocationHandler:    locationHandler,
+	}
+	appLogger.Info("✓ Master data handlers initialized")
+
+	// Initialize FCM notification handlers
+	appLogger.Info("Initializing FCM notification handlers...")
+	deviceTokenHandler := http.NewDeviceTokenHandler(deviceTokenRepo, fcmService, appLogger)
+	pushNotificationHandler := http.NewPushNotificationHandler(fcmService, appLogger)
+	appLogger.Info("FCM handlers initialized successfully")
 
 	// Setup Fiber app
 	app := fiber.New(fiber.Config{
@@ -164,11 +278,43 @@ func main() {
 		CompanyProfileHandler: companyProfileHandler,
 		CompanyReviewHandler:  companyReviewHandler,
 		CompanyStatsHandler:   companyStatsHandler,
+		CompanyInviteHandler:  companyInviteHandler,
+
+		// Master data handlers
+		SkillsMasterHandler: skillsMasterHandler,
+		MasterDataHandlers:  masterDataHandlers,
+
+		// FCM Notification handlers
+		DeviceTokenHandler:      deviceTokenHandler,
+		PushNotificationHandler: pushNotificationHandler,
+
+		// Services (for middlewares)
+		CompanyService: companyService,
 	}
 	routes.SetupRoutes(app, deps)
 
 	// 404 handler (must be last)
 	app.Use(middleware.NotFoundHandler())
+
+	// ==========================================
+	// BACKGROUND JOBS SETUP
+	// ==========================================
+	appLogger.Info("Setting up background jobs...")
+
+	// Initialize scheduler
+	scheduler := jobs.NewScheduler()
+
+	// Register jobs
+	invitationExpiryJob := jobs.NewInvitationExpiryJob(companyService)
+	if err := scheduler.Register(invitationExpiryJob); err != nil {
+		appLogger.WithError(err).Fatal("Failed to register invitation expiry job")
+	}
+
+	// Start scheduler
+	scheduler.Start()
+
+	// Ensure scheduler stops on shutdown
+	defer scheduler.Stop()
 
 	// Start server in a goroutine
 	port := cfg.ServerPort
@@ -191,6 +337,10 @@ func main() {
 	<-quit
 
 	appLogger.Info("Shutting down server gracefully...")
+
+	// Stop background jobs first
+	appLogger.Info("Stopping background jobs...")
+	scheduler.Stop()
 
 	// Graceful shutdown with timeout
 	if err := app.ShutdownWithTimeout(10 * time.Second); err != nil {

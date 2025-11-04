@@ -4,70 +4,98 @@ import "time"
 
 // CompanyResponse represents company public response
 type CompanyResponse struct {
-	ID             int64      `json:"id"`
-	UUID           string     `json:"uuid"`
-	CompanyName    string     `json:"company_name"`
-	Slug           string     `json:"slug"`
-	Industry       string     `json:"industry,omitempty"`
-	CompanyType    string     `json:"company_type,omitempty"`
-	SizeCategory   string     `json:"size_category,omitempty"`
-	WebsiteURL     string     `json:"website_url,omitempty"`
-	Phone          string     `json:"phone,omitempty"`
-	City           string     `json:"city,omitempty"`
-	Province       string     `json:"province,omitempty"`
-	Country        string     `json:"country"`
-	LogoURL        string     `json:"logo_url,omitempty"`
-	BannerURL      string     `json:"banner_url,omitempty"`
-	About          string     `json:"about,omitempty"`
-	Verified       bool       `json:"verified"`
-	VerifiedAt     *time.Time `json:"verified_at,omitempty"`
-	IsActive       bool       `json:"is_active"`
-	CreatedAt      time.Time  `json:"created_at"`
-	FollowersCount int64      `json:"followers_count"`
-	JobsCount      int64      `json:"jobs_count"`
-	AverageRating  float64    `json:"average_rating"`
-	ReviewsCount   int64      `json:"reviews_count"`
+	ID          int64  `json:"id"`
+	UUID        string `json:"uuid"`
+	CompanyName string `json:"company_name"`
+	Slug        string `json:"slug"`
+
+	// Master Data Relations (new structure)
+	IndustryDetail    *MasterIndustryResponse    `json:"industry_detail,omitempty"`
+	CompanySizeDetail *MasterCompanySizeResponse `json:"company_size_detail,omitempty"`
+	LocationDetail    *CompanyLocationResponse   `json:"location_detail,omitempty"`
+	FullAddress       string                     `json:"full_address,omitempty"`
+	Description       string                     `json:"description,omitempty"`
+
+	// Legacy Fields (for backward compatibility)
+	Industry     string `json:"industry,omitempty"`
+	CompanyType  string `json:"company_type,omitempty"`
+	SizeCategory string `json:"size_category,omitempty"`
+	City         string `json:"city,omitempty"`
+	Province     string `json:"province,omitempty"`
+
+	WebsiteURL string     `json:"website_url,omitempty"`
+	Phone      string     `json:"phone,omitempty"`
+	Country    string     `json:"country"`
+	LogoURL    string     `json:"logo_url,omitempty"`
+	BannerURL  string     `json:"banner_url,omitempty"`
+	About      string     `json:"about,omitempty"`
+	Verified   bool       `json:"verified"`
+	VerifiedAt *time.Time `json:"verified_at,omitempty"`
+	IsActive   bool       `json:"is_active"`
+	CreatedAt  time.Time  `json:"created_at"`
+	UpdatedAt  time.Time  `json:"updated_at"`
+
+	// Stats
+	FollowersCount int64   `json:"followers_count"`
+	JobsCount      int64   `json:"jobs_count"`
+	AverageRating  float64 `json:"average_rating"`
+	ReviewsCount   int64   `json:"reviews_count"`
 }
 
 // CompanyDetailResponse represents detailed company response
 type CompanyDetailResponse struct {
-	ID                 int64                     `json:"id"`
-	UUID               string                    `json:"uuid"`
-	CompanyName        string                    `json:"company_name"`
-	Slug               string                    `json:"slug"`
-	LegalName          string                    `json:"legal_name,omitempty"`
-	RegistrationNumber string                    `json:"registration_number,omitempty"`
-	Industry           string                    `json:"industry,omitempty"`
-	CompanyType        string                    `json:"company_type,omitempty"`
-	SizeCategory       string                    `json:"size_category,omitempty"`
-	WebsiteURL         string                    `json:"website_url,omitempty"`
-	EmailDomain        string                    `json:"email_domain,omitempty"`
-	Phone              string                    `json:"phone,omitempty"`
-	Address            string                    `json:"address,omitempty"`
-	City               string                    `json:"city,omitempty"`
-	Province           string                    `json:"province,omitempty"`
-	Country            string                    `json:"country"`
-	PostalCode         string                    `json:"postal_code,omitempty"`
-	Latitude           *float64                  `json:"latitude,omitempty"`
-	Longitude          *float64                  `json:"longitude,omitempty"`
-	LogoURL            string                    `json:"logo_url,omitempty"`
-	BannerURL          string                    `json:"banner_url,omitempty"`
-	About              string                    `json:"about,omitempty"`
-	Culture            string                    `json:"culture,omitempty"`
-	Benefits           []string                  `json:"benefits,omitempty"`
-	Verified           bool                      `json:"verified"`
-	VerifiedAt         *time.Time                `json:"verified_at,omitempty"`
-	IsActive           bool                      `json:"is_active"`
-	CreatedAt          time.Time                 `json:"created_at"`
-	UpdatedAt          time.Time                 `json:"updated_at"`
-	Profile            *CompanyProfileResponse   `json:"profile,omitempty"`
-	Industries         []CompanyIndustryResponse `json:"industries,omitempty"`
-	Reviews            []CompanyReviewResponse   `json:"reviews,omitempty"`
-	FollowersCount     int64                     `json:"followers_count"`
-	JobsCount          int64                     `json:"jobs_count"`
-	AverageRating      float64                   `json:"average_rating"`
-	ReviewsCount       int64                     `json:"reviews_count"`
-	IsFollowing        bool                      `json:"is_following,omitempty"` // For authenticated users
+	ID                 int64  `json:"id"`
+	UUID               string `json:"uuid"`
+	CompanyName        string `json:"company_name"`
+	Slug               string `json:"slug"`
+	LegalName          string `json:"legal_name,omitempty"`
+	RegistrationNumber string `json:"registration_number,omitempty"`
+
+	// Master Data Relations
+	IndustryDetail    *MasterIndustryResponse    `json:"industry_detail,omitempty"`
+	CompanySizeDetail *MasterCompanySizeResponse `json:"company_size_detail,omitempty"`
+	LocationDetail    *CompanyLocationResponse   `json:"location_detail,omitempty"`
+	FullAddress       string                     `json:"full_address,omitempty"`
+	Description       string                     `json:"description,omitempty"`
+
+	// Legacy Fields (for backward compatibility)
+	Industry     string `json:"industry,omitempty"`
+	SizeCategory string `json:"size_category,omitempty"`
+	City         string `json:"city,omitempty"`
+	Province     string `json:"province,omitempty"`
+	Address      string `json:"address,omitempty"`
+
+	// Other Fields
+	CompanyType string     `json:"company_type,omitempty"`
+	WebsiteURL  string     `json:"website_url,omitempty"`
+	EmailDomain string     `json:"email_domain,omitempty"`
+	Phone       string     `json:"phone,omitempty"`
+	Country     string     `json:"country"`
+	PostalCode  string     `json:"postal_code,omitempty"`
+	Latitude    *float64   `json:"latitude,omitempty"`
+	Longitude   *float64   `json:"longitude,omitempty"`
+	LogoURL     string     `json:"logo_url,omitempty"`
+	BannerURL   string     `json:"banner_url,omitempty"`
+	About       string     `json:"about,omitempty"`
+	Culture     string     `json:"culture,omitempty"`
+	Benefits    []string   `json:"benefits,omitempty"`
+	Verified    bool       `json:"verified"`
+	VerifiedAt  *time.Time `json:"verified_at,omitempty"`
+	IsActive    bool       `json:"is_active"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
+
+	// Relations
+	Profile    *CompanyProfileResponse   `json:"profile,omitempty"`
+	Industries []CompanyIndustryResponse `json:"industries,omitempty"`
+	Reviews    []CompanyReviewResponse   `json:"reviews,omitempty"`
+
+	// Stats
+	FollowersCount int64   `json:"followers_count"`
+	JobsCount      int64   `json:"jobs_count"`
+	AverageRating  float64 `json:"average_rating"`
+	ReviewsCount   int64   `json:"reviews_count"`
+	IsFollowing    bool    `json:"is_following,omitempty"` // For authenticated users
 }
 
 // CompanyProfileResponse represents company profile response
@@ -176,4 +204,61 @@ type CompanyStatsResponse struct {
 	AverageRating     float64 `json:"average_rating"`
 	TotalReviews      int64   `json:"total_reviews"`
 	TotalEmployees    int64   `json:"total_employees"`
+}
+
+// =============================================================================
+// Master Data Responses
+// =============================================================================
+
+// MasterIndustryResponse represents industry master data in company response
+type MasterIndustryResponse struct {
+	ID          int64  `json:"id"`
+	Name        string `json:"name"`
+	Slug        string `json:"slug"`
+	Description string `json:"description,omitempty"`
+	IconURL     string `json:"icon_url,omitempty"`
+}
+
+// MasterCompanySizeResponse represents company size master data in company response
+type MasterCompanySizeResponse struct {
+	ID           int64  `json:"id"`
+	Label        string `json:"label"`
+	Code         string `json:"code"`
+	MinEmployees int    `json:"min_employees"`
+	MaxEmployees *int   `json:"max_employees,omitempty"`
+	Description  string `json:"description,omitempty"`
+}
+
+// CompanyLocationResponse represents complete location hierarchy in company response
+type CompanyLocationResponse struct {
+	Province     ProvinceResponse `json:"province"`
+	City         CityResponse     `json:"city"`
+	District     DistrictResponse `json:"district"`
+	FullLocation string           `json:"full_location"` // e.g., "Batujajar, Kabupaten Bandung Barat, Jawa Barat"
+}
+
+// ProvinceResponse represents province in location response
+type ProvinceResponse struct {
+	ID   int64  `json:"id"`
+	Code string `json:"code"`
+	Name string `json:"name"`
+}
+
+// CityResponse represents city in location response
+type CityResponse struct {
+	ID          int64  `json:"id"`
+	Code        string `json:"code"`
+	Name        string `json:"name"`
+	Type        string `json:"type"`      // "Kota" or "Kabupaten"
+	FullName    string `json:"full_name"` // e.g., "Kabupaten Bandung Barat"
+	ProvinceID  int64  `json:"province_id"`
+	PostalCodes string `json:"postal_codes,omitempty"`
+}
+
+// DistrictResponse represents district in location response
+type DistrictResponse struct {
+	ID     int64  `json:"id"`
+	Code   string `json:"code"`
+	Name   string `json:"name"`
+	CityID int64  `json:"city_id"`
 }

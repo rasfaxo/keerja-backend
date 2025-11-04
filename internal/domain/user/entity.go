@@ -3,6 +3,8 @@ package user
 import (
 	"time"
 
+	"keerja-backend/internal/domain/master"
+
 	"github.com/google/uuid"
 )
 
@@ -55,29 +57,56 @@ func (u *User) IsEmployer() bool {
 
 // UserProfile represents user profile information
 type UserProfile struct {
-	ID                 int64      `gorm:"primaryKey;autoIncrement" json:"id"`
-	UserID             int64      `gorm:"not null;uniqueIndex" json:"user_id"`
-	Headline           *string    `gorm:"type:varchar(150)" json:"headline,omitempty" validate:"omitempty,max=150"`
-	Bio                *string    `gorm:"type:text" json:"bio,omitempty"`
-	Gender             *string    `gorm:"type:varchar(10);check:gender IN ('male','female','other')" json:"gender,omitempty" validate:"omitempty,oneof=male female other"`
-	BirthDate          *time.Time `gorm:"type:date" json:"birth_date,omitempty"`
-	LocationCity       *string    `gorm:"type:varchar(100)" json:"location_city,omitempty"`
-	LocationCountry    *string    `gorm:"type:varchar(100)" json:"location_country,omitempty"`
-	DesiredPosition    *string    `gorm:"type:varchar(150)" json:"desired_position,omitempty"`
-	DesiredSalaryMin   *float64   `gorm:"type:numeric(12,2)" json:"desired_salary_min,omitempty"`
-	DesiredSalaryMax   *float64   `gorm:"type:numeric(12,2)" json:"desired_salary_max,omitempty"`
-	ExperienceLevel    *string    `gorm:"type:varchar(50);check:experience_level IN ('internship','junior','mid','senior','lead')" json:"experience_level,omitempty" validate:"omitempty,oneof=internship junior mid senior lead"`
-	IndustryInterest   *string    `gorm:"type:varchar(100)" json:"industry_interest,omitempty"`
-	AvailabilityStatus string     `gorm:"type:varchar(50);default:'open'" json:"availability_status" validate:"omitempty,oneof=open looking_actively not_looking"`
-	ProfileVisibility  bool       `gorm:"default:true" json:"profile_visibility"`
-	Slug               *string    `gorm:"type:varchar(100);uniqueIndex" json:"slug,omitempty"`
-	AvatarURL          *string    `gorm:"type:text" json:"avatar_url,omitempty"`
-	CoverURL           *string    `gorm:"type:text" json:"cover_url,omitempty"`
-	CreatedAt          time.Time  `gorm:"type:timestamp;default:now()" json:"created_at"`
-	UpdatedAt          time.Time  `gorm:"type:timestamp;default:now()" json:"updated_at"`
+	ID          int64      `gorm:"primaryKey;autoIncrement" json:"id"`
+	UserID      int64      `gorm:"not null;uniqueIndex" json:"user_id"`
+	Headline    *string    `gorm:"type:varchar(150)" json:"headline,omitempty" validate:"omitempty,max=150"`
+	Bio         *string    `gorm:"type:text" json:"bio,omitempty"`
+	Gender      *string    `gorm:"type:varchar(10);check:gender IN ('male','female','other')" json:"gender,omitempty" validate:"omitempty,oneof=male female other"`
+	BirthDate   *time.Time `gorm:"type:date;column:birth_date" json:"birth_date,omitempty"`
+	Nationality *string    `gorm:"type:varchar(100);column:nationality" json:"nationality,omitempty"`
+	Address     *string    `gorm:"type:text;column:address" json:"address,omitempty"`
+
+	// Master Data Location Fields
+	DistrictID *int64 `gorm:"column:district_id;index" json:"district_id,omitempty"`
+	CityID     *int64 `gorm:"column:city_id;index" json:"city_id,omitempty"`
+	ProvinceID *int64 `gorm:"column:province_id;index" json:"province_id,omitempty"`
+
+	// Legacy Location Fields (backward compatibility)
+	LocationCity    *string `gorm:"type:varchar(100);column:location_city" json:"location_city,omitempty"`
+	LocationState   *string `gorm:"type:varchar(100);column:location_state" json:"location_state,omitempty"`
+	LocationCountry *string `gorm:"type:varchar(100);column:location_country" json:"location_country,omitempty"`
+
+	PostalCode       *string  `gorm:"type:varchar(10);column:postal_code" json:"postal_code,omitempty"`
+	LinkedInURL      *string  `gorm:"type:varchar(255);column:linkedin_url" json:"linkedin_url,omitempty"`
+	PortfolioURL     *string  `gorm:"type:varchar(255);column:portfolio_url" json:"portfolio_url,omitempty"`
+	GithubURL        *string  `gorm:"type:varchar(255);column:github_url" json:"github_url,omitempty"`
+	DesiredPosition  *string  `gorm:"type:varchar(150);column:desired_position" json:"desired_position,omitempty"`
+	DesiredSalaryMin *float64 `gorm:"type:numeric(12,2)" json:"desired_salary_min,omitempty"`
+	DesiredSalaryMax *float64 `gorm:"type:numeric(12,2)" json:"desired_salary_max,omitempty"`
+	ExperienceLevel  *string  `gorm:"type:varchar(50);check:experience_level IN ('internship','junior','mid','senior','lead')" json:"experience_level,omitempty" validate:"omitempty,oneof=internship junior mid senior lead"`
+
+	// Master Data Industry Fields - Support multiple industries
+	IndustryIDs []int64 `gorm:"-" json:"industry_ids,omitempty"` // Virtual field, stored in junction table
+
+	// Legacy Industry Field (backward compatibility)
+	IndustryInterest *string `gorm:"type:varchar(100)" json:"industry_interest,omitempty"`
+
+	AvailabilityStatus string    `gorm:"type:varchar(50);default:'open'" json:"availability_status" validate:"omitempty,oneof=open looking_actively not_looking"`
+	ProfileVisibility  bool      `gorm:"default:true" json:"profile_visibility"`
+	Slug               *string   `gorm:"type:varchar(100);uniqueIndex" json:"slug,omitempty"`
+	AvatarURL          *string   `gorm:"type:text" json:"avatar_url,omitempty"`
+	CoverURL           *string   `gorm:"type:text" json:"cover_url,omitempty"`
+	CreatedAt          time.Time `gorm:"type:timestamp;default:now()" json:"created_at"`
+	UpdatedAt          time.Time `gorm:"type:timestamp;default:now()" json:"updated_at"`
 
 	// Relationships
 	User *User `gorm:"foreignKey:UserID" json:"-"`
+
+	// Master Data Relations
+	District   *master.District  `gorm:"foreignKey:DistrictID;references:ID;constraint:OnDelete:SET NULL" json:"district,omitempty"`
+	MCity      *master.City      `gorm:"foreignKey:CityID;references:ID;constraint:OnDelete:SET NULL" json:"m_city,omitempty"`
+	MProvince  *master.Province  `gorm:"foreignKey:ProvinceID;references:ID;constraint:OnDelete:SET NULL" json:"m_province,omitempty"`
+	Industries []master.Industry `gorm:"many2many:user_profile_industries;constraint:OnDelete:CASCADE" json:"industries,omitempty"`
 }
 
 // TableName specifies the table name for UserProfile
@@ -87,13 +116,24 @@ func (UserProfile) TableName() string {
 
 // UserPreference represents user preferences and settings
 type UserPreference struct {
-	ID                  int64     `gorm:"primaryKey;autoIncrement" json:"id"`
-	UserID              int64     `gorm:"not null;uniqueIndex" json:"user_id"`
-	LanguagePreference  string    `gorm:"type:varchar(10);default:'id'" json:"language_preference"`
-	ThemePreference     string    `gorm:"type:varchar(10);default:'light'" json:"theme_preference"`
-	PreferredJobType    string    `gorm:"type:varchar(50);default:'onsite'" json:"preferred_job_type"`
-	PreferredIndustry   *string   `gorm:"type:varchar(100)" json:"preferred_industry,omitempty"`
-	PreferredLocation   *string   `gorm:"type:varchar(100)" json:"preferred_location,omitempty"`
+	ID                 int64  `gorm:"primaryKey;autoIncrement" json:"id"`
+	UserID             int64  `gorm:"not null;uniqueIndex" json:"user_id"`
+	LanguagePreference string `gorm:"type:varchar(10);default:'id'" json:"language_preference"`
+	ThemePreference    string `gorm:"type:varchar(10);default:'light'" json:"theme_preference"`
+	PreferredJobType   string `gorm:"type:varchar(50);default:'onsite'" json:"preferred_job_type"`
+
+	// Master Data Preferred Industries - Support multiple industries
+	PreferredIndustryIDs []int64 `gorm:"-" json:"preferred_industry_ids,omitempty"` // Virtual field, stored in junction table
+
+	// Master Data Preferred Location
+	PreferredDistrictID *int64 `gorm:"column:preferred_district_id;index" json:"preferred_district_id,omitempty"`
+	PreferredCityID     *int64 `gorm:"column:preferred_city_id;index" json:"preferred_city_id,omitempty"`
+	PreferredProvinceID *int64 `gorm:"column:preferred_province_id;index" json:"preferred_province_id,omitempty"`
+
+	// Legacy Fields (backward compatibility)
+	PreferredIndustry *string `gorm:"type:varchar(100)" json:"preferred_industry,omitempty"`
+	PreferredLocation *string `gorm:"type:varchar(100)" json:"preferred_location,omitempty"`
+
 	PreferredSalaryMin  *float64  `gorm:"type:numeric(12,2)" json:"preferred_salary_min,omitempty"`
 	PreferredSalaryMax  *float64  `gorm:"type:numeric(12,2)" json:"preferred_salary_max,omitempty"`
 	EmailNotifications  bool      `gorm:"default:true" json:"email_notifications"`
@@ -109,11 +149,165 @@ type UserPreference struct {
 
 	// Relationships
 	User *User `gorm:"foreignKey:UserID" json:"-"`
+
+	// Master Data Relations
+	PreferredDistrict   *master.District  `gorm:"foreignKey:PreferredDistrictID;references:ID;constraint:OnDelete:SET NULL" json:"preferred_district,omitempty"`
+	PreferredMCity      *master.City      `gorm:"foreignKey:PreferredCityID;references:ID;constraint:OnDelete:SET NULL" json:"preferred_m_city,omitempty"`
+	PreferredMProvince  *master.Province  `gorm:"foreignKey:PreferredProvinceID;references:ID;constraint:OnDelete:SET NULL" json:"preferred_m_province,omitempty"`
+	PreferredIndustries []master.Industry `gorm:"many2many:user_preference_industries;constraint:OnDelete:CASCADE" json:"preferred_industries,omitempty"`
 }
 
 // TableName specifies the table name for UserPreference
 func (UserPreference) TableName() string {
 	return "user_preferences"
+}
+
+// ===========================================
+// UserProfile Helper Methods
+// ===========================================
+
+// HasMasterDataRelations checks if user profile has master data relations loaded
+func (up *UserProfile) HasMasterDataRelations() bool {
+	return up.District != nil || up.MCity != nil || up.MProvince != nil || len(up.Industries) > 0
+}
+
+// GetDistrict returns the district relation if loaded
+func (up *UserProfile) GetDistrict() *master.District {
+	return up.District
+}
+
+// GetCity returns the city relation if loaded
+func (up *UserProfile) GetCity() *master.City {
+	return up.MCity
+}
+
+// GetProvince returns the province relation if loaded
+func (up *UserProfile) GetProvince() *master.Province {
+	return up.MProvince
+}
+
+// GetCityName returns city name from master data or falls back to legacy field
+func (up *UserProfile) GetCityName() string {
+	if up.MCity != nil {
+		return up.MCity.Name
+	}
+	if up.LocationCity != nil {
+		return *up.LocationCity
+	}
+	return ""
+}
+
+// GetProvinceName returns province name from master data or falls back to legacy field
+func (up *UserProfile) GetProvinceName() string {
+	if up.MProvince != nil {
+		return up.MProvince.Name
+	}
+	if up.LocationState != nil {
+		return *up.LocationState
+	}
+	return ""
+}
+
+// GetFullLocation returns formatted location string with smart fallback
+func (up *UserProfile) GetFullLocation() string {
+	// Try master data first
+	if up.District != nil && up.MCity != nil && up.MProvince != nil {
+		districtName := up.District.Name
+		cityName := up.MCity.GetFullName()
+		provinceName := up.MProvince.Name
+		return districtName + ", " + cityName + ", " + provinceName
+	}
+
+	// Fallback to legacy fields
+	if up.LocationCity != nil && up.LocationState != nil {
+		return *up.LocationCity + ", " + *up.LocationState
+	}
+
+	if up.LocationCity != nil {
+		return *up.LocationCity
+	}
+
+	return ""
+}
+
+// GetIndustries returns array of industry names
+func (up *UserProfile) GetIndustries() []string {
+	if len(up.Industries) == 0 {
+		// Fallback to legacy field
+		if up.IndustryInterest != nil && *up.IndustryInterest != "" {
+			return []string{*up.IndustryInterest}
+		}
+		return []string{}
+	}
+
+	industries := make([]string, len(up.Industries))
+	for i, ind := range up.Industries {
+		industries[i] = ind.Name
+	}
+	return industries
+}
+
+// ===========================================
+// UserPreference Helper Methods
+// ===========================================
+
+// HasMasterDataRelations checks if user preference has master data relations loaded
+func (upref *UserPreference) HasMasterDataRelations() bool {
+	return upref.PreferredDistrict != nil || upref.PreferredMCity != nil ||
+		upref.PreferredMProvince != nil || len(upref.PreferredIndustries) > 0
+}
+
+// GetPreferredCityName returns preferred city name from master data or falls back to legacy field
+func (upref *UserPreference) GetPreferredCityName() string {
+	if upref.PreferredMCity != nil {
+		return upref.PreferredMCity.Name
+	}
+	if upref.PreferredLocation != nil {
+		return *upref.PreferredLocation
+	}
+	return ""
+}
+
+// GetPreferredProvinceName returns preferred province name from master data
+func (upref *UserPreference) GetPreferredProvinceName() string {
+	if upref.PreferredMProvince != nil {
+		return upref.PreferredMProvince.Name
+	}
+	return ""
+}
+
+// GetPreferredFullLocation returns formatted preferred location string
+func (upref *UserPreference) GetPreferredFullLocation() string {
+	if upref.PreferredDistrict != nil && upref.PreferredMCity != nil && upref.PreferredMProvince != nil {
+		districtName := upref.PreferredDistrict.Name
+		cityName := upref.PreferredMCity.GetFullName()
+		provinceName := upref.PreferredMProvince.Name
+		return districtName + ", " + cityName + ", " + provinceName
+	}
+
+	// Fallback to legacy field
+	if upref.PreferredLocation != nil {
+		return *upref.PreferredLocation
+	}
+
+	return ""
+}
+
+// GetPreferredIndustries returns array of preferred industry names
+func (upref *UserPreference) GetPreferredIndustries() []string {
+	if len(upref.PreferredIndustries) == 0 {
+		// Fallback to legacy field
+		if upref.PreferredIndustry != nil && *upref.PreferredIndustry != "" {
+			return []string{*upref.PreferredIndustry}
+		}
+		return []string{}
+	}
+
+	industries := make([]string, len(upref.PreferredIndustries))
+	for i, ind := range upref.PreferredIndustries {
+		industries[i] = ind.Name
+	}
+	return industries
 }
 
 // UserEducation represents user's education history
