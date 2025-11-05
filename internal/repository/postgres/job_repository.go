@@ -36,8 +36,15 @@ func (r *jobRepository) FindByID(ctx context.Context, id int64) (*job.Job, error
 		Preload("Category").
 		Preload("Locations").
 		Preload("Benefits").
-		Preload("Skills").
+		Preload("Skills.Skill").
 		Preload("JobRequirements").
+		// Preload Job Master Data Relations (New)
+		Preload("JobTitle").
+		Preload("JobType").
+		Preload("WorkPolicy").
+		Preload("EducationLevelM").
+		Preload("ExperienceLevelM").
+		Preload("GenderPreference").
 		First(&j, id).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -55,8 +62,15 @@ func (r *jobRepository) FindByUUID(ctx context.Context, uuid string) (*job.Job, 
 		Preload("Category").
 		Preload("Locations").
 		Preload("Benefits").
-		Preload("Skills").
+		Preload("Skills.Skill").
 		Preload("JobRequirements").
+		// Preload Job Master Data Relations (New)
+		Preload("JobTitle").
+		Preload("JobType").
+		Preload("WorkPolicy").
+		Preload("EducationLevelM").
+		Preload("ExperienceLevelM").
+		Preload("GenderPreference").
 		Where("uuid = ?", uuid).
 		First(&j).Error
 	if err != nil {
@@ -75,7 +89,7 @@ func (r *jobRepository) FindBySlug(ctx context.Context, slug string) (*job.Job, 
 		Preload("Category").
 		Preload("Locations").
 		Preload("Benefits").
-		Preload("Skills").
+		Preload("Skills.Skill").
 		Preload("JobRequirements").
 		Where("slug = ?", slug).
 		First(&j).Error
@@ -90,7 +104,35 @@ func (r *jobRepository) FindBySlug(ctx context.Context, slug string) (*job.Job, 
 
 // Update updates a job
 func (r *jobRepository) Update(ctx context.Context, j *job.Job) error {
-	return r.db.WithContext(ctx).Save(j).Error
+	// Use Updates with Select to avoid GORM overwriting our pointer values
+	// This ensures we only update the specific fields we want (all fields except CompanyID)
+	return r.db.WithContext(ctx).Model(j).Select(
+		// Basic fields
+		"Title", "Slug", "Description",
+		"JobLevel", "EmploymentType",
+		"Requirements", "Responsibilities",
+
+		// Master Data IDs
+		"JobTitleID", "JobTypeID", "WorkPolicyID",
+		"EducationLevelID", "ExperienceLevelID", "GenderPreferenceID",
+		"CategoryID",
+
+		// Location fields
+		"Location", "City", "Province", "RemoteOption",
+
+		// Salary fields
+		"SalaryMin", "SalaryMax", "Currency",
+
+		// Experience and Education (legacy fields)
+		"ExperienceMin", "ExperienceMax", "EducationLevel",
+
+		// Job metadata
+		"TotalHires", "Status",
+		"ViewsCount", "ApplicationsCount",
+
+		// Dates
+		"PublishedAt", "ExpiredAt", "UpdatedAt",
+	).Updates(j).Error
 }
 
 // Delete hard deletes a job
@@ -137,7 +179,7 @@ func (r *jobRepository) List(ctx context.Context, filter job.JobFilter, page, li
 		Preload("Category").
 		Preload("Locations").
 		Preload("Benefits").
-		Preload("Skills").
+		Preload("Skills.Skill").
 		Limit(limit).
 		Offset(offset).
 		Find(&jobs).Error
@@ -181,7 +223,7 @@ func (r *jobRepository) ListByEmployer(ctx context.Context, employerUserID int64
 		Preload("Category").
 		Preload("Locations").
 		Preload("Benefits").
-		Preload("Skills").
+		Preload("Skills.Skill").
 		Limit(limit).
 		Offset(offset).
 		Find(&jobs).Error
@@ -291,7 +333,7 @@ func (r *jobRepository) SearchJobs(ctx context.Context, filter job.JobSearchFilt
 		Preload("Category").
 		Preload("Locations").
 		Preload("Benefits").
-		Preload("Skills").
+		Preload("Skills.Skill").
 		Order("published_at DESC").
 		Limit(limit).
 		Offset(offset).
@@ -596,7 +638,7 @@ func (r *jobRepository) SearchBySkills(ctx context.Context, skillIDs []int64, fi
 		Preload("Category").
 		Preload("Locations").
 		Preload("Benefits").
-		Preload("Skills").
+		Preload("Skills.Skill").
 		Limit(limit).
 		Offset(offset).
 		Find(&jobs).Error
@@ -1142,12 +1184,7 @@ func (r *jobRepository) PreloadMasterData(ctx context.Context, j *job.Job) error
 		return nil
 	}
 
-	return r.db.WithContext(ctx).
-		Preload("Industry").
-		Preload("District.City.Province").
-		Preload("MCity.Province").
-		Preload("MProvince").
-		First(j, j.ID).Error
+	return r.db.WithContext(ctx).First(j, j.ID).Error
 }
 
 // FindByIDWithMasterData retrieves job with all master data preloaded
@@ -1155,12 +1192,8 @@ func (r *jobRepository) FindByIDWithMasterData(ctx context.Context, id int64) (*
 	var j job.Job
 
 	err := r.db.WithContext(ctx).
-		Preload("Industry").
-		Preload("District.City.Province").
-		Preload("MCity.Province").
-		Preload("MProvince").
 		Preload("Category").
-		Preload("Skills").
+		Preload("Skills.Skill").
 		Preload("Benefits").
 		Preload("Locations").
 		Preload("JobRequirements").

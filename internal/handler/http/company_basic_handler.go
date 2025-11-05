@@ -782,3 +782,64 @@ func (h *CompanyBasicHandler) GetMyCompanies(c *fiber.Ctx) error {
 
 	return utils.SuccessResponse(c, MsgFetchedSuccess, responses)
 }
+
+// GetMyAddresses godoc
+// @Summary Get my company addresses
+// @Description Get list of addresses for the authenticated employer's company
+// @Tags companies
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} utils.Response{data=[]response.CompanyAddressResponse}
+// @Failure 401 {object} utils.Response
+// @Failure 404 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /companies/me/addresses [get]
+func (h *CompanyBasicHandler) GetMyAddresses(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	// Get authenticated user ID from JWT
+	userID := middleware.GetUserID(c)
+	if userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "User not authenticated", "userID not found in context")
+	}
+
+	// Get companies where user is a member
+	companies, err := h.companyService.GetUserCompanies(ctx, userID)
+	if err != nil {
+		return utils.InternalServerErrorResponse(c, ErrFailedOperation)
+	}
+
+	// If no company found
+	if len(companies) == 0 {
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "No company found", "User is not affiliated with any company")
+	}
+
+	// Get the first company (user's primary company)
+	// In future, we can support multiple companies
+	company := companies[0]
+
+	// Build address response
+	// Currently, company has single embedded address
+	addresses := make([]response.CompanyAddressResponse, 0)
+
+	// Only return address if FullAddress is not empty
+	if company.FullAddress != "" {
+		addressResp := response.CompanyAddressResponse{
+			ID:            company.ID, // Using company ID as address ID
+			AlamatLengkap: company.FullAddress,
+		}
+
+		// Include coordinates if available
+		if company.Latitude != nil {
+			addressResp.Latitude = *company.Latitude
+		}
+		if company.Longitude != nil {
+			addressResp.Longitude = *company.Longitude
+		}
+
+		addresses = append(addresses, addressResp)
+	}
+
+	return utils.SuccessResponse(c, "Company addresses retrieved successfully", addresses)
+}

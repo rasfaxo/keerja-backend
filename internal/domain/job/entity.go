@@ -24,11 +24,13 @@ type Job struct {
 	RequirementsText string    `gorm:"column:requirements;type:text" json:"requirements_text,omitempty"`
 	Responsibilities string    `gorm:"column:responsibilities;type:text" json:"responsibilities,omitempty"`
 
-	// Master Data Relations
-	IndustryID *int64 `gorm:"column:industry_id;index" json:"industry_id,omitempty"`
-	DistrictID *int64 `gorm:"column:district_id;index" json:"district_id,omitempty"`
-	CityID     *int64 `gorm:"column:city_id;index" json:"city_id,omitempty"`
-	ProvinceID *int64 `gorm:"column:province_id;index" json:"province_id,omitempty"`
+	// Master Data Relations - Job Master Data (New FK columns)
+	JobTitleID         *int64 `gorm:"column:job_title_id;index" json:"job_title_id,omitempty"`
+	JobTypeID          *int64 `gorm:"column:job_type_id;index" json:"job_type_id,omitempty"`
+	WorkPolicyID       *int64 `gorm:"column:work_policy_id;index" json:"work_policy_id,omitempty"`
+	EducationLevelID   *int64 `gorm:"column:education_level_id;index" json:"education_level_id,omitempty"`
+	ExperienceLevelID  *int64 `gorm:"column:experience_level_id;index" json:"experience_level_id,omitempty"`
+	GenderPreferenceID *int64 `gorm:"column:gender_preference_id;index" json:"gender_preference_id,omitempty"`
 
 	// Legacy Location Fields (for backward compatibility)
 	Location     string `gorm:"column:location;type:varchar(150)" json:"location,omitempty"`
@@ -43,7 +45,7 @@ type Job struct {
 	ExperienceMax     *int16     `gorm:"column:experience_max" json:"experience_max,omitempty"`
 	EducationLevel    string     `gorm:"column:education_level;type:varchar(50)" json:"education_level,omitempty"`
 	TotalHires        int16      `gorm:"column:total_hires;default:1" json:"total_hires"`
-	Status            string     `gorm:"column:status;type:varchar(20);default:'draft';index" json:"status" validate:"omitempty,oneof='draft' 'published' 'closed' 'expired' 'suspended'"`
+	Status            string     `gorm:"column:status;type:varchar(20);default:'draft';index" json:"status" validate:"omitempty,oneof='draft' 'pending_review' 'published' 'closed' 'expired' 'suspended' 'rejected'"`
 	ViewsCount        int64      `gorm:"column:views_count;default:0" json:"views_count"`
 	ApplicationsCount int64      `gorm:"column:applications_count;default:0" json:"applications_count"`
 	PublishedAt       *time.Time `gorm:"column:published_at" json:"published_at,omitempty"`
@@ -58,11 +60,13 @@ type Job struct {
 	Skills          []JobSkill       `gorm:"foreignKey:JobID;references:ID;constraint:OnDelete:CASCADE" json:"skills,omitempty"`
 	JobRequirements []JobRequirement `gorm:"foreignKey:JobID;references:ID;constraint:OnDelete:CASCADE" json:"job_requirements,omitempty"`
 
-	// Master Data Relations
-	Industry  *master.Industry `gorm:"foreignKey:IndustryID;references:ID;constraint:OnDelete:SET NULL" json:"industry,omitempty"`
-	District  *master.District `gorm:"foreignKey:DistrictID;references:ID;constraint:OnDelete:SET NULL" json:"district,omitempty"`
-	MCity     *master.City     `gorm:"foreignKey:CityID;references:ID;constraint:OnDelete:SET NULL" json:"m_city,omitempty"`
-	MProvince *master.Province `gorm:"foreignKey:ProvinceID;references:ID;constraint:OnDelete:SET NULL" json:"m_province,omitempty"`
+	// Master Data Relations - Job Master Data (New Relations)
+	JobTitle         *master.JobTitle         `gorm:"foreignKey:JobTitleID;references:ID;constraint:OnDelete:SET NULL" json:"job_title,omitempty"`
+	JobType          *master.JobType          `gorm:"foreignKey:JobTypeID;references:ID;constraint:OnDelete:SET NULL" json:"job_type,omitempty"`
+	WorkPolicy       *master.WorkPolicy       `gorm:"foreignKey:WorkPolicyID;references:ID;constraint:OnDelete:SET NULL" json:"work_policy,omitempty"`
+	EducationLevelM  *master.EducationLevel   `gorm:"foreignKey:EducationLevelID;references:ID;constraint:OnDelete:SET NULL" json:"education_level_m,omitempty"`
+	ExperienceLevelM *master.ExperienceLevel  `gorm:"foreignKey:ExperienceLevelID;references:ID;constraint:OnDelete:SET NULL" json:"experience_level_m,omitempty"`
+	GenderPreference *master.GenderPreference `gorm:"foreignKey:GenderPreferenceID;references:ID;constraint:OnDelete:SET NULL" json:"gender_preference,omitempty"`
 }
 
 // TableName specifies the table name for Job
@@ -81,6 +85,21 @@ func (j *Job) BeforeCreate(tx *gorm.DB) error {
 // IsPublished checks if job is published
 func (j *Job) IsPublished() bool {
 	return j.Status == "published"
+}
+
+// IsPendingReview checks if job is pending review
+func (j *Job) IsPendingReview() bool {
+	return j.Status == "pending_review"
+}
+
+// IsDraft checks if job is draft
+func (j *Job) IsDraft() bool {
+	return j.Status == "draft"
+}
+
+// IsRejected checks if job is rejected
+func (j *Job) IsRejected() bool {
+	return j.Status == "rejected"
 }
 
 // IsClosed checks if job is closed
@@ -112,75 +131,97 @@ func (j *Job) CanApply() bool {
 
 // HasMasterDataRelations checks if job has master data relations loaded
 func (j *Job) HasMasterDataRelations() bool {
-	return j.Industry != nil || j.District != nil || j.MCity != nil || j.MProvince != nil
+	return j.JobTitle != nil || j.JobType != nil || j.WorkPolicy != nil ||
+		j.EducationLevelM != nil || j.ExperienceLevelM != nil || j.GenderPreference != nil
 }
 
-// GetIndustry returns the industry relation if loaded
-func (j *Job) GetIndustry() *master.Industry {
-	return j.Industry
+// HasJobMasterDataRelations checks if job has job master data relations loaded
+func (j *Job) HasJobMasterDataRelations() bool {
+	return j.JobTitle != nil || j.JobType != nil || j.WorkPolicy != nil ||
+		j.EducationLevelM != nil || j.ExperienceLevelM != nil || j.GenderPreference != nil
 }
 
-// GetIndustryName returns industry name from master data or falls back to legacy field
-// This provides smart fallback for backward compatibility
-func (j *Job) GetIndustryName() string {
-	if j.Industry != nil {
-		return j.Industry.Name
+// ==========================================
+// JOB MASTER DATA HELPERS (NEW)
+// ==========================================
+
+// GetJobTitle returns job title master data if loaded
+func (j *Job) GetJobTitle() *master.JobTitle {
+	return j.JobTitle
+}
+
+// GetJobTitleName returns job title name from master data
+func (j *Job) GetJobTitleName() string {
+	if j.JobTitle != nil {
+		return j.JobTitle.Name
 	}
-	// No legacy industry field in Job, return empty
 	return ""
 }
 
-// GetDistrict returns the district relation if loaded
-func (j *Job) GetDistrict() *master.District {
-	return j.District
+// GetJobType returns job type master data if loaded
+func (j *Job) GetJobType() *master.JobType {
+	return j.JobType
 }
 
-// GetCity returns the city relation if loaded
-func (j *Job) GetCity() *master.City {
-	return j.MCity
-}
-
-// GetProvince returns the province relation if loaded
-func (j *Job) GetProvince() *master.Province {
-	return j.MProvince
-}
-
-// GetCityName returns city name from master data or falls back to legacy field
-func (j *Job) GetCityName() string {
-	if j.MCity != nil {
-		return j.MCity.Name
+// GetJobTypeName returns job type name from master data
+func (j *Job) GetJobTypeName() string {
+	if j.JobType != nil {
+		return j.JobType.Name
 	}
-	// Fallback to legacy field
-	return j.City
+	return ""
 }
 
-// GetProvinceName returns province name from master data or falls back to legacy field
-func (j *Job) GetProvinceName() string {
-	if j.MProvince != nil {
-		return j.MProvince.Name
-	}
-	// Fallback to legacy field
-	return j.Province
+// GetWorkPolicy returns work policy master data if loaded
+func (j *Job) GetWorkPolicy() *master.WorkPolicy {
+	return j.WorkPolicy
 }
 
-// GetFullLocation returns full location string with master data or legacy fields
-// Returns format: "District, City, Province" or legacy location string
-func (j *Job) GetFullLocation() string {
-	// Try master data first
-	if j.District != nil && j.MCity != nil && j.MProvince != nil {
-		districtName := j.District.Name
-		cityName := j.MCity.GetFullName() // e.g., "Kota Bandung"
-		provinceName := j.MProvince.Name
-		return districtName + ", " + cityName + ", " + provinceName
+// GetWorkPolicyName returns work policy name from master data
+func (j *Job) GetWorkPolicyName() string {
+	if j.WorkPolicy != nil {
+		return j.WorkPolicy.Name
 	}
+	return ""
+}
 
-	// Fallback to legacy fields
-	if j.City != "" && j.Province != "" {
-		return j.City + ", " + j.Province
+// GetEducationLevel returns education level master data if loaded
+func (j *Job) GetEducationLevel() *master.EducationLevel {
+	return j.EducationLevelM
+}
+
+// GetEducationLevelName returns education level name from master data
+func (j *Job) GetEducationLevelName() string {
+	if j.EducationLevelM != nil {
+		return j.EducationLevelM.Name
 	}
+	return ""
+}
 
-	// Last resort: use Location field
-	return j.Location
+// GetExperienceLevel returns experience level master data if loaded
+func (j *Job) GetExperienceLevel() *master.ExperienceLevel {
+	return j.ExperienceLevelM
+}
+
+// GetExperienceLevelName returns experience level name from master data
+func (j *Job) GetExperienceLevelName() string {
+	if j.ExperienceLevelM != nil {
+		return j.ExperienceLevelM.Name
+	}
+	return ""
+}
+
+// GetGenderPreference returns gender preference master data if loaded
+func (j *Job) GetGenderPreference() *master.GenderPreference {
+	return j.GenderPreference
+}
+
+// GetGenderPreferenceName returns gender preference name from master data or returns default
+func (j *Job) GetGenderPreferenceName() string {
+	if j.GenderPreference != nil {
+		return j.GenderPreference.Name
+	}
+	// Default to "Any" if not specified
+	return "Any"
 }
 
 // JobCategory represents job category entity
@@ -295,7 +336,8 @@ type JobSkill struct {
 	UpdatedAt       time.Time `gorm:"column:updated_at;autoUpdateTime" json:"updated_at"`
 
 	// Relationships
-	Job *Job `gorm:"foreignKey:JobID;references:ID;constraint:OnDelete:CASCADE" json:"job,omitempty"`
+	Job   *Job                 `gorm:"foreignKey:JobID;references:ID;constraint:OnDelete:CASCADE" json:"job,omitempty"`
+	Skill *master.SkillsMaster `gorm:"foreignKey:SkillID;references:ID;constraint:OnDelete:CASCADE" json:"skill,omitempty"`
 }
 
 // TableName specifies the table name for JobSkill

@@ -470,3 +470,57 @@ type DistrictResponse struct {
 	FullLocationPath string        `json:"full_location_path,omitempty"` // e.g., "Batujajar, Kabupaten Bandung Barat, Jawa Barat"
 	IsActive         bool          `json:"is_active"`
 }
+
+// JobTitleService defines business logic for job title master data
+type JobTitleService interface {
+	// Phase 1: GetJobTitles with smart search
+	SearchJobTitles(ctx context.Context, query string, limit int) ([]JobTitleResponse, error)
+	GetJobTitle(ctx context.Context, id int64) (*JobTitleResponse, error)
+	ListPopularJobTitles(ctx context.Context, limit int) ([]JobTitleResponse, error)
+
+	// Admin operations
+	CreateJobTitle(ctx context.Context, req *CreateJobTitleRequest) (*JobTitle, error)
+	UpdateJobTitle(ctx context.Context, id int64, req *UpdateJobTitleRequest) (*JobTitle, error)
+	DeleteJobTitle(ctx context.Context, id int64) error
+}
+
+// JobOptionsService defines business logic for job options (static master data)
+type JobOptionsService interface {
+	// Phase 3: GetJobOptions - combined response with caching
+	GetJobOptions(ctx context.Context) (*JobOptionsResponse, error)
+
+	// Individual getters (rarely used, mostly for admin)
+	GetJobTypes(ctx context.Context) ([]JobType, error)
+	GetWorkPolicies(ctx context.Context) ([]WorkPolicy, error)
+	GetEducationLevels(ctx context.Context) ([]EducationLevel, error)
+	GetExperienceLevels(ctx context.Context) ([]ExperienceLevel, error)
+	GetGenderPreferences(ctx context.Context) ([]GenderPreference, error)
+}
+
+// ===== Request DTOs =====
+
+// CreateJobTitleRequest for creating job title
+type CreateJobTitleRequest struct {
+	Name                  string  `json:"name" validate:"required,min=2,max=200"`
+	RecommendedCategoryID *int64  `json:"recommended_category_id,omitempty"`
+	PopularityScore       float64 `json:"popularity_score" validate:"omitempty,min=0,max=100"`
+}
+
+// UpdateJobTitleRequest for updating job title
+type UpdateJobTitleRequest struct {
+	Name                  *string  `json:"name,omitempty" validate:"omitempty,min=2,max=200"`
+	RecommendedCategoryID *int64   `json:"recommended_category_id,omitempty"`
+	PopularityScore       *float64 `json:"popularity_score,omitempty" validate:"omitempty,min=0,max=100"`
+	IsActive              *bool    `json:"is_active,omitempty"`
+}
+
+// ===== Response DTOs =====
+
+// JobTitleResponse for job title with recommendations
+type JobTitleResponse struct {
+	ID                    int64   `json:"id"`
+	Name                  string  `json:"name"`
+	RecommendedCategoryID *int64  `json:"rekomendasi_kategori_id,omitempty"` // Follow naming in spec
+	PopularityScore       float64 `json:"popularity_score"`
+	SearchCount           int64   `json:"search_count"`
+}

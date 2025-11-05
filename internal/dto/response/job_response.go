@@ -2,28 +2,24 @@ package response
 
 import "time"
 
-// JobResponse represents job public response
+// JobResponse represents job public response (simplified - master data only)
 type JobResponse struct {
-	ID                int64      `json:"id"`
-	UUID              string     `json:"uuid"`
-	CompanyID         int64      `json:"company_id"`
-	CompanyName       string     `json:"company_name"`
-	CompanyLogoURL    string     `json:"company_logo_url,omitempty"`
-	CompanyVerified   bool       `json:"company_verified"`
-	Title             string     `json:"title"`
-	Slug              string     `json:"slug"`
-	JobLevel          string     `json:"job_level,omitempty"`
-	EmploymentType    string     `json:"employment_type"`
-	Location          string     `json:"location,omitempty"`
-	City              string     `json:"city,omitempty"`
-	Province          string     `json:"province,omitempty"`
-	RemoteOption      bool       `json:"remote_option"`
+	ID              int64  `json:"id"`
+	UUID            string `json:"uuid"`
+	CompanyID       int64  `json:"company_id"`
+	CompanyName     string `json:"company_name"`
+	CompanyLogoURL  string `json:"company_logo_url,omitempty"`
+	CompanyVerified bool   `json:"company_verified"`
+	Title           string `json:"title"`
+	Slug            string `json:"slug"`
+
+	// Master Data
+	JobType    *JobMasterDataItem `json:"job_type,omitempty"`
+	WorkPolicy *JobMasterDataItem `json:"work_policy,omitempty"`
+
 	SalaryMin         *float64   `json:"salary_min,omitempty"`
 	SalaryMax         *float64   `json:"salary_max,omitempty"`
 	Currency          string     `json:"currency"`
-	ExperienceMin     *int16     `json:"experience_min,omitempty"`
-	ExperienceMax     *int16     `json:"experience_max,omitempty"`
-	EducationLevel    string     `json:"education_level,omitempty"`
 	Status            string     `json:"status"`
 	ViewsCount        int64      `json:"views_count"`
 	ApplicationsCount int64      `json:"applications_count"`
@@ -34,45 +30,40 @@ type JobResponse struct {
 	DaysRemaining     *int       `json:"days_remaining,omitempty"`
 }
 
-// JobDetailResponse represents detailed job response
+// JobDetailResponse represents detailed job response (master data only)
 type JobDetailResponse struct {
-	ID               int64  `json:"id"`
-	UUID             string `json:"uuid"`
-	CompanyID        int64  `json:"company_id"`
-	CompanyName      string `json:"company_name"`
-	CompanyLogoURL   string `json:"company_logo_url,omitempty"`
-	CompanyVerified  bool   `json:"company_verified"`
-	CompanySlug      string `json:"company_slug"`
-	EmployerUserID   *int64 `json:"employer_user_id,omitempty"`
-	CategoryID       *int64 `json:"category_id,omitempty"`
-	CategoryName     string `json:"category_name,omitempty"`
-	Title            string `json:"title"`
-	Slug             string `json:"slug"`
-	JobLevel         string `json:"job_level,omitempty"`
-	EmploymentType   string `json:"employment_type"`
-	Description      string `json:"description"`
-	RequirementsText string `json:"requirements_text,omitempty"`
-	Responsibilities string `json:"responsibilities,omitempty"`
+	ID              int64  `json:"id"`
+	UUID            string `json:"uuid"`
+	CompanyID       int64  `json:"company_id"`
+	CompanyName     string `json:"company_name"`
+	CompanyLogoURL  string `json:"company_logo_url,omitempty"`
+	CompanyVerified bool   `json:"company_verified"`
+	CompanySlug     string `json:"company_slug"`
+	EmployerUserID  *int64 `json:"employer_user_id,omitempty"`
+	Title           string `json:"title"`
+	Slug            string `json:"slug"`
 
-	// Master Data Fields
-	IndustryID     *int64                  `json:"industry_id,omitempty"`
-	IndustryDetail *MasterIndustryResponse `json:"industry,omitempty"`
-	DistrictID     *int64                  `json:"district_id,omitempty"`
-	LocationDetail *JobLocationDetail      `json:"location_detail,omitempty"`
+	// Master Data IDs
+	JobTitleID         int64 `json:"job_title_id"`
+	JobTypeID          int64 `json:"job_type_id"`
+	WorkPolicyID       int64 `json:"work_policy_id"`
+	EducationLevelID   int64 `json:"education_level_id"`
+	ExperienceLevelID  int64 `json:"experience_level_id"`
+	GenderPreferenceID int64 `json:"gender_preference_id"`
 
-	// Legacy Location Fields (for backward compatibility)
-	Location string `json:"location,omitempty"`
-	City     string `json:"city,omitempty"`
-	Province string `json:"province,omitempty"`
+	// Master Data Details
+	JobTitle         *JobMasterDataItem `json:"job_title,omitempty"`
+	JobType          *JobMasterDataItem `json:"job_type,omitempty"`
+	WorkPolicy       *JobMasterDataItem `json:"work_policy,omitempty"`
+	EducationLevel   *JobMasterDataItem `json:"education_level,omitempty"`
+	ExperienceLevel  *JobMasterDataItem `json:"experience_level,omitempty"`
+	GenderPreference *JobMasterDataItem `json:"gender_preference,omitempty"`
 
-	RemoteOption      bool                     `json:"remote_option"`
+	Description string `json:"description"`
+
 	SalaryMin         *float64                 `json:"salary_min,omitempty"`
 	SalaryMax         *float64                 `json:"salary_max,omitempty"`
 	Currency          string                   `json:"currency"`
-	ExperienceMin     *int16                   `json:"experience_min,omitempty"`
-	ExperienceMax     *int16                   `json:"experience_max,omitempty"`
-	EducationLevel    string                   `json:"education_level,omitempty"`
-	TotalHires        int16                    `json:"total_hires"`
 	Status            string                   `json:"status"`
 	ViewsCount        int64                    `json:"views_count"`
 	ApplicationsCount int64                    `json:"applications_count"`
@@ -86,8 +77,16 @@ type JobDetailResponse struct {
 	Benefits          []JobBenefitResponse     `json:"benefits,omitempty"`
 	Locations         []JobLocationResponse    `json:"locations,omitempty"`
 	JobRequirements   []JobRequirementResponse `json:"job_requirements,omitempty"`
-	HasApplied        bool                     `json:"has_applied,omitempty"` // For authenticated users
-	IsSaved           bool                     `json:"is_saved,omitempty"`    // For authenticated users
+	HasApplied        bool                     `json:"has_applied,omitempty"`
+	IsSaved           bool                     `json:"is_saved,omitempty"`
+}
+
+// JobMasterDataItem represents a generic master data item for job details
+type JobMasterDataItem struct {
+	ID          int64  `json:"id"`
+	Code        string `json:"code"`
+	Name        string `json:"name"`
+	Description string `json:"description,omitempty"`
 }
 
 // JobSkillResponse represents job skill response

@@ -3,6 +3,7 @@ package http
 import (
 	"strconv"
 
+	"keerja-backend/internal/domain/company"
 	"keerja-backend/internal/domain/job"
 	"keerja-backend/internal/dto/mapper"
 	"keerja-backend/internal/dto/request"
@@ -21,11 +22,15 @@ import (
 // - Calls domain job.JobService directly
 
 type JobHandler struct {
-	jobService job.JobService
+	jobService     job.JobService
+	companyService company.CompanyService
 }
 
-func NewJobHandler(jobService job.JobService) *JobHandler {
-	return &JobHandler{jobService: jobService}
+func NewJobHandler(jobService job.JobService, companyService company.CompanyService) *JobHandler {
+	return &JobHandler{
+		jobService:     jobService,
+		companyService: companyService,
+	}
 }
 
 // GET /jobs
@@ -77,7 +82,10 @@ func (h *JobHandler) GetJob(c *fiber.Ctx) error {
 		return utils.NotFoundResponse(c, ErrJobNotFound)
 	}
 
-	resp := mapper.ToJobDetailResponse(j)
+	// Get company info to include in response
+	company, _ := h.companyService.GetCompany(ctx, j.CompanyID)
+
+	resp := mapper.ToJobDetailResponseWithCompany(j, company)
 	return utils.SuccessResponse(c, MsgFetchedSuccess, resp)
 }
 
@@ -122,7 +130,7 @@ func (h *JobHandler) SearchJobs(c *fiber.Ctx) error {
 // POST /jobs
 func (h *JobHandler) CreateJob(c *fiber.Ctx) error {
 	ctx := c.Context()
-	employerID := middleware.GetUserID(c)
+	userID := middleware.GetUserID(c)
 
 	var req request.CreateJobRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -134,105 +142,37 @@ func (h *JobHandler) CreateJob(c *fiber.Ctx) error {
 	}
 
 	// Sanitize text inputs
-	req.Title = utils.SanitizeString(req.Title)
 	req.Description = utils.SanitizeHTML(req.Description)
-	req.RequirementsText = utils.SanitizeHTML(req.RequirementsText)
-	req.Responsibilities = utils.SanitizeHTML(req.Responsibilities)
 
 	// Security validation
-	if !utils.ValidateNoXSS(req.Title) || !utils.ValidateNoXSS(req.Description) {
+	if !utils.ValidateNoXSS(req.Description) {
 		return utils.BadRequestResponse(c, ErrPotentialXSS)
 	}
 
-	// Parse optional expired_at using datetime helper
-	expiredAt, err := utils.ParseOptionalDateTime(req.ExpiredAt)
-	if err != nil {
-		return utils.BadRequestResponse(c, ErrInvalidDateFormat)
-	}
-
-	// Validate future date if provided
-	if expiredAt != nil {
-		if err := utils.MustBeFutureTime(*expiredAt); err != nil {
-			return utils.BadRequestResponse(c, ErrFutureDateRequired)
-		}
-	}
-
-	// Map locations
-	locs := make([]job.AddLocationRequest, 0, len(req.Locations))
-	for _, l := range req.Locations {
-		locs = append(locs, job.AddLocationRequest{
-			LocationType:  l.LocationType,
-			Address:       l.Address,
-			City:          l.City,
-			Province:      l.Province,
-			PostalCode:    l.PostalCode,
-			Country:       l.Country,
-			Latitude:      l.Latitude,
-			Longitude:     l.Longitude,
-			GooglePlaceID: l.GooglePlaceID,
-			MapURL:        l.MapURL,
-			IsPrimary:     l.IsPrimary,
-		})
-	}
 	// Map skills
 	skills := make([]job.AddSkillRequest, 0, len(req.Skills))
 	for _, s := range req.Skills {
 		skills = append(skills, job.AddSkillRequest{
 			SkillID:         s.SkillID,
 			ImportanceLevel: s.ImportanceLevel,
-			Weight:          s.Weight,
-		})
-	}
-	// Map benefits
-	benefits := make([]job.AddBenefitRequest, 0, len(req.Benefits))
-	for _, b := range req.Benefits {
-		benefits = append(benefits, job.AddBenefitRequest{
-			BenefitID:   b.BenefitID,
-			BenefitName: b.BenefitName,
-			Description: b.Description,
-			IsHighlight: b.IsHighlight,
-		})
-	}
-	// Map requirements
-	reqs := make([]job.AddRequirementRequest, 0, len(req.JobRequirements))
-	for _, r := range req.JobRequirements {
-		reqs = append(reqs, job.AddRequirementRequest{
-			RequirementType: r.RequirementType,
-			RequirementText: r.RequirementText,
-			SkillID:         r.SkillID,
-			MinExperience:   r.MinExperience,
-			MaxExperience:   r.MaxExperience,
-			EducationLevel:  r.EducationLevel,
-			Language:        r.Language,
-			IsMandatory:     r.IsMandatory,
-			Priority:        r.Priority,
 		})
 	}
 
-	// Build domain request
+	// Build domain request - master data only
+	// Pass user ID (not employer_user ID), service will resolve it
 	domainReq := &job.CreateJobRequest{
-		CompanyID:        req.CompanyID,
-		EmployerUserID:   employerID,
-		CategoryID:       req.CategoryID,
-		Title:            req.Title,
-		JobLevel:         req.JobLevel,
-		EmploymentType:   req.EmploymentType,
-		Description:      req.Description,
-		RequirementsText: req.RequirementsText,
-		Responsibilities: req.Responsibilities,
-		RemoteOption:     req.RemoteOption,
-		SalaryMin:        req.SalaryMin,
-		SalaryMax:        req.SalaryMax,
-		Currency:         req.Currency,
-		ExperienceMin:    req.ExperienceMin,
-		ExperienceMax:    req.ExperienceMax,
-		EducationLevel:   req.EducationLevel,
-		TotalHires:       req.TotalHires,
-		ExpiredAt:        expiredAt,
-		Locations:        locs,
-		Benefits:         benefits,
-		Skills:           skills,
-		JobRequirements:  reqs,
+		CompanyID:          req.CompanyID,
+		EmployerUserID:     userID, // This is user ID, service will look up employer_user ID
+		Description:        req.Description,
+		JobTitleID:         req.JobTitleID,
+		JobTypeID:          req.JobTypeID,
+		WorkPolicyID:       req.WorkPolicyID,
+		EducationLevelID:   req.EducationLevelID,
+		ExperienceLevelID:  req.ExperienceLevelID,
+		GenderPreferenceID: req.GenderPreferenceID,
+		SalaryMin:          req.SalaryMin,
+		SalaryMax:          req.SalaryMax,
+		Skills:             skills,
 	}
 
 	created, err := h.jobService.CreateJob(ctx, domainReq)
@@ -240,8 +180,89 @@ func (h *JobHandler) CreateJob(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to create job", err.Error())
 	}
 
-	resp := mapper.ToJobDetailResponse(created)
+	// Get company info to include in response
+	company, _ := h.companyService.GetCompany(ctx, req.CompanyID)
+
+	resp := mapper.ToJobDetailResponseWithCompany(created, company)
 	return utils.CreatedResponse(c, MsgCreatedSuccess, resp)
+}
+
+// POST /jobs/draft - Save job draft (Phase 6)
+// @Summary Save job draft
+// @Description Save job draft with validation (salary, age ranges, XSS sanitization). Support create new or update existing by draft_id
+// @Tags jobs
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body request.SaveJobDraftRequest true "Job draft data"
+// @Success 201 {object} utils.Response{data=response.JobDetailResponse}
+// @Success 200 {object} utils.Response{data=response.JobDetailResponse}
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /jobs/draft [post]
+func (h *JobHandler) SaveJobDraft(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	// Get authenticated user ID
+	userID := middleware.GetUserID(c)
+	if userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "User not authenticated", "userID not found in context")
+	}
+
+	// Parse request body
+	var req request.SaveJobDraftRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.BadRequestResponse(c, ErrInvalidRequest)
+	}
+
+	// Validate request
+	if err := utils.ValidateStruct(&req); err != nil {
+		errs := utils.FormatValidationErrors(err)
+		return utils.ValidationErrorResponse(c, ErrValidationFailed, errs)
+	}
+
+	// Get company ID from user context
+	// Note: We need to get the user's company. For now, we'll use a helper or assume CompanyID is available
+	// In production, you should fetch this from user's employer relationship
+	companyID := req.CompanyID
+
+	// Map request DTO to domain request
+	domainReq := &job.SaveJobDraftRequest{
+		DraftID:          req.DraftID,
+		JobTitleID:       req.JobTitleID,
+		JobCategoryID:    req.JobCategoryID,
+		JobTypeID:        req.JobTypeID,
+		WorkPolicyID:     req.WorkPolicyID,
+		GajiMin:          req.GajiMin,
+		GajiMaks:         req.GajiMaks,
+		AdaBonus:         req.AdaBonus,
+		GenderPreference: req.GenderPreference,
+		UmurMin:          req.UmurMin,
+		UmurMaks:         req.UmurMaks,
+		SkillIDs:         req.SkillIDs,
+		PendidikanID:     req.PendidikanID,
+		PengalamanID:     req.PengalamanID,
+		Deskripsi:        req.Deskripsi,
+	}
+
+	// Call service to save draft
+	draft, err := h.jobService.SaveJobDraft(ctx, companyID, domainReq)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to save job draft", err.Error())
+	}
+
+	// Get company info to include in response
+	company, _ := h.companyService.GetCompany(ctx, draft.CompanyID)
+
+	// Map to response
+	resp := mapper.ToJobDetailResponseWithCompany(draft, company)
+
+	// Return 201 Created for new draft, 200 OK for update
+	if req.DraftID == nil || *req.DraftID == 0 {
+		return utils.CreatedResponse(c, "Job draft created successfully", resp)
+	}
+	return utils.SuccessResponse(c, "Job draft updated successfully", resp)
 }
 
 // PUT /jobs/:id
@@ -263,92 +284,61 @@ func (h *JobHandler) UpdateJob(c *fiber.Ctx) error {
 		return utils.ValidationErrorResponse(c, ErrValidationFailed, errs)
 	}
 
-	// CRITICAL FIX: Check ownership before allowing updates
+	// Check ownership before allowing updates
 	existingJob, err := h.jobService.GetJob(ctx, id)
 	if err != nil {
 		return utils.NotFoundResponse(c, ErrJobNotFound)
 	}
-	if existingJob.EmployerUserID == nil || *existingJob.EmployerUserID != employerID {
+	if existingJob.EmployerUserID == nil {
 		return utils.ForbiddenResponse(c, ErrNotJobOwner)
 	}
 
-	// Parse optional expired_at using datetime helper
-	expiredAt, err := utils.ParseOptionalDateTime(req.ExpiredAt)
-	if err != nil {
-		return utils.BadRequestResponse(c, ErrInvalidDateFormat)
+	// Build domain request - master data only
+	domainReq := &job.UpdateJobRequest{
+		EmployerUserID:     employerID,            // User ID for verification
+		CompanyID:          existingJob.CompanyID, // Company ID for employer lookup
+		JobTitleID:         req.JobTitleID,
+		JobTypeID:          req.JobTypeID,
+		WorkPolicyID:       req.WorkPolicyID,
+		EducationLevelID:   req.EducationLevelID,
+		ExperienceLevelID:  req.ExperienceLevelID,
+		GenderPreferenceID: req.GenderPreferenceID,
+		SalaryMin:          req.SalaryMin,
+		SalaryMax:          req.SalaryMax,
 	}
 
-	// Validate future date if provided
-	if expiredAt != nil {
-		if err := utils.MustBeFutureTime(*expiredAt); err != nil {
-			return utils.BadRequestResponse(c, ErrFutureDateRequired)
-		}
-	}
+	// NOTE: Status is NOT updated by users - it's controlled by workflow
+	// Users can only update job details, not status
+	// Status changes are handled by:
+	// - PublishJob endpoint (draft → pending_approval)
+	// - Admin ApproveJob endpoint (pending_approval → published)
+	// - Admin RejectJob endpoint (pending_approval → rejected)
+	// - System/Admin lifecycle management (published → closed/expired/suspended)
 
-	// Build domain request (only non-nil/nonnull fields will be applied by service)
-	domainReq := &job.UpdateJobRequest{}
-	if req.CategoryID != nil {
-		domainReq.CategoryID = req.CategoryID
-	}
-	if req.Title != nil {
-		sanitized := utils.SanitizeString(*req.Title)
+	// Sanitize description if provided
+	if req.Description != nil {
+		sanitized := utils.SanitizeHTML(*req.Description)
 		if !utils.ValidateNoXSS(sanitized) {
 			return utils.BadRequestResponse(c, ErrPotentialXSS)
 		}
-		domainReq.Title = sanitized
-	}
-	if req.JobLevel != nil {
-		domainReq.JobLevel = *req.JobLevel
-	}
-	if req.EmploymentType != nil {
-		domainReq.EmploymentType = *req.EmploymentType
-	}
-	if req.Description != nil {
-		sanitized := utils.SanitizeHTML(*req.Description)
 		domainReq.Description = sanitized
 	}
-	if req.RequirementsText != nil {
-		sanitized := utils.SanitizeHTML(*req.RequirementsText)
-		domainReq.RequirementsText = sanitized
-	}
-	if req.Responsibilities != nil {
-		sanitized := utils.SanitizeHTML(*req.Responsibilities)
-		domainReq.Responsibilities = sanitized
-	}
-	if req.RemoteOption != nil {
-		domainReq.RemoteOption = req.RemoteOption
-	}
-	if req.SalaryMin != nil {
-		domainReq.SalaryMin = req.SalaryMin
-	}
-	if req.SalaryMax != nil {
-		domainReq.SalaryMax = req.SalaryMax
-	}
-	if req.Currency != nil {
-		domainReq.Currency = *req.Currency
-	}
-	if req.ExperienceMin != nil {
-		domainReq.ExperienceMin = req.ExperienceMin
-	}
-	if req.ExperienceMax != nil {
-		domainReq.ExperienceMax = req.ExperienceMax
-	}
-	if req.EducationLevel != nil {
-		domainReq.EducationLevel = *req.EducationLevel
-	}
-	if req.TotalHires != nil {
-		domainReq.TotalHires = req.TotalHires
-	}
-	if expiredAt != nil {
-		domainReq.ExpiredAt = expiredAt
-	}
 
-	updated, err := h.jobService.UpdateJob(ctx, id, domainReq)
+	_, err = h.jobService.UpdateJob(ctx, id, domainReq)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update job", err.Error())
 	}
 
-	resp := mapper.ToJobDetailResponse(updated)
+	// Get latest job data after update to ensure all changes are reflected in response
+	latestJob, err := h.jobService.GetJob(ctx, id)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to retrieve updated job", err.Error())
+	}
+
+	// Get company info to include in response
+	company, _ := h.companyService.GetCompany(ctx, latestJob.CompanyID)
+
+	resp := mapper.ToJobDetailResponseWithCompany(latestJob, company)
 	return utils.SuccessResponse(c, MsgUpdatedSuccess, resp)
 }
 
@@ -418,7 +408,22 @@ func (h *JobHandler) GetMyJobs(c *fiber.Ctx) error {
 	return utils.SuccessResponseWithMeta(c, MsgFetchedSuccess, payload, meta)
 }
 
-// POST /jobs/:id/publish
+// POST /jobs/:id/publish - Publish job (Phase 7)
+// @Summary Publish job for review
+// @Description Change job status from draft to pending_review. Requires company to be verified.
+// @Tags jobs
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Job ID"
+// @Param request body request.PublishJobRequest false "Optional publish settings"
+// @Success 200 {object} utils.Response
+// @Failure 401 {object} utils.Response "User not authenticated"
+// @Failure 403 {object} utils.Response "Company not verified"
+// @Failure 404 {object} utils.Response "Job not found"
+// @Failure 409 {object} utils.Response "Job already published or in wrong status"
+// @Failure 500 {object} utils.Response
+// @Router /jobs/{id}/publish [post]
 func (h *JobHandler) PublishJob(c *fiber.Ctx) error {
 	ctx := c.Context()
 	employerID := middleware.GetUserID(c)
@@ -452,9 +457,33 @@ func (h *JobHandler) PublishJob(c *fiber.Ctx) error {
 	}
 
 	if err := h.jobService.PublishJob(ctx, id, employerID); err != nil {
+		// Phase 7: Handle specific error cases
+		errMsg := err.Error()
+
+		// 403 Forbidden: Company not verified
+		if errMsg == "company is not verified yet" {
+			return utils.ForbiddenResponse(c, "Company must be verified before publishing jobs")
+		}
+
+		// 404 Not Found: Job not found or not owned by employer
+		if errMsg == "job not found: record not found" || errMsg == "not authorized to manage this job" {
+			return utils.NotFoundResponse(c, "Job not found or you don't have permission")
+		}
+
+		// 409 Conflict: Job already published or in wrong status
+		if errMsg == "job is already pending review" || errMsg == "job is already published" {
+			return utils.ErrorResponse(c, fiber.StatusConflict, "Job status conflict", errMsg)
+		}
+
+		// 500 Internal Server Error: Other errors
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to publish job", err.Error())
 	}
-	return utils.SuccessResponse(c, MsgUpdatedSuccess, fiber.Map{"published": true})
+
+	// Phase 7: Return 200 OK with status pending_review
+	return utils.SuccessResponse(c, "Job submitted for review successfully", fiber.Map{
+		"status":  "pending_review",
+		"message": "Your job has been submitted and is waiting for admin approval",
+	})
 }
 
 // POST /jobs/:id/close

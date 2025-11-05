@@ -10,12 +10,12 @@ import (
 // Routes: /api/v1/companies/*
 //
 // Route Organization:
-// - Basic CRUD: CompanyBasicHandler (10 endpoints)
+// - Basic CRUD: CompanyBasicHandler (11 endpoints)
 // - Profile & Social: CompanyProfileHandler (8 endpoints)
 // - Reviews & Ratings: CompanyReviewHandler (5 endpoints)
 // - Statistics & Queries: CompanyStatsHandler (3 endpoints)
 // - Invitations: CompanyInviteHandler (5 endpoints)
-// Total: 31 endpoints
+// Total: 32 endpoints
 func SetupCompanyRoutes(api fiber.Router, deps *Dependencies, authMw *middleware.AuthMiddleware, permMw *middleware.PermissionMiddleware) {
 	companies := api.Group("/companies")
 
@@ -27,6 +27,12 @@ func SetupCompanyRoutes(api fiber.Router, deps *Dependencies, authMw *middleware
 	companies.Get("/my-companies",
 		authMw.AuthRequired(),
 		deps.CompanyBasicHandler.GetMyCompanies,
+	)
+
+	// Get my company addresses (for job posting)
+	companies.Get("/me/addresses",
+		authMw.AuthRequired(),
+		deps.CompanyBasicHandler.GetMyAddresses,
 	)
 
 	// Get user's followed companies

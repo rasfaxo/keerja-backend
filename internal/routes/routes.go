@@ -16,7 +16,7 @@ type Dependencies struct {
 	UserHandler        *http.UserHandler
 	JobHandler         *http.JobHandler         // Job management (9 endpoints)
 	ApplicationHandler *http.ApplicationHandler // Application management (21 endpoints)
-	AdminHandler       interface{}              // TODO: Change to *http.AdminHandler when implemented
+	AdminHandler       *http.AdminHandler       // Admin moderation & job approval
 
 	// Company handlers (split by domain for better organization)
 	CompanyBasicHandler   *http.CompanyBasicHandler   // CRUD operations (10 endpoints)
@@ -28,6 +28,7 @@ type Dependencies struct {
 	// Master data handlers
 	SkillsMasterHandler *http.SkillsMasterHandler // Skills master data (8 endpoints)
 	MasterDataHandlers  *MasterDataHandlers       // Industry, company size, location (10 endpoints)
+	MasterDataHandler   *http.MasterDataHandler   // Job titles & options (Phase 1-4)
 
 	// FCM Notification handlers (Firebase Cloud Messaging)
 	DeviceTokenHandler      *http.DeviceTokenHandler      // Device token management (6 endpoints)
@@ -69,6 +70,11 @@ func SetupRoutes(app *fiber.App, deps *Dependencies) {
 	// Master data routes (industries, company sizes, locations)
 	if deps.MasterDataHandlers != nil {
 		SetupMasterDataRoutes(api, deps.MasterDataHandlers) // master_routes.go
+	}
+
+	// Job master data routes (job titles & options - Phase 1-4)
+	if deps.MasterDataHandler != nil {
+		SetupJobMasterDataRoutes(api, deps.MasterDataHandler, authMw) // job_master_data_routes.go
 	}
 
 	// FCM Notification routes

@@ -97,49 +97,65 @@ type AdminUserService interface {
 	IsUserActive(ctx context.Context, userID int64) (bool, error)
 }
 
+// AdminJobService defines business logic for admin job moderation
+// Note: Actual implementation is in internal/service/admin_job_service.go
+type AdminJobService interface {
+	// Job approval/rejection (moderation)
+	// ApproveJob changes job status from pending_review to published
+	ApproveJob(ctx context.Context, jobID int64) (interface{}, error)
+	// RejectJob changes job status from pending_review back to draft
+	RejectJob(ctx context.Context, jobID int64, reason string) (interface{}, error)
+
+	// Job list for approval
+	// GetPendingJobs retrieves all jobs pending review (status = pending_review)
+	GetPendingJobs(ctx context.Context, page, limit int) ([]interface{}, int64, error)
+	// GetJobsForReview retrieves jobs for review with specific status
+	GetJobsForReview(ctx context.Context, status string, page, limit int) ([]interface{}, int64, error)
+}
+
 // Request DTOs
 
 // CreateRoleRequest represents a request to create an admin role
 type CreateRoleRequest struct {
-	RoleName        string  `json:"role_name" validate:"required,min=3,max=100"`
-	RoleDescription string  `json:"role_description,omitempty"`
-	AccessLevel     int16   `json:"access_level" validate:"required,min=1,max=10"`
-	IsSystemRole    bool    `json:"is_system_role"`
-	CreatedBy       *int64  `json:"created_by,omitempty"`
+	RoleName        string `json:"role_name" validate:"required,min=3,max=100"`
+	RoleDescription string `json:"role_description,omitempty"`
+	AccessLevel     int16  `json:"access_level" validate:"required,min=1,max=10"`
+	IsSystemRole    bool   `json:"is_system_role"`
+	CreatedBy       *int64 `json:"created_by,omitempty"`
 }
 
 // UpdateRoleRequest represents a request to update an admin role
 type UpdateRoleRequest struct {
-	RoleName        string  `json:"role_name,omitempty" validate:"omitempty,min=3,max=100"`
-	RoleDescription string  `json:"role_description,omitempty"`
-	AccessLevel     *int16  `json:"access_level,omitempty" validate:"omitempty,min=1,max=10"`
+	RoleName        string `json:"role_name,omitempty" validate:"omitempty,min=3,max=100"`
+	RoleDescription string `json:"role_description,omitempty"`
+	AccessLevel     *int16 `json:"access_level,omitempty" validate:"omitempty,min=1,max=10"`
 }
 
 // CreateUserRequest represents a request to create an admin user
 type CreateUserRequest struct {
-	FullName        string  `json:"full_name" validate:"required,min=2,max=100"`
-	Email           string  `json:"email" validate:"required,email,max=150"`
-	Phone           string  `json:"phone,omitempty" validate:"omitempty,min=10,max=20"`
-	Password        string  `json:"password" validate:"required,min=8"`
-	RoleID          *int64  `json:"role_id,omitempty"`
-	Status          string  `json:"status,omitempty" validate:"omitempty,oneof=active inactive"`
-	ProfileImageURL string  `json:"profile_image_url,omitempty"`
-	CreatedBy       *int64  `json:"created_by,omitempty"`
+	FullName        string `json:"full_name" validate:"required,min=2,max=100"`
+	Email           string `json:"email" validate:"required,email,max=150"`
+	Phone           string `json:"phone,omitempty" validate:"omitempty,min=10,max=20"`
+	Password        string `json:"password" validate:"required,min=8"`
+	RoleID          *int64 `json:"role_id,omitempty"`
+	Status          string `json:"status,omitempty" validate:"omitempty,oneof=active inactive"`
+	ProfileImageURL string `json:"profile_image_url,omitempty"`
+	CreatedBy       *int64 `json:"created_by,omitempty"`
 }
 
 // UpdateUserRequest represents a request to update an admin user
 type UpdateUserRequest struct {
-	FullName        string  `json:"full_name,omitempty" validate:"omitempty,min=2,max=100"`
-	Phone           string  `json:"phone,omitempty" validate:"omitempty,min=10,max=20"`
-	RoleID          *int64  `json:"role_id,omitempty"`
-	Status          string  `json:"status,omitempty" validate:"omitempty,oneof=active inactive suspended"`
-	ProfileImageURL string  `json:"profile_image_url,omitempty"`
+	FullName        string `json:"full_name,omitempty" validate:"omitempty,min=2,max=100"`
+	Phone           string `json:"phone,omitempty" validate:"omitempty,min=10,max=20"`
+	RoleID          *int64 `json:"role_id,omitempty"`
+	Status          string `json:"status,omitempty" validate:"omitempty,oneof=active inactive suspended"`
+	ProfileImageURL string `json:"profile_image_url,omitempty"`
 }
 
 // LoginRequest represents a login request
 type LoginRequest struct {
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required"`
+	Email     string `json:"email" validate:"required,email"`
+	Password  string `json:"password" validate:"required"`
 	TwoFACode string `json:"two_fa_code,omitempty"`
 }
 
@@ -235,18 +251,18 @@ type TokenResponse struct {
 
 // Enable2FAResponse represents a 2FA setup response
 type Enable2FAResponse struct {
-	Secret    string `json:"secret"`
-	QRCode    string `json:"qr_code"`
+	Secret      string   `json:"secret"`
+	QRCode      string   `json:"qr_code"`
 	BackupCodes []string `json:"backup_codes"`
 }
 
 // ProfileResponse represents a profile response with full details
 type ProfileResponse struct {
-	User            *AdminUserResponse `json:"user"`
-	CreatedUsers    int64              `json:"created_users"`
-	CreatedRoles    int64              `json:"created_roles"`
-	TotalLogins     int64              `json:"total_logins"`
-	RecentLogins    []time.Time        `json:"recent_logins"`
+	User         *AdminUserResponse `json:"user"`
+	CreatedUsers int64              `json:"created_users"`
+	CreatedRoles int64              `json:"created_roles"`
+	TotalLogins  int64              `json:"total_logins"`
+	RecentLogins []time.Time        `json:"recent_logins"`
 }
 
 // RoleStatsResponse represents statistics about admin roles
@@ -261,45 +277,45 @@ type RoleStatsResponse struct {
 
 // RoleUsageResponse represents usage information for a role
 type RoleUsageResponse struct {
-	Role       *AdminRoleResponse   `json:"role"`
-	UserCount  int64                `json:"user_count"`
+	Role        *AdminRoleResponse  `json:"role"`
+	UserCount   int64               `json:"user_count"`
 	ActiveUsers int64               `json:"active_users"`
-	Users      []AdminUserResponse  `json:"users"`
+	Users       []AdminUserResponse `json:"users"`
 }
 
 // UserStatsResponse represents statistics about admin users
 type UserStatsResponse struct {
-	TotalUsers      int64           `json:"total_users"`
-	ActiveUsers     int64           `json:"active_users"`
-	InactiveUsers   int64           `json:"inactive_users"`
-	SuspendedUsers  int64           `json:"suspended_users"`
-	Users2FA        int64           `json:"users_2fa"`
-	ByRole          map[int64]int64 `json:"by_role"`
-	SuperAdmins     int64           `json:"super_admins"`
-	Admins          int64           `json:"admins"`
-	Moderators      int64           `json:"moderators"`
-	RecentLogins    int64           `json:"recent_logins"`
+	TotalUsers     int64           `json:"total_users"`
+	ActiveUsers    int64           `json:"active_users"`
+	InactiveUsers  int64           `json:"inactive_users"`
+	SuspendedUsers int64           `json:"suspended_users"`
+	Users2FA       int64           `json:"users_2fa"`
+	ByRole         map[int64]int64 `json:"by_role"`
+	SuperAdmins    int64           `json:"super_admins"`
+	Admins         int64           `json:"admins"`
+	Moderators     int64           `json:"moderators"`
+	RecentLogins   int64           `json:"recent_logins"`
 }
 
 // ActivityStatsResponse represents activity statistics
 type ActivityStatsResponse struct {
-	Period          string                 `json:"period"`
-	TotalLogins     int64                  `json:"total_logins"`
-	UniqueUsers     int64                  `json:"unique_users"`
-	AverageLogins   float64                `json:"average_logins"`
-	LoginsByDate    map[string]int64       `json:"logins_by_date"`
-	LoginsByUser    map[int64]int64        `json:"logins_by_user"`
-	TopActiveUsers  []AdminUserResponse    `json:"top_active_users"`
+	Period         string              `json:"period"`
+	TotalLogins    int64               `json:"total_logins"`
+	UniqueUsers    int64               `json:"unique_users"`
+	AverageLogins  float64             `json:"average_logins"`
+	LoginsByDate   map[string]int64    `json:"logins_by_date"`
+	LoginsByUser   map[int64]int64     `json:"logins_by_user"`
+	TopActiveUsers []AdminUserResponse `json:"top_active_users"`
 }
 
 // UserActivityResponse represents activity information for a user
 type UserActivityResponse struct {
-	User            *AdminUserResponse `json:"user"`
-	TotalLogins     int64              `json:"total_logins"`
-	LastLogin       *time.Time         `json:"last_login,omitempty"`
-	CreatedUsers    int64              `json:"created_users"`
-	CreatedRoles    int64              `json:"created_roles"`
-	LoginHistory    []LoginRecord      `json:"login_history"`
+	User         *AdminUserResponse `json:"user"`
+	TotalLogins  int64              `json:"total_logins"`
+	LastLogin    *time.Time         `json:"last_login,omitempty"`
+	CreatedUsers int64              `json:"created_users"`
+	CreatedRoles int64              `json:"created_roles"`
+	LoginHistory []LoginRecord      `json:"login_history"`
 }
 
 // LoginRecord represents a single login record

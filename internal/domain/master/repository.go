@@ -358,3 +358,44 @@ type DistrictRepository interface {
 	// ExistsByID checks if a district exists by ID
 	ExistsByID(ctx context.Context, id int64) (bool, error)
 }
+
+// JobTitleRepository defines data access methods for JobTitle
+type JobTitleRepository interface {
+	// Basic CRUD
+	Create(ctx context.Context, jobTitle *JobTitle) error
+	FindByID(ctx context.Context, id int64) (*JobTitle, error)
+	FindByName(ctx context.Context, name string) (*JobTitle, error)
+	Update(ctx context.Context, jobTitle *JobTitle) error
+	Delete(ctx context.Context, id int64) error
+
+	// Smart Search with fuzzy matching
+	SearchJobTitles(ctx context.Context, query string, limit int) ([]JobTitle, error)
+
+	// Listing
+	ListActive(ctx context.Context) ([]JobTitle, error)
+	ListPopular(ctx context.Context, limit int) ([]JobTitle, error)
+
+	// Statistics
+	IncrementSearchCount(ctx context.Context, id int64) error
+	UpdatePopularity(ctx context.Context, id int64, score float64) error
+}
+
+// JobOptionsRepository defines data access methods for job options (static data)
+type JobOptionsRepository interface {
+	// Get all options at once for caching
+	GetAllJobTypes(ctx context.Context) ([]JobType, error)
+	GetAllWorkPolicies(ctx context.Context) ([]WorkPolicy, error)
+	GetAllEducationLevels(ctx context.Context) ([]EducationLevel, error)
+	GetAllExperienceLevels(ctx context.Context) ([]ExperienceLevel, error)
+	GetAllGenderPreferences(ctx context.Context) ([]GenderPreference, error)
+
+	// Get combined options (for caching efficiency)
+	GetJobOptions(ctx context.Context) (*JobOptionsResponse, error)
+
+	// Individual lookups
+	FindJobTypeByID(ctx context.Context, id int64) (*JobType, error)
+	FindWorkPolicyByID(ctx context.Context, id int64) (*WorkPolicy, error)
+	FindEducationLevelByID(ctx context.Context, id int64) (*EducationLevel, error)
+	FindExperienceLevelByID(ctx context.Context, id int64) (*ExperienceLevel, error)
+	FindGenderPreferenceByID(ctx context.Context, id int64) (*GenderPreference, error)
+}

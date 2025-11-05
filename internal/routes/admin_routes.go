@@ -84,16 +84,22 @@ func SetupAdminRoutes(api fiber.Router, deps *Dependencies, authMw *middleware.A
 
 	// Job management
 	admin.Get("/jobs", func(c *fiber.Ctx) error {
-		// TODO: Implement GetJobs handler
-		// deps.AdminHandler.GetJobs(c)
+		// TODO: Implement GetJobs handler to list pending jobs
 		return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{
 			"message": "Get jobs endpoint - Coming soon",
 		})
 	})
 
+	admin.Patch("/jobs/:id/approve",
+		deps.AdminHandler.ApproveJob,
+	)
+
+	admin.Patch("/jobs/:id/reject",
+		deps.AdminHandler.RejectJob,
+	)
+
 	admin.Put("/jobs/:id/status", func(c *fiber.Ctx) error {
-		// TODO: Implement UpdateJobStatus handler
-		// deps.AdminHandler.UpdateJobStatus(c)
+		// TODO: Implement UpdateJobStatus handler for other status changes
 		return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{
 			"message": "Update job status endpoint - Coming soon",
 		})

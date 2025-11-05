@@ -10,6 +10,12 @@ import (
 func RunSeeders(db *gorm.DB) error {
 	log.Println("Starting database seeding...")
 
+	// Run job master data seeder (Phase 1-4: job_types, work_policies, education_levels, experience_levels, gender_preferences, job_titles)
+	if err := JobMasterDataSeeder(db); err != nil {
+		log.Printf("Failed to run JobMasterDataSeeder: %v", err)
+		return err
+	}
+
 	// Run skills master seeder
 	if err := SkillsMasterSeeder(db); err != nil {
 		log.Printf("Failed to run SkillsMasterSeeder: %v", err)
