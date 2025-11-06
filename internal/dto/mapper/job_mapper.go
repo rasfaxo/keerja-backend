@@ -8,7 +8,7 @@ import (
 
 // Job Entity to Response Mappers
 
-// ToJobResponse maps Job entity to JobResponse DTO
+// ToJobResponse maps Job entity to JobResponse DTO (master data only)
 func ToJobResponse(j *job.Job) *response.JobResponse {
 	if j == nil {
 		return nil
@@ -20,24 +20,15 @@ func ToJobResponse(j *job.Job) *response.JobResponse {
 		daysRemaining = &days
 	}
 
-	return &response.JobResponse{
+	resp := &response.JobResponse{
 		ID:                j.ID,
 		UUID:              j.UUID.String(),
 		CompanyID:         j.CompanyID,
 		Title:             j.Title,
 		Slug:              j.Slug,
-		JobLevel:          j.JobLevel,
-		EmploymentType:    j.EmploymentType,
-		Location:          j.Location,
-		City:              j.City,
-		Province:          j.Province,
-		RemoteOption:      j.RemoteOption,
 		SalaryMin:         j.SalaryMin,
 		SalaryMax:         j.SalaryMax,
 		Currency:          j.Currency,
-		ExperienceMin:     j.ExperienceMin,
-		ExperienceMax:     j.ExperienceMax,
-		EducationLevel:    j.EducationLevel,
 		Status:            j.Status,
 		ViewsCount:        j.ViewsCount,
 		ApplicationsCount: j.ApplicationsCount,
@@ -47,6 +38,27 @@ func ToJobResponse(j *job.Job) *response.JobResponse {
 		IsExpired:         j.IsExpired(),
 		DaysRemaining:     daysRemaining,
 	}
+
+	// Map master data details
+	if j.JobType != nil {
+		resp.JobType = &response.JobMasterDataItem{
+			ID:          j.JobType.ID,
+			Code:        j.JobType.Code,
+			Name:        j.JobType.Name,
+			Description: "",
+		}
+	}
+
+	if j.WorkPolicy != nil {
+		resp.WorkPolicy = &response.JobMasterDataItem{
+			ID:          j.WorkPolicy.ID,
+			Code:        j.WorkPolicy.Code,
+			Name:        j.WorkPolicy.Name,
+			Description: "",
+		}
+	}
+
+	return resp
 }
 
 // ToJobResponseWithCompany maps Job entity with company info to JobResponse DTO
@@ -72,7 +84,7 @@ func ToJobResponseWithCompany(j *job.Job, comp *company.Company) *response.JobRe
 	return resp
 }
 
-// ToJobDetailResponse maps Job entity with relations to JobDetailResponse DTO
+// ToJobDetailResponse maps Job entity with relations to JobDetailResponse DTO (master data only)
 func ToJobDetailResponse(j *job.Job) *response.JobDetailResponse {
 	if j == nil {
 		return nil
@@ -85,36 +97,26 @@ func ToJobDetailResponse(j *job.Job) *response.JobDetailResponse {
 	}
 
 	resp := &response.JobDetailResponse{
-		ID:               j.ID,
-		UUID:             j.UUID.String(),
-		CompanyID:        j.CompanyID,
-		EmployerUserID:   j.EmployerUserID,
-		CategoryID:       j.CategoryID,
-		Title:            j.Title,
-		Slug:             j.Slug,
-		JobLevel:         j.JobLevel,
-		EmploymentType:   j.EmploymentType,
-		Description:      j.Description,
-		RequirementsText: j.RequirementsText,
-		Responsibilities: j.Responsibilities,
+		ID:             j.ID,
+		UUID:           j.UUID.String(),
+		CompanyID:      j.CompanyID,
+		EmployerUserID: j.EmployerUserID,
+		Title:          j.Title,
+		Slug:           j.Slug,
 
-		// Master Data Fields
-		IndustryID: j.IndustryID,
-		DistrictID: j.DistrictID,
+		// Master Data IDs (required, dereference pointers)
+		JobTitleID:         derefInt64(j.JobTitleID),
+		JobTypeID:          derefInt64(j.JobTypeID),
+		WorkPolicyID:       derefInt64(j.WorkPolicyID),
+		EducationLevelID:   derefInt64(j.EducationLevelID),
+		ExperienceLevelID:  derefInt64(j.ExperienceLevelID),
+		GenderPreferenceID: derefInt64(j.GenderPreferenceID),
 
-		// Legacy Location Fields (backward compatibility)
-		Location: j.Location,
-		City:     j.City,
-		Province: j.Province,
+		Description: j.Description,
 
-		RemoteOption:      j.RemoteOption,
 		SalaryMin:         j.SalaryMin,
 		SalaryMax:         j.SalaryMax,
 		Currency:          j.Currency,
-		ExperienceMin:     j.ExperienceMin,
-		ExperienceMax:     j.ExperienceMax,
-		EducationLevel:    j.EducationLevel,
-		TotalHires:        j.TotalHires,
 		Status:            j.Status,
 		ViewsCount:        j.ViewsCount,
 		ApplicationsCount: j.ApplicationsCount,
@@ -126,72 +128,67 @@ func ToJobDetailResponse(j *job.Job) *response.JobDetailResponse {
 		DaysRemaining:     daysRemaining,
 	}
 
-	// Map Industry Detail \
-	if j.HasMasterDataRelations() && j.Industry != nil {
-		resp.IndustryDetail = &response.MasterIndustryResponse{
-			ID:          j.Industry.ID,
-			Name:        j.Industry.Name,
-			Slug:        j.Industry.Slug,
-			Description: j.Industry.Description.String,
-			IconURL:     j.Industry.IconURL.String,
-		}
-	}
-
-	// Map Location Detail
-	if j.HasMasterDataRelations() && j.District != nil {
-		locationDetail := &response.JobLocationDetail{}
-
-		// Map District
-		locationDetail.District = &response.DistrictResponse{
-			ID:     j.District.ID,
-			Code:   j.District.Code,
-			Name:   j.District.Name,
-			CityID: j.District.CityID,
-		}
-
-		// Map City (prefer preloaded MCity over District.City)
-		if j.MCity != nil {
-			locationDetail.City = &response.CityResponse{
-				ID:         j.MCity.ID,
-				Code:       j.MCity.Code,
-				Name:       j.MCity.Name,
-				Type:       j.MCity.Type,
-				FullName:   j.MCity.GetFullName(),
-				ProvinceID: j.MCity.ProvinceID,
-			}
-		} else if j.District.City != nil {
-			locationDetail.City = &response.CityResponse{
-				ID:         j.District.City.ID,
-				Code:       j.District.City.Code,
-				Name:       j.District.City.Name,
-				Type:       j.District.City.Type,
-				FullName:   j.District.City.GetFullName(),
-				ProvinceID: j.District.City.ProvinceID,
+	// Map Job Master Data Details
+	if j.HasJobMasterDataRelations() {
+		// Job Title
+		if j.JobTitle != nil {
+			resp.JobTitle = &response.JobMasterDataItem{
+				ID:          j.JobTitle.ID,
+				Code:        j.JobTitle.NormalizedName,
+				Name:        j.JobTitle.Name,
+				Description: "",
 			}
 		}
 
-		// Map Province (prefer preloaded MProvince over nested relations)
-		if j.MProvince != nil {
-			locationDetail.Province = &response.ProvinceResponse{
-				ID:   j.MProvince.ID,
-				Code: j.MProvince.Code,
-				Name: j.MProvince.Name,
-			}
-		} else if j.MCity != nil && j.MCity.Province != nil {
-			locationDetail.Province = &response.ProvinceResponse{
-				ID:   j.MCity.Province.ID,
-				Code: j.MCity.Province.Code,
-				Name: j.MCity.Province.Name,
-			}
-		} else if j.District.City != nil && j.District.City.Province != nil {
-			locationDetail.Province = &response.ProvinceResponse{
-				ID:   j.District.City.Province.ID,
-				Code: j.District.City.Province.Code,
-				Name: j.District.City.Province.Name,
+		// Job Type
+		if j.JobType != nil {
+			resp.JobType = &response.JobMasterDataItem{
+				ID:          j.JobType.ID,
+				Code:        j.JobType.Code,
+				Name:        j.JobType.Name,
+				Description: "",
 			}
 		}
 
-		resp.LocationDetail = locationDetail
+		// Work Policy
+		if j.WorkPolicy != nil {
+			resp.WorkPolicy = &response.JobMasterDataItem{
+				ID:          j.WorkPolicy.ID,
+				Code:        j.WorkPolicy.Code,
+				Name:        j.WorkPolicy.Name,
+				Description: "",
+			}
+		}
+
+		// Education Level
+		if j.EducationLevelM != nil {
+			resp.EducationLevel = &response.JobMasterDataItem{
+				ID:          j.EducationLevelM.ID,
+				Code:        j.EducationLevelM.Code,
+				Name:        j.EducationLevelM.Name,
+				Description: "",
+			}
+		}
+
+		// Experience Level
+		if j.ExperienceLevelM != nil {
+			resp.ExperienceLevel = &response.JobMasterDataItem{
+				ID:          j.ExperienceLevelM.ID,
+				Code:        j.ExperienceLevelM.Code,
+				Name:        j.ExperienceLevelM.Name,
+				Description: "",
+			}
+		}
+
+		// Gender Preference
+		if j.GenderPreference != nil {
+			resp.GenderPreference = &response.JobMasterDataItem{
+				ID:          j.GenderPreference.ID,
+				Code:        j.GenderPreference.Code,
+				Name:        j.GenderPreference.Name,
+				Description: "",
+			}
+		}
 	}
 
 	// Map skills
@@ -229,6 +226,14 @@ func ToJobDetailResponse(j *job.Job) *response.JobDetailResponse {
 	return resp
 }
 
+// derefInt64 safely dereferences an int64 pointer, returning 0 if nil
+func derefInt64(ptr *int64) int64 {
+	if ptr == nil {
+		return 0
+	}
+	return *ptr
+}
+
 // ToJobDetailResponseWithCompany maps Job entity with company info to JobDetailResponse DTO
 func ToJobDetailResponseWithCompany(j *job.Job, comp *company.Company) *response.JobDetailResponse {
 	if j == nil {
@@ -259,9 +264,15 @@ func ToJobSkillResponse(s *job.JobSkill) *response.JobSkillResponse {
 		return nil
 	}
 
+	skillName := ""
+	if s.Skill != nil {
+		skillName = s.Skill.Name
+	}
+
 	return &response.JobSkillResponse{
 		ID:              s.ID,
 		SkillID:         s.SkillID,
+		SkillName:       skillName,
 		ImportanceLevel: s.ImportanceLevel,
 		Weight:          s.Weight,
 	}

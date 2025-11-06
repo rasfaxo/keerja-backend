@@ -262,3 +262,11 @@ type DistrictResponse struct {
 	Name   string `json:"name"`
 	CityID int64  `json:"city_id"`
 }
+
+// CompanyAddressResponse represents company address for job posting
+type CompanyAddressResponse struct {
+	ID            int64   `json:"id"`
+	AlamatLengkap string  `json:"alamat_lengkap"` // Full address text
+	Latitude      float64 `json:"latitude,omitempty"`
+	Longitude     float64 `json:"longitude,omitempty"`
+}

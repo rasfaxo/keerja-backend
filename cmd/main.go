@@ -72,6 +72,10 @@ func main() {
 	provinceRepo := postgres.NewProvinceRepository(db)
 	cityRepo := postgres.NewCityRepository(db)
 	districtRepo := postgres.NewDistrictRepository(db)
+
+	// Job master data repositories
+	jobTitleRepo := postgres.NewJobTitleRepository(db)
+	jobOptionsRepo := postgres.NewJobOptionsRepository(db)
 	appLogger.Info("✓ Master data repositories initialized")
 
 	// Initialize services
@@ -158,6 +162,10 @@ func main() {
 	provinceService := service.NewProvinceService(provinceRepo, cacheService)
 	cityService := service.NewCityService(cityRepo, provinceRepo, cacheService)
 	districtService := service.NewDistrictService(districtRepo, cityRepo, provinceRepo, cacheService)
+
+	// Job master data services
+	jobTitleService := service.NewJobTitleService(jobTitleRepo)
+	jobOptionsService := service.NewJobOptionsService(jobOptionsRepo, cacheService)
 	appLogger.Info("✓ Master data services initialized")
 
 	// Company service
@@ -175,9 +183,15 @@ func main() {
 		jobRepo,
 		companyRepo,
 		userRepo,
+		jobOptionsRepo,
+		jobTitleRepo,
 		industryService,
 		districtService,
 	)
+
+	// Admin job service (orchestrates admin operations on jobs)
+	adminJobService := service.NewAdminJobService(jobRepo)
+
 	applicationService := service.NewApplicationService(applicationRepo, jobRepo, userRepo, companyRepo, emailService, nil) // notificationService disabled temporarily
 	skillsMasterService := service.NewSkillsMasterService(skillsMasterRepo)
 
@@ -203,8 +217,12 @@ func main() {
 
 	// Initialize job & application handlers
 	appLogger.Info("Initializing job & application handlers...")
-	jobHandler := http.NewJobHandler(jobService)
+	jobHandler := http.NewJobHandler(jobService, companyService)
 	applicationHandler := http.NewApplicationHandler(applicationService)
+
+	// Initialize admin handlers
+	appLogger.Info("Initializing admin handlers...")
+	adminHandler := http.NewAdminHandler(adminJobService)
 
 	// Initialize master data handlers
 	appLogger.Info("Initializing master data handlers...")
@@ -214,6 +232,10 @@ func main() {
 	industryHandler := master.NewIndustryHandler(industryService)
 	companySizeHandler := master.NewCompanySizeHandler(companySizeService)
 	locationHandler := master.NewLocationHandler(provinceService, cityService, districtService)
+
+	// Initialize job master data handler (job titles & options)
+	masterDataHandler := http.NewMasterDataHandler(jobTitleService, jobOptionsService)
+
 	masterDataHandlers := &routes.MasterDataHandlers{
 		IndustryHandler:    industryHandler,
 		CompanySizeHandler: companySizeHandler,
@@ -272,6 +294,7 @@ func main() {
 		// Job & Application handlers
 		JobHandler:         jobHandler,
 		ApplicationHandler: applicationHandler,
+		AdminHandler:       adminHandler,
 
 		// Company handlers (split by domain)
 		CompanyBasicHandler:   companyBasicHandler,
@@ -283,6 +306,7 @@ func main() {
 		// Master data handlers
 		SkillsMasterHandler: skillsMasterHandler,
 		MasterDataHandlers:  masterDataHandlers,
+		MasterDataHandler:   masterDataHandler,
 
 		// FCM Notification handlers
 		DeviceTokenHandler:      deviceTokenHandler,

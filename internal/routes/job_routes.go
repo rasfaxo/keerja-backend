@@ -14,15 +14,16 @@ import (
 //   - GET    /:id                Get job details by ID
 //   - POST   /search             Advanced job search
 //
-// Employer Endpoints (6):
+// Employer Endpoints (7):
 //   - POST   /                   Create new job posting
+//   - POST   /draft              Save job draft (Phase 6)
 //   - PUT    /:id                Update existing job
 //   - DELETE /:id                Delete job posting
 //   - GET    /my-jobs            List employer's own jobs
 //   - PATCH  /:id/publish        Publish draft job
 //   - PATCH  /:id/close          Close active job
 //
-// Total: 9 endpoints
+// Total: 10 endpoints
 func SetupJobRoutes(api fiber.Router, deps *Dependencies, authMw *middleware.AuthMiddleware) {
 	jobs := api.Group("/jobs")
 
@@ -53,11 +54,20 @@ func SetupJobRoutes(api fiber.Router, deps *Dependencies, authMw *middleware.Aut
 	)
 
 	// ============================================
-	// PROTECTED ROUTES - EMPLOYER ONLY (6 endpoints)
+	// PROTECTED ROUTES - EMPLOYER ONLY (7 endpoints)
 	// ============================================
 	protected := jobs.Group("")
 	protected.Use(authMw.AuthRequired())
 	protected.Use(authMw.EmployerOnly())
+
+	// POST /api/v1/jobs/draft - Save job draft (Phase 6)
+	// Body: SaveJobDraftRequest with all job posting data
+	// Rate limit: 100 requests/minute
+	// Response: 201 Created (new draft) or 200 OK (update)
+	protected.Post("/draft",
+		middleware.ApplicationRateLimiter(),
+		deps.JobHandler.SaveJobDraft,
+	)
 
 	// POST /api/v1/jobs - Create new job posting
 	// Body: { title, description, requirements, company_id, ... }
@@ -89,8 +99,10 @@ func SetupJobRoutes(api fiber.Router, deps *Dependencies, authMw *middleware.Aut
 		deps.JobHandler.GetMyJobs,
 	)
 
-	// PATCH /api/v1/jobs/:id/publish - Publish draft job
-	// Changes status from draft to published
+	// PATCH /api/v1/jobs/:id/publish - Publish draft job (Phase 7)
+	// Changes status from draft to pending_review
+	// Requires company to be verified
+	// Triggers admin notification for review
 	protected.Patch("/:id/publish",
 		deps.JobHandler.PublishJob,
 	)

@@ -1,29 +1,26 @@
 package request
 
 // CreateJobRequest represents job creation request
+// Only uses master data IDs - no legacy format support
 type CreateJobRequest struct {
-	CompanyID        int64                      `json:"company_id" validate:"required,min=1"`
-	EmployerUserID   int64                      `json:"employer_user_id" validate:"required,min=1"`
-	CategoryID       *int64                     `json:"category_id" validate:"omitempty,min=1"`
-	Title            string                     `json:"title" validate:"required,min=3,max=200"`
-	JobLevel         string                     `json:"job_level" validate:"omitempty,oneof='Internship' 'Entry Level' 'Mid Level' 'Senior Level' 'Manager' 'Director'"`
-	EmploymentType   string                     `json:"employment_type" validate:"required,oneof='Full-Time' 'Part-Time' 'Contract' 'Internship' 'Freelance'"`
-	Description      string                     `json:"description" validate:"required,min=50"`
-	RequirementsText string                     `json:"requirements_text" validate:"omitempty"`
-	Responsibilities string                     `json:"responsibilities" validate:"omitempty"`
-	RemoteOption     bool                       `json:"remote_option"`
-	SalaryMin        *float64                   `json:"salary_min" validate:"omitempty,min=0"`
-	SalaryMax        *float64                   `json:"salary_max" validate:"omitempty,min=0,gtefield=SalaryMin"`
-	Currency         string                     `json:"currency" validate:"omitempty,len=3"`
-	ExperienceMin    *int16                     `json:"experience_min" validate:"omitempty,min=0"`
-	ExperienceMax    *int16                     `json:"experience_max" validate:"omitempty,min=0,gtefield=ExperienceMin"`
-	EducationLevel   string                     `json:"education_level" validate:"omitempty"`
-	TotalHires       int16                      `json:"total_hires" validate:"omitempty,min=1"`
-	ExpiredAt        *string                    `json:"expired_at" validate:"omitempty"`
-	Locations        []CreateJobLocationRequest `json:"locations" validate:"omitempty"`
-	Skills           []AddSkillRequest          `json:"skills" validate:"omitempty"`
-	Benefits         []AddBenefitRequest        `json:"benefits" validate:"omitempty"`
-	JobRequirements  []AddRequirementRequest    `json:"job_requirements" validate:"omitempty"`
+	// Required Fields
+	CompanyID   int64  `json:"company_id" validate:"required,min=1"`
+	Description string `json:"description" validate:"required,min=50"`
+
+	// Master Data IDs (All Required)
+	JobTitleID         int64 `json:"job_title_id" validate:"required,min=1"`
+	JobTypeID          int64 `json:"job_type_id" validate:"required,min=1"`
+	WorkPolicyID       int64 `json:"work_policy_id" validate:"required,min=1"`
+	EducationLevelID   int64 `json:"education_level_id" validate:"required,min=1"`
+	ExperienceLevelID  int64 `json:"experience_level_id" validate:"required,min=1"`
+	GenderPreferenceID int64 `json:"gender_preference_id" validate:"required,min=1"`
+
+	// Salary Range (Required)
+	SalaryMin *float64 `json:"salary_min" validate:"required,min=0"`
+	SalaryMax *float64 `json:"salary_max" validate:"required,min=0,gtefield=SalaryMin"`
+
+	// Skills (Required)
+	Skills []AddSkillRequest `json:"skills" validate:"required,min=1"`
 }
 
 // CreateJobLocationRequest represents additional job location
@@ -43,9 +40,8 @@ type CreateJobLocationRequest struct {
 
 // AddSkillRequest represents add skill to job request
 type AddSkillRequest struct {
-	SkillID         int64   `json:"skill_id" validate:"required"`
-	ImportanceLevel string  `json:"importance_level" validate:"omitempty,oneof='required' 'preferred' 'optional'"`
-	Weight          float64 `json:"weight" validate:"omitempty,min=0,max=1"`
+	SkillID         int64  `json:"skill_id" validate:"required"`
+	ImportanceLevel string `json:"importance_level" validate:"omitempty,oneof='required' 'preferred' 'optional'"`
 }
 
 // AddBenefitRequest represents add benefit to job request
@@ -69,25 +65,26 @@ type AddRequirementRequest struct {
 	Priority        int16  `json:"priority" validate:"omitempty,min=1"`
 }
 
-// UpdateJobRequest represents job update request
+// UpdateJobRequest represents job update request (only master data format)
 type UpdateJobRequest struct {
-	CategoryID       *int64   `json:"category_id" validate:"omitempty,min=1"`
-	Title            *string  `json:"title" validate:"omitempty,min=3,max=200"`
-	JobLevel         *string  `json:"job_level" validate:"omitempty,oneof='Internship' 'Entry Level' 'Mid Level' 'Senior Level' 'Manager' 'Director'"`
-	EmploymentType   *string  `json:"employment_type" validate:"omitempty,oneof='Full-Time' 'Part-Time' 'Contract' 'Internship' 'Freelance'"`
-	Description      *string  `json:"description" validate:"omitempty,min=50"`
-	RequirementsText *string  `json:"requirements_text" validate:"omitempty"`
-	Responsibilities *string  `json:"responsibilities" validate:"omitempty"`
-	RemoteOption     *bool    `json:"remote_option"`
-	SalaryMin        *float64 `json:"salary_min" validate:"omitempty,min=0"`
-	SalaryMax        *float64 `json:"salary_max" validate:"omitempty,min=0"`
-	Currency         *string  `json:"currency" validate:"omitempty,len=3"`
-	ExperienceMin    *int16   `json:"experience_min" validate:"omitempty,min=0"`
-	ExperienceMax    *int16   `json:"experience_max" validate:"omitempty,min=0"`
-	EducationLevel   *string  `json:"education_level" validate:"omitempty"`
-	TotalHires       *int16   `json:"total_hires" validate:"omitempty,min=1"`
-	Status           *string  `json:"status" validate:"omitempty,oneof=draft published closed expired suspended"`
-	ExpiredAt        *string  `json:"expired_at" validate:"omitempty"`
+	// Master Data IDs (Optional for updates)
+	JobTitleID         *int64 `json:"job_title_id" validate:"omitempty,min=1"`
+	JobTypeID          *int64 `json:"job_type_id" validate:"omitempty,min=1"`
+	WorkPolicyID       *int64 `json:"work_policy_id" validate:"omitempty,min=1"`
+	EducationLevelID   *int64 `json:"education_level_id" validate:"omitempty,min=1"`
+	ExperienceLevelID  *int64 `json:"experience_level_id" validate:"omitempty,min=1"`
+	GenderPreferenceID *int64 `json:"gender_preference_id" validate:"omitempty,min=1"`
+
+	// Other Fields (Optional)
+	Description *string  `json:"description" validate:"omitempty,min=50"`
+	SalaryMin   *float64 `json:"salary_min" validate:"omitempty,min=0"`
+	SalaryMax   *float64 `json:"salary_max" validate:"omitempty,min=0"`
+	// NOTE: Status should NOT be updated by users - it's controlled by workflow
+	// - draft: initial state (automatic)
+	// - pending_approval: submitted for review (automatic when published)
+	// - published: approved by admin (admin action)
+	// - rejected: rejected by admin (admin action)
+	// - closed/expired/suspended: lifecycle management (admin/system action)
 }
 
 // UpdateJobSkillsRequest represents update job skills request
@@ -154,4 +151,24 @@ type CloseJobRequest struct {
 type JobRecommendationRequest struct {
 	UserID int64 `json:"user_id" validate:"required,min=1"`
 	Limit  int   `json:"limit" validate:"omitempty,min=1,max=50"`
+}
+
+// SaveJobDraftRequest represents save job draft request (Phase 6)
+type SaveJobDraftRequest struct {
+	DraftID          *int64  `json:"draft_id" validate:"omitempty,min=1"`                           // Optional: for updating existing draft
+	CompanyID        int64   `json:"company_id" validate:"required,min=1"`                          // Company ID for the job draft
+	JobTitleID       int64   `json:"job_title_id" validate:"required,min=1"`                        // Master data: job title ID
+	JobCategoryID    int64   `json:"job_category_id" validate:"required,min=1"`                     // Master data: job category ID
+	JobTypeID        int64   `json:"job_type_id" validate:"required,min=1"`                         // Master data: job type ID (full-time, part-time, etc.)
+	WorkPolicyID     int64   `json:"work_policy_id" validate:"required,min=1"`                      // Master data: work policy ID (onsite, remote, hybrid)
+	GajiMin          int     `json:"gaji_min" validate:"required,min=0"`                            // Minimum salary
+	GajiMaks         int     `json:"gaji_maks" validate:"required,min=0,gtefield=GajiMin"`          // Maximum salary (must be >= GajiMin)
+	AdaBonus         bool    `json:"ada_bonus"`                                                     // Has bonus?
+	GenderPreference string  `json:"gender_preference" validate:"required,oneof=male female any"`   // Gender preference
+	UmurMin          *int    `json:"umur_min" validate:"omitempty,min=17,max=65"`                   // Minimum age (nullable)
+	UmurMaks         *int    `json:"umur_maks" validate:"omitempty,min=17,max=65,gtefield=UmurMin"` // Maximum age (nullable, must be >= UmurMin)
+	SkillIDs         []int64 `json:"skill_ids" validate:"required,min=1,dive,min=1"`                // Array of skill IDs (at least 1)
+	PendidikanID     int64   `json:"pendidikan_id" validate:"required,min=1"`                       // Master data: education level ID
+	PengalamanID     int64   `json:"pengalaman_id" validate:"required,min=1"`                       // Master data: experience level ID
+	Deskripsi        string  `json:"deskripsi" validate:"required,min=50,max=5000"`                 // Job description (will be sanitized for XSS)
 }

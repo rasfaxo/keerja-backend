@@ -5,6 +5,114 @@ import (
 	"time"
 )
 
+// JobTitle represents master data for job titles with smart recommendations
+// Maps to: job_titles table
+type JobTitle struct {
+	ID                    int64     `gorm:"primaryKey;autoIncrement" json:"id"`
+	Name                  string    `gorm:"type:varchar(200);not null;uniqueIndex" json:"name" validate:"required,min=2,max=200"`
+	NormalizedName        string    `gorm:"type:varchar(200);index:idx_job_titles_normalized" json:"normalized_name"`
+	RecommendedCategoryID *int64    `gorm:"index" json:"recommended_category_id,omitempty"`
+	PopularityScore       float64   `gorm:"type:numeric(5,2);default:0.00;index:idx_job_titles_popularity,sort:desc" json:"popularity_score" validate:"min=0,max=100"`
+	SearchCount           int64     `gorm:"default:0" json:"search_count"`
+	IsActive              bool      `gorm:"default:true;index" json:"is_active"`
+	CreatedAt             time.Time `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt             time.Time `gorm:"autoUpdateTime" json:"updated_at"`
+}
+
+// TableName specifies the table name for JobTitle
+func (JobTitle) TableName() string {
+	return "job_titles"
+}
+
+// IncrementSearchCount increments search count for analytics
+func (jt *JobTitle) IncrementSearchCount() {
+	jt.SearchCount++
+}
+
+// IncrementPopularity increases popularity score
+func (jt *JobTitle) IncrementPopularity(amount float64) {
+	jt.PopularityScore += amount
+	if jt.PopularityScore > 100.0 {
+		jt.PopularityScore = 100.0
+	}
+}
+
+// JobType represents job type options (full-time, part-time, etc)
+type JobType struct {
+	ID    int64  `gorm:"primaryKey;autoIncrement" json:"id"`
+	Code  string `gorm:"type:varchar(30);not null;uniqueIndex" json:"code" validate:"required"`
+	Name  string `gorm:"type:varchar(100);not null" json:"name" validate:"required"`
+	Order int    `gorm:"default:0" json:"order"`
+}
+
+// TableName specifies the table name for JobType
+func (JobType) TableName() string {
+	return "job_types"
+}
+
+// WorkPolicy represents work location policies (onsite, remote, hybrid)
+type WorkPolicy struct {
+	ID    int64  `gorm:"primaryKey;autoIncrement" json:"id"`
+	Code  string `gorm:"type:varchar(30);not null;uniqueIndex" json:"code" validate:"required"`
+	Name  string `gorm:"type:varchar(100);not null" json:"name" validate:"required"`
+	Order int    `gorm:"default:0" json:"order"`
+}
+
+// TableName specifies the table name for WorkPolicy
+func (WorkPolicy) TableName() string {
+	return "work_policies"
+}
+
+// EducationLevel represents education level requirements
+type EducationLevel struct {
+	ID    int64  `gorm:"primaryKey;autoIncrement" json:"id"`
+	Code  string `gorm:"type:varchar(30);not null;uniqueIndex" json:"code" validate:"required"`
+	Name  string `gorm:"type:varchar(100);not null" json:"name" validate:"required"`
+	Order int    `gorm:"default:0" json:"order"`
+}
+
+// TableName specifies the table name for EducationLevel
+func (EducationLevel) TableName() string {
+	return "education_levels"
+}
+
+// ExperienceLevel represents experience level requirements
+type ExperienceLevel struct {
+	ID       int64  `gorm:"primaryKey;autoIncrement" json:"id"`
+	Code     string `gorm:"type:varchar(30);not null;uniqueIndex" json:"code" validate:"required"`
+	Name     string `gorm:"type:varchar(100);not null" json:"name" validate:"required"`
+	MinYears int    `gorm:"default:0" json:"min_years"`
+	MaxYears *int   `gorm:"" json:"max_years,omitempty"`
+	Order    int    `gorm:"default:0" json:"order"`
+}
+
+// TableName specifies the table name for ExperienceLevel
+func (ExperienceLevel) TableName() string {
+	return "experience_levels"
+}
+
+// GenderPreference represents gender preference options
+type GenderPreference struct {
+	ID    int64  `gorm:"primaryKey;autoIncrement" json:"id"`
+	Code  string `gorm:"type:varchar(30);not null;uniqueIndex" json:"code" validate:"required"`
+	Name  string `gorm:"type:varchar(100);not null" json:"name" validate:"required"`
+	Order int    `gorm:"default:0" json:"order"`
+}
+
+// TableName specifies the table name for GenderPreference
+func (GenderPreference) TableName() string {
+	return "gender_preferences"
+}
+
+// JobOptionsResponse represents combined response for GetJobOptions endpoint
+type JobOptionsResponse struct {
+	JobTypes          []JobType          `json:"job_types"`
+	WorkPolicies      []WorkPolicy       `json:"work_policies"`
+	EducationLevels   []EducationLevel   `json:"education_levels"`
+	ExperienceLevels  []ExperienceLevel  `json:"experience_levels"`
+	GenderPreferences []GenderPreference `json:"genders"`
+}
+
 // BenefitsMaster represents a master data entry for job benefits
 // Maps to: benefits_master table
 type BenefitsMaster struct {
