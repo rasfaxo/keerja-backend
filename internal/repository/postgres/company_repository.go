@@ -921,19 +921,45 @@ func (r *companyRepository) ApproveVerification(ctx context.Context, companyID, 
 	now := time.Now()
 	expiry := now.AddDate(1, 0, 0) // 1 year from now
 
-	// Update verification
-	if err := r.db.WithContext(ctx).
-		Model(&company.CompanyVerification{}).
+	// Check if verification record exists
+	var verification company.CompanyVerification
+	err := r.db.WithContext(ctx).
 		Where("company_id = ?", companyID).
-		Updates(map[string]interface{}{
-			"status":              "verified",
-			"reviewed_by":         reviewedBy,
-			"reviewed_at":         now,
-			"verification_notes":  notes,
-			"verification_expiry": expiry,
-			"badge_granted":       true,
-		}).Error; err != nil {
-		return err
+		First(&verification).Error
+
+	if err != nil {
+		// Record not found, create new verification record
+		verification = company.CompanyVerification{
+			CompanyID:          companyID,
+			ReviewedBy:         &reviewedBy,
+			ReviewedAt:         &now,
+			Status:             "verified",
+			NPWPNumber:         "", // Will be empty if not provided during request
+			VerificationScore:  100.0,
+			VerificationNotes:  &notes,
+			VerificationExpiry: &expiry,
+			BadgeGranted:       true,
+			CreatedAt:          now,
+			UpdatedAt:          now,
+		}
+		if err := r.db.WithContext(ctx).Create(&verification).Error; err != nil {
+			return err
+		}
+	} else {
+		// Update existing verification
+		if err := r.db.WithContext(ctx).
+			Model(&verification).
+			Updates(map[string]interface{}{
+				"status":              "verified",
+				"reviewed_by":         reviewedBy,
+				"reviewed_at":         now,
+				"verification_notes":  notes,
+				"verification_expiry": expiry,
+				"badge_granted":       true,
+				"updated_at":          now,
+			}).Error; err != nil {
+			return err
+		}
 	}
 
 	// Update company

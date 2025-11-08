@@ -58,7 +58,7 @@ type Company struct {
 	CreatedAt  time.Time      `gorm:"type:timestamp;default:now()" json:"created_at"`
 	UpdatedAt  time.Time      `gorm:"type:timestamp;default:now()" json:"updated_at"`
 
-	// Master Data Relationships 
+	// Master Data Relationships
 	IndustryRelation    *master.Industry    `gorm:"foreignKey:IndustryID;references:ID" json:"industry_relation,omitempty"`
 	CompanySizeRelation *master.CompanySize `gorm:"foreignKey:CompanySizeID;references:ID" json:"company_size_relation,omitempty"`
 	ProvinceRelation    *master.Province    `gorm:"foreignKey:ProvinceID;references:ID" json:"province_relation,omitempty"`
@@ -90,32 +90,32 @@ func (c *Company) IsStartup() bool {
 	return c.CompanyType != nil && *c.CompanyType == "startup"
 }
 
-// GetIndustry returns the industry relation 
+// GetIndustry returns the industry relation
 func (c *Company) GetIndustry() *master.Industry {
 	return c.IndustryRelation
 }
 
-// GetCompanySize returns the company size relation 
+// GetCompanySize returns the company size relation
 func (c *Company) GetCompanySize() *master.CompanySize {
 	return c.CompanySizeRelation
 }
 
-// GetProvince returns the province relation 
+// GetProvince returns the province relation
 func (c *Company) GetProvince() *master.Province {
 	return c.ProvinceRelation
 }
 
-// GetCity returns the city relation 
+// GetCity returns the city relation
 func (c *Company) GetCity() *master.City {
 	return c.CityRelation
 }
 
-// GetDistrict returns the district relation 
+// GetDistrict returns the district relation
 func (c *Company) GetDistrict() *master.District {
 	return c.DistrictRelation
 }
 
-// GetFullLocation returns the complete location path 
+// GetFullLocation returns the complete location path
 // Format: "District, City Type City, Province"
 // Example: "Batujajar, Kabupaten Bandung Barat, Jawa Barat"
 func (c *Company) GetFullLocation() string {
@@ -140,7 +140,7 @@ func (c *Company) GetFullLocation() string {
 	return ""
 }
 
-// GetFullLocationWithDistrict returns location with district details 
+// GetFullLocationWithDistrict returns location with district details
 func (c *Company) GetFullLocationWithDistrict() string {
 	location := c.GetFullLocation()
 	if location != "" && c.FullAddress != "" {
@@ -155,13 +155,13 @@ func (c *Company) GetFullLocationWithDistrict() string {
 	return ""
 }
 
-// HasMasterDataRelations checks if company has master data relations loaded 
+// HasMasterDataRelations checks if company has master data relations loaded
 func (c *Company) HasMasterDataRelations() bool {
 	return c.IndustryRelation != nil || c.CompanySizeRelation != nil ||
 		c.DistrictRelation != nil || c.CityRelation != nil || c.ProvinceRelation != nil
 }
 
-// GetIndustryName returns industry name from relation or legacy field 
+// GetIndustryName returns industry name from relation or legacy field
 func (c *Company) GetIndustryName() string {
 	if c.IndustryRelation != nil {
 		return c.IndustryRelation.Name
@@ -172,7 +172,7 @@ func (c *Company) GetIndustryName() string {
 	return ""
 }
 
-// GetCompanySizeLabel returns company size label 
+// GetCompanySizeLabel returns company size label
 func (c *Company) GetCompanySizeLabel() string {
 	if c.CompanySizeRelation != nil {
 		return c.CompanySizeRelation.Label
@@ -183,7 +183,7 @@ func (c *Company) GetCompanySizeLabel() string {
 	return ""
 }
 
-// GetLocationSummary returns a short location summary 
+// GetLocationSummary returns a short location summary
 // Format: "City, Province"
 func (c *Company) GetLocationSummary() string {
 	if c.CityRelation != nil && c.ProvinceRelation != nil {
@@ -408,6 +408,8 @@ type CompanyVerification struct {
 	ReviewedBy         *int64     `gorm:"type:bigint" json:"reviewed_by,omitempty"`
 	ReviewedAt         *time.Time `gorm:"type:timestamp" json:"reviewed_at,omitempty"`
 	Status             string     `gorm:"type:varchar(20);default:'pending';check:status IN ('pending','under_review','verified','rejected','blacklisted','expired')" json:"status"`
+	NPWPNumber         string     `gorm:"type:varchar(50);not null" json:"npwp_number" validate:"required"`
+	NIBNumber          *string    `gorm:"type:varchar(50)" json:"nib_number,omitempty"`
 	VerificationScore  float64    `gorm:"type:numeric(5,2);default:0.00" json:"verification_score"`
 	VerificationNotes  *string    `gorm:"type:text" json:"verification_notes,omitempty"`
 	RejectionReason    *string    `gorm:"type:text" json:"rejection_reason,omitempty"`

@@ -147,8 +147,9 @@ type UpdateEmployeeRequest struct {
 
 // RequestVerificationRequest represents company verification request
 type RequestVerificationRequest struct {
-	DocumentType string `json:"document_type" validate:"required,oneof='business_license' 'tax_id' 'incorporation_certificate' 'other'"`
-	Notes        string `json:"notes" validate:"omitempty"`
+	NPWPNumber *string `form:"npwp_number" json:"npwp_number" validate:"required"`
+	NIBNumber  *string `form:"nib_number" json:"nib_number" validate:"omitempty"`
+	Notes      *string `form:"notes" json:"notes" validate:"omitempty"`
 }
 
 // UploadCompanyDocumentRequest represents company document upload request

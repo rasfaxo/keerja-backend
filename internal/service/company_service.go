@@ -1714,10 +1714,149 @@ func (s *companyService) CheckEmployerPermission(ctx context.Context, userID, co
 // =============================================================================
 
 // RequestVerification requests company verification
-func (s *companyService) RequestVerification(ctx context.Context, companyID, requestedBy int64) error {
-	if err := s.companyRepo.RequestVerification(ctx, companyID, requestedBy); err != nil {
-		return fmt.Errorf("failed to request verification: %w", err)
+func (s *companyService) RequestVerification(ctx context.Context, companyID, requestedBy int64, npwpNumber string, nibNumber *string, npwpFile *multipart.FileHeader, additionalFiles []*multipart.FileHeader) error {
+	// Validate NPWP number is required
+	if npwpNumber == "" {
+		return fmt.Errorf("npwp_number is required")
 	}
+
+	// Upload NPWP document first
+	var npwpDocPath string
+	if npwpFile != nil {
+		filePath, err := s.uploadService.UploadFile(ctx, npwpFile, "documents/npwp")
+		if err != nil {
+			return fmt.Errorf("failed to upload NPWP document: %w", err)
+		}
+		npwpDocPath = filePath
+	} else {
+		return fmt.Errorf("npwp_file is required")
+	}
+
+	// Start transaction
+	tx := s.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return fmt.Errorf("failed to start transaction: %w", tx.Error)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Create or update verification record with NPWP and NIB
+	verification, err := s.companyRepo.FindVerificationByCompanyID(ctx, companyID)
+
+	if err != nil {
+		// Real error occurred
+		tx.Rollback()
+		return fmt.Errorf("failed to find verification: %w", err)
+	}
+
+	if verification == nil {
+		// Create new verification record (no record exists)
+		verification = &company.CompanyVerification{
+			CompanyID:   companyID,
+			RequestedBy: &requestedBy,
+			Status:      "pending",
+			NPWPNumber:  npwpNumber,
+			NIBNumber:   nibNumber,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		}
+		if err := tx.Create(verification).Error; err != nil {
+			tx.Rollback()
+			return fmt.Errorf("failed to create verification: %w", err)
+		}
+	} else {
+		// Update existing verification
+		verification.Status = "pending"
+		verification.NPWPNumber = npwpNumber
+		verification.NIBNumber = nibNumber
+		verification.RequestedBy = &requestedBy
+		verification.UpdatedAt = time.Now()
+		if err := tx.Save(verification).Error; err != nil {
+			tx.Rollback()
+			return fmt.Errorf("failed to update verification: %w", err)
+		}
+	}
+
+	// Save NPWP document to company_documents
+	npwpDocument := &company.CompanyDocument{
+		CompanyID:      companyID,
+		UploadedBy:     &requestedBy,
+		DocumentType:   "NPWP",
+		DocumentNumber: &npwpNumber,
+		DocumentName:   utils.StringPtr("NPWP Perusahaan"),
+		FilePath:       npwpDocPath,
+		Status:         "pending",
+		IsActive:       true,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
+	}
+	if err := tx.Create(npwpDocument).Error; err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to save NPWP document: %w", err)
+	}
+
+	// Save NIB document if NIB number provided
+	if nibNumber != nil && *nibNumber != "" {
+		// Check if NIB file exists in additional documents (optional)
+		// For now, we just save the NIB number without requiring document
+		nibDocument := &company.CompanyDocument{
+			CompanyID:      companyID,
+			UploadedBy:     &requestedBy,
+			DocumentType:   "NIB",
+			DocumentNumber: nibNumber,
+			DocumentName:   utils.StringPtr("Nomor Induk Berusaha"),
+			FilePath:       "", // NIB is optional, may not have file
+			Status:         "pending",
+			IsActive:       true,
+			CreatedAt:      time.Now(),
+			UpdatedAt:      time.Now(),
+		}
+		// Only create if FilePath is provided or we can skip this
+		// For now, skip if no file
+		_ = nibDocument
+	}
+
+	// Save additional documents
+	if len(additionalFiles) > 0 {
+		for i, file := range additionalFiles {
+			if i >= 5 { // Max 5 files
+				break
+			}
+
+			filePath, err := s.uploadService.UploadFile(ctx, file, "documents/additional")
+			if err != nil {
+				// Continue with other files even if one fails
+				continue
+			}
+
+			additionalDoc := &company.CompanyDocument{
+				CompanyID:    companyID,
+				UploadedBy:   &requestedBy,
+				DocumentType: "LAINNYA",
+				DocumentName: utils.StringPtr(fmt.Sprintf("Dokumen Tambahan %d", i+1)),
+				FilePath:     filePath,
+				Status:       "pending",
+				IsActive:     true,
+				CreatedAt:    time.Now(),
+				UpdatedAt:    time.Now(),
+			}
+			if err := tx.Create(additionalDoc).Error; err != nil {
+				// Continue with other files
+				continue
+			}
+		}
+	}
+
+	// Commit transaction
+	if err := tx.Commit().Error; err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	// Invalidate cache
+	s.cache.Delete(cache.GenerateCacheKey("company", "verification", companyID))
 
 	return nil
 }

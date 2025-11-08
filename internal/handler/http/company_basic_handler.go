@@ -1,6 +1,8 @@
 package http
 
 import (
+	"fmt"
+	"mime/multipart"
 	"strconv"
 	"strings"
 
@@ -843,7 +845,30 @@ func (h *CompanyBasicHandler) GetMyAddresses(c *fiber.Ctx) error {
 
 	return utils.SuccessResponse(c, "Company addresses retrieved successfully", addresses)
 }
+
+// RequestVerification godoc
+// @Summary Request company verification
+// @Description Submit a verification request for the company with NPWP and optional NIB
+// @Tags companies
+// @Accept multipart/form-data
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Company ID"
+// @Param npwp_number formData string true "Nomor NPWP Perusahaan (Required)"
+// @Param nib_number formData string false "13 Digit NIB Perusahaan (Optional)"
+// @Param npwp_file formData file true "Upload NPWP Perusahaan (pdf, jpg, jpeg, png, max 10MB)"
+// @Param additional_documents formData file false "Dokumen Tambahan (max 5 files, each max 10MB)"
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 404 {object} utils.Response
+// @Failure 409 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /companies/{id}/request-verification [post]
 func (h *CompanyBasicHandler) RequestVerification(c *fiber.Ctx) error {
+	ctx := c.Context()
+
 	// Get company ID from URL params
 	companyID, err := strconv.ParseInt(c.Params("id"), 10, 64)
 	if err != nil {
@@ -857,7 +882,7 @@ func (h *CompanyBasicHandler) RequestVerification(c *fiber.Ctx) error {
 	}
 
 	// Verify company exists
-	comp, err := h.companyService.GetCompany(c.Context(), companyID)
+	comp, err := h.companyService.GetCompany(ctx, companyID)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusNotFound, "Company not found", err.Error())
 	}
@@ -868,7 +893,7 @@ func (h *CompanyBasicHandler) RequestVerification(c *fiber.Ctx) error {
 	}
 
 	// Check if verification request already exists
-	verificationStatus, err := h.companyService.GetVerificationStatus(c.Context(), companyID)
+	verificationStatus, err := h.companyService.GetVerificationStatus(ctx, companyID)
 	if err == nil && verificationStatus != nil {
 		// Verification record exists, check status
 		if verificationStatus.Status == "pending" || verificationStatus.Status == "under_review" {
@@ -877,14 +902,83 @@ func (h *CompanyBasicHandler) RequestVerification(c *fiber.Ctx) error {
 		}
 	}
 
-	employerUserID, err := h.companyService.GetEmployerUserID(c.Context(), userID, companyID)
+	// Get employer user ID
+	employerUserID, err := h.companyService.GetEmployerUserID(ctx, userID, companyID)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusForbidden, "Access denied",
 			"You must be an employee of this company to request verification")
 	}
 
-	// Request verification with employer_user ID
-	if err := h.companyService.RequestVerification(c.Context(), companyID, employerUserID); err != nil {
+	// Parse multipart form
+	var req request.RequestVerificationRequest
+
+	// Get NPWP number (required)
+	npwpNumber := c.FormValue("npwp_number")
+	if npwpNumber == "" {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "NPWP number is required", "npwp_number field is required")
+	}
+	req.NPWPNumber = &npwpNumber
+
+	// Get NIB number (optional)
+	nibNumber := c.FormValue("nib_number")
+	if nibNumber != "" {
+		req.NIBNumber = &nibNumber
+	}
+
+	// Sanitize inputs
+	*req.NPWPNumber = utils.SanitizeString(*req.NPWPNumber)
+	if req.NIBNumber != nil {
+		*req.NIBNumber = utils.SanitizeString(*req.NIBNumber)
+	}
+
+	// Validate request
+	if err := utils.ValidateStruct(&req); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Validation failed", err.Error())
+	}
+
+	// Get NPWP file (required)
+	npwpFile, err := c.FormFile("npwp_file")
+	if err != nil || npwpFile == nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "NPWP file is required", "npwp_file must be uploaded")
+	}
+
+	// Validate NPWP file size (max 10MB)
+	if npwpFile.Size > 10*1024*1024 {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "NPWP file too large", "Maximum file size is 10MB")
+	}
+
+	// Get additional documents (optional, max 5 files)
+	form, err := c.MultipartForm()
+	var additionalFiles []*multipart.FileHeader
+	if err == nil && form != nil {
+		if files, ok := form.File["additional_documents"]; ok {
+			// Limit to 5 files
+			maxFiles := 5
+			if len(files) > maxFiles {
+				files = files[:maxFiles]
+			}
+
+			// Validate each file size
+			for _, file := range files {
+				if file.Size > 10*1024*1024 {
+					return utils.ErrorResponse(c, fiber.StatusBadRequest, "File too large",
+						fmt.Sprintf("File %s exceeds 10MB limit", file.Filename))
+				}
+				additionalFiles = append(additionalFiles, file)
+			}
+		}
+	}
+
+	// Request verification with documents
+	if err := h.companyService.RequestVerification(
+		ctx,
+		companyID,
+		employerUserID,
+		*req.NPWPNumber,
+		req.NIBNumber,
+		npwpFile,
+		additionalFiles,
+	); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to request verification", err.Error())
 	}
 

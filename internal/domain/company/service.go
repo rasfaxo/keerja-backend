@@ -87,7 +87,7 @@ type CompanyService interface {
 	CheckEmployerPermission(ctx context.Context, userID, companyID int64, requiredRole string) (bool, error)
 
 	// Verification management
-	RequestVerification(ctx context.Context, companyID, requestedBy int64) error
+	RequestVerification(ctx context.Context, companyID, requestedBy int64, npwpNumber string, nibNumber *string, npwpFile *multipart.FileHeader, additionalFiles []*multipart.FileHeader) error
 	GetVerificationStatus(ctx context.Context, companyID int64) (*CompanyVerification, error)
 	ApproveVerification(ctx context.Context, companyID, reviewedBy int64, notes string) error
 	RejectVerification(ctx context.Context, companyID, reviewedBy int64, reason string) error

@@ -184,10 +184,15 @@ func (s *adminCompanyService) UpdateCompanyStatus(ctx context.Context, companyID
 	// Get or create company verification record
 	verification, err := s.companyRepo.FindVerificationByCompanyID(ctx, companyID)
 	if err != nil {
-		// Create new verification record if it doesn't exist
+		return fmt.Errorf("failed to get verification: %w", err)
+	}
+
+	// If verification doesn't exist (nil), create new record
+	if verification == nil {
 		verification = &company.CompanyVerification{
-			CompanyID: companyID,
-			Status:    req.Status,
+			CompanyID:  companyID,
+			Status:     req.Status,
+			NPWPNumber: "", // Empty NPWP when created by admin without verification request
 		}
 	} else {
 		// Update existing verification record
@@ -205,6 +210,9 @@ func (s *adminCompanyService) UpdateCompanyStatus(ctx context.Context, companyID
 		comp.VerifiedAt = &now
 		comp.VerifiedBy = &adminID
 		verification.BadgeGranted = req.GrantBadge != nil && *req.GrantBadge
+		// Set verification expiry to 1 year from now
+		expiry := now.AddDate(1, 0, 0)
+		verification.VerificationExpiry = &expiry
 	} else if req.Status == "rejected" {
 		// Keep verified as false, set rejection reason
 		comp.Verified = false
@@ -227,11 +235,14 @@ func (s *adminCompanyService) UpdateCompanyStatus(ctx context.Context, companyID
 	// Update or create verification record
 	if verification.ID == 0 {
 		// Create new verification record
+		verification.CreatedAt = now
+		verification.UpdatedAt = now
 		if err := s.companyRepo.CreateVerification(ctx, verification); err != nil {
 			return fmt.Errorf("failed to create verification: %w", err)
 		}
 	} else {
 		// Update existing verification record
+		verification.UpdatedAt = now
 		if err := s.companyRepo.UpdateVerification(ctx, verification); err != nil {
 			return fmt.Errorf("failed to update verification: %w", err)
 		}
