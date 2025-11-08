@@ -8,12 +8,11 @@ import (
 
 // SetupAdminRoutes configures admin routes
 // Routes: /api/v1/admin/*
-func SetupAdminRoutes(api fiber.Router, deps *Dependencies, authMw *middleware.AuthMiddleware) {
+func SetupAdminRoutes(api fiber.Router, deps *Dependencies, adminAuthMw *middleware.AdminAuthMiddleware) {
 	admin := api.Group("/admin")
 
-	// All admin routes require authentication and admin role
-	admin.Use(authMw.AuthRequired())
-	admin.Use(authMw.AdminOnly())
+	// All admin routes require admin authentication
+	admin.Use(adminAuthMw.AdminAuthRequired())
 
 	// Dashboard
 	admin.Get("/dashboard", func(c *fiber.Ctx) error {
@@ -50,37 +49,27 @@ func SetupAdminRoutes(api fiber.Router, deps *Dependencies, authMw *middleware.A
 	})
 
 	// Company management
-	admin.Get("/companies", func(c *fiber.Ctx) error {
-		// TODO: Implement GetCompanies handler
-		// deps.AdminHandler.GetCompanies(c)
-		return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{
-			"message": "Get companies endpoint - Coming soon",
-		})
-	})
+	// Task 2.1: List companies with filters, pagination, and search
+	admin.Get("/companies", deps.AdminCompanyHandler.ListCompanies)
 
-	admin.Get("/companies/:id", func(c *fiber.Ctx) error {
-		// TODO: Implement GetCompanyDetail handler
-		// deps.AdminHandler.GetCompanyDetail(c)
-		return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{
-			"message": "Get company detail endpoint - Coming soon",
-		})
-	})
+	// Task 2.2: Get company detail for review
+	admin.Get("/companies/:id", deps.AdminCompanyHandler.GetCompanyDetail)
 
-	admin.Put("/companies/:id/verify", func(c *fiber.Ctx) error {
-		// TODO: Implement VerifyCompany handler
-		// deps.AdminHandler.VerifyCompany(c)
-		return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{
-			"message": "Verify company endpoint - Coming soon",
-		})
-	})
+	// Task 2.3: Update company status (approve/reject/suspend)
+	admin.Patch("/companies/:id/status", deps.AdminCompanyHandler.UpdateCompanyStatus)
 
-	admin.Put("/companies/:id/status", func(c *fiber.Ctx) error {
-		// TODO: Implement UpdateCompanyStatus handler
-		// deps.AdminHandler.UpdateCompanyStatus(c)
-		return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{
-			"message": "Update company status endpoint - Coming soon",
-		})
-	})
+	// Task 2.4: Edit company details (admin support)
+	admin.Put("/companies/:id", deps.AdminCompanyHandler.UpdateCompany)
+
+	// Task 2.5: Delete company with validation
+	admin.Delete("/companies/:id", deps.AdminCompanyHandler.DeleteCompany)
+
+	// Additional company endpoints
+	admin.Get("/companies/:id/stats", deps.AdminCompanyHandler.GetCompanyStats)
+	admin.Get("/companies/:id/audit-logs", deps.AdminCompanyHandler.GetAuditLogs)
+
+	// Dashboard stats
+	admin.Get("/dashboard/stats", deps.AdminCompanyHandler.GetDashboardStats)
 
 	// Job management
 	admin.Get("/jobs", func(c *fiber.Ctx) error {

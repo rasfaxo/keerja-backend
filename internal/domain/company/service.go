@@ -79,6 +79,7 @@ type CompanyService interface {
 	GetUserPendingInvitations(ctx context.Context, email string) ([]CompanyInvitation, error)
 	ExpireOldInvitations(ctx context.Context) (int64, error)
 	GetEmployerUser(ctx context.Context, userID, companyID int64) (*EmployerUser, error)
+	GetEmployerUserID(ctx context.Context, userID, companyID int64) (int64, error)
 	UpdateEmployerRole(ctx context.Context, employerUserID int64, newRole string) error
 	RemoveEmployerUser(ctx context.Context, employerUserID, companyID int64) error
 	GetEmployerUsers(ctx context.Context, companyID int64) ([]EmployerUser, error)

@@ -843,3 +843,54 @@ func (h *CompanyBasicHandler) GetMyAddresses(c *fiber.Ctx) error {
 
 	return utils.SuccessResponse(c, "Company addresses retrieved successfully", addresses)
 }
+func (h *CompanyBasicHandler) RequestVerification(c *fiber.Ctx) error {
+	// Get company ID from URL params
+	companyID, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid company ID", err.Error())
+	}
+
+	// Get authenticated user from context
+	userID := middleware.GetUserID(c)
+	if userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "User not authenticated", "User ID not found in context")
+	}
+
+	// Verify company exists
+	comp, err := h.companyService.GetCompany(c.Context(), companyID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "Company not found", err.Error())
+	}
+
+	// Check if company is already verified
+	if comp.Verified {
+		return utils.ErrorResponse(c, fiber.StatusConflict, "Company already verified", "This company is already verified")
+	}
+
+	// Check if verification request already exists
+	verificationStatus, err := h.companyService.GetVerificationStatus(c.Context(), companyID)
+	if err == nil && verificationStatus != nil {
+		// Verification record exists, check status
+		if verificationStatus.Status == "pending" || verificationStatus.Status == "under_review" {
+			return utils.ErrorResponse(c, fiber.StatusConflict, "Verification request already submitted",
+				"A verification request is already pending for this company")
+		}
+	}
+
+	employerUserID, err := h.companyService.GetEmployerUserID(c.Context(), userID, companyID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "Access denied",
+			"You must be an employee of this company to request verification")
+	}
+
+	// Request verification with employer_user ID
+	if err := h.companyService.RequestVerification(c.Context(), companyID, employerUserID); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to request verification", err.Error())
+	}
+
+	return utils.SuccessResponse(c, "Verification request submitted successfully", fiber.Map{
+		"company_id": companyID,
+		"status":     "pending",
+		"message":    "Your verification request has been submitted and will be reviewed by our admin team",
+	})
+}

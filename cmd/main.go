@@ -11,6 +11,7 @@ import (
 	"keerja-backend/internal/cache"
 	"keerja-backend/internal/config"
 	"keerja-backend/internal/handler/http"
+	"keerja-backend/internal/handler/http/admin"
 	"keerja-backend/internal/handler/http/master"
 	"keerja-backend/internal/jobs"
 	"keerja-backend/internal/middleware"
@@ -61,6 +62,10 @@ func main() {
 	oauthRepo := postgres.NewOAuthRepository(db)
 	otpCodeRepo := postgres.NewOTPCodeRepository(db)
 	refreshTokenRepo := postgres.NewRefreshTokenRepository(db)
+
+	// Admin repositories
+	adminUserRepo := postgres.NewAdminUserRepository(db)
+	adminRoleRepo := postgres.NewAdminRoleRepository(db)
 
 	// FCM Notification repository
 	deviceTokenRepo := postgres.NewDeviceTokenRepository(db)
@@ -155,6 +160,12 @@ func main() {
 
 	userService := service.NewUserService(userRepo, uploadService, skillsMasterRepo)
 
+	// Admin services
+	appLogger.Info("Initializing admin services...")
+	adminAuthService := service.NewAdminAuthService(adminUserRepo, adminRoleRepo, cfg)
+	adminCompanyService := service.NewAdminCompanyService(companyRepo, jobRepo, emailService, cacheService)
+	appLogger.Info("✓ Admin services initialized")
+
 	// Master data services
 	appLogger.Info("Initializing master data services...")
 	industryService := service.NewIndustryService(industryRepo, cacheService)
@@ -223,6 +234,8 @@ func main() {
 	// Initialize admin handlers
 	appLogger.Info("Initializing admin handlers...")
 	adminHandler := http.NewAdminHandler(adminJobService)
+	adminAuthHandler := http.NewAdminAuthHandler(adminAuthService)
+	adminCompanyHandler := admin.NewCompanyHandler(adminCompanyService)
 
 	// Initialize master data handlers
 	appLogger.Info("Initializing master data handlers...")
@@ -286,10 +299,16 @@ func main() {
 
 	// Setup routes
 	appLogger.Info("Setting up routes...")
+	adminAuthMw := middleware.NewAdminAuthMiddleware(cfg, adminUserRepo)
 	deps := &routes.Dependencies{
 		Config:      cfg,
 		AuthHandler: authHandler,
 		UserHandler: userHandler,
+
+		// Admin handlers
+		AdminAuthHandler:    adminAuthHandler,
+		AdminCompanyHandler: adminCompanyHandler,
+		AdminAuthMiddleware: adminAuthMw,
 
 		// Job & Application handlers
 		JobHandler:         jobHandler,

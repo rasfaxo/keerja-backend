@@ -187,6 +187,9 @@ func (s *companyService) RegisterCompany(ctx context.Context, req *company.Regis
 		s.cache.DeletePattern("companies:verified:*")
 	}
 
+	// Invalidate user companies cache for the owner
+	s.cache.Delete(cache.GenerateCacheKey("user", "companies", userID))
+
 	// Return company with preloaded master data
 	// This ensures response includes full master data details
 	if comp.IndustryID != nil || comp.CompanySizeID != nil || comp.DistrictID != nil {
@@ -405,6 +408,9 @@ func (s *companyService) DeleteCompany(ctx context.Context, companyID int64) err
 		}
 	}
 
+	// Get all employers before deletion to invalidate their caches
+	employers, _ := s.companyRepo.GetEmployerUsersByCompanyID(ctx, companyID)
+
 	// Delete company (cascade will handle related records)
 	if err := s.companyRepo.Delete(ctx, companyID); err != nil {
 		return fmt.Errorf("failed to delete company: %w", err)
@@ -415,6 +421,11 @@ func (s *companyService) DeleteCompany(ctx context.Context, companyID int64) err
 	s.cache.DeletePattern("companies:list:*")
 	s.cache.DeletePattern("companies:verified:*")
 	s.cache.DeletePattern("companies:top-rated:*")
+
+	// Invalidate user companies cache for all employers
+	for _, emp := range employers {
+		s.cache.Delete(cache.GenerateCacheKey("user", "companies", emp.UserID))
+	}
 
 	return nil
 }
@@ -2028,6 +2039,15 @@ func (s *companyService) GetEmployerUser(ctx context.Context, userID, companyID 
 	}
 
 	return employerUser, nil
+}
+
+// GetEmployerUserID retrieves employer_user ID by user ID and company ID
+func (s *companyService) GetEmployerUserID(ctx context.Context, userID, companyID int64) (int64, error) {
+	employerUser, err := s.GetEmployerUser(ctx, userID, companyID)
+	if err != nil {
+		return 0, err
+	}
+	return employerUser.ID, nil
 }
 
 // =============================================================================
