@@ -127,4 +127,58 @@ func SetupAdminRoutes(api fiber.Router, deps *Dependencies, adminAuthMw *middlew
 			"message": "Get application report endpoint - Coming soon",
 		})
 	})
+
+	// Master Data Management
+	setupAdminMasterDataRoutes(admin, deps)
+}
+
+// setupAdminMasterDataRoutes configures admin master data CRUD routes
+func setupAdminMasterDataRoutes(admin fiber.Router, deps *Dependencies) {
+	// Provinces CRUD
+	provinces := admin.Group("/master/provinces")
+	provinces.Post("/", deps.AdminMasterDataHandler.CreateProvince)
+	provinces.Get("/", deps.AdminMasterDataHandler.GetProvinces)
+	provinces.Get("/:id", deps.AdminMasterDataHandler.GetProvinceByID)
+	provinces.Put("/:id", deps.AdminMasterDataHandler.UpdateProvince)
+	provinces.Delete("/:id", deps.AdminMasterDataHandler.DeleteProvince)
+
+	// Cities CRUD
+	cities := admin.Group("/master/cities")
+	cities.Post("/", deps.AdminMasterDataHandler.CreateCity)
+	cities.Get("/", deps.AdminMasterDataHandler.GetCities)
+	cities.Get("/:id", deps.AdminMasterDataHandler.GetCityByID)
+	cities.Put("/:id", deps.AdminMasterDataHandler.UpdateCity)
+	cities.Delete("/:id", deps.AdminMasterDataHandler.DeleteCity)
+
+	// Districts CRUD
+	districts := admin.Group("/master/districts")
+	districts.Post("/", deps.AdminMasterDataHandler.CreateDistrict)
+	districts.Get("/", deps.AdminMasterDataHandler.GetDistricts)
+	districts.Get("/:id", deps.AdminMasterDataHandler.GetDistrictByID)
+	districts.Put("/:id", deps.AdminMasterDataHandler.UpdateDistrict)
+	districts.Delete("/:id", deps.AdminMasterDataHandler.DeleteDistrict)
+
+	// Industries CRUD
+	industries := admin.Group("/master/industries")
+	industries.Post("/", deps.AdminMasterDataHandler.CreateIndustry)
+	industries.Get("/", deps.AdminMasterDataHandler.GetIndustries)
+	industries.Get("/:id", deps.AdminMasterDataHandler.GetIndustryByID)
+	industries.Put("/:id", deps.AdminMasterDataHandler.UpdateIndustry)
+	industries.Delete("/:id", deps.AdminMasterDataHandler.DeleteIndustry)
+
+	// Job Types CRUD
+	jobTypes := admin.Group("/master/job-types")
+	jobTypes.Post("/", deps.AdminMasterDataHandler.CreateJobType)
+	jobTypes.Get("/", deps.AdminMasterDataHandler.GetJobTypes)
+	jobTypes.Get("/:id", deps.AdminMasterDataHandler.GetJobTypeByID)
+	jobTypes.Put("/:id", deps.AdminMasterDataHandler.UpdateJobType)
+	jobTypes.Delete("/:id", deps.AdminMasterDataHandler.DeleteJobType)
+
+	// Company Sizes CRUD (note: endpoint is /admin/meta/company-sizes as per requirement)
+	companySizes := admin.Group("/meta/company-sizes")
+	companySizes.Post("/", deps.AdminMasterDataHandler.CreateCompanySize)
+	companySizes.Get("/", deps.AdminMasterDataHandler.GetCompanySizes)
+	companySizes.Get("/:id", deps.AdminMasterDataHandler.GetCompanySizeByID)
+	companySizes.Put("/:id", deps.AdminMasterDataHandler.UpdateCompanySize)
+	companySizes.Delete("/:id", deps.AdminMasterDataHandler.DeleteCompanySize)
 }
