@@ -59,4 +59,17 @@ func SetupUserRoutes(api fiber.Router, deps *Dependencies, authMw *middleware.Au
 		}),
 		deps.UserHandler.UploadDocument,
 	)
+
+	// Profile photo upload route
+	users.Post("/profile-photo",
+		middleware.UploadRateLimiter(),
+		middleware.ValidateFileUpload(middleware.FileUploadConfig{
+			MaxFileSize:       5 * 1024 * 1024, // 5MB for profile photo
+			AllowedMimeTypes:  []string{"image/jpeg", "image/png", "image/webp"},
+			AllowedExtensions: []string{".jpg", ".jpeg", ".png", ".webp"},
+			Required:          true,
+			FieldName:         "file",
+		}),
+		deps.UserHandler.UploadProfilePhoto,
+	)
 }

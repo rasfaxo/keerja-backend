@@ -916,3 +916,39 @@ func (h *UserHandler) UploadDocument(c *fiber.Ctx) error {
 
 	return utils.CreatedResponse(c, "Document uploaded successfully", document)
 }
+
+// UploadProfilePhoto godoc
+// @Summary Upload user profile photo
+// @Description Upload a profile photo for the authenticated user
+// @Tags users
+// @Accept multipart/form-data
+// @Produce json
+// @Security BearerAuth
+// @Param file formData file true "Profile photo file (jpg, png, webp)"
+// @Success 201 {object} utils.Response{data=fiber.Map} "Photo uploaded successfully with avatar_url"
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /users/profile-photo [post]
+func (h *UserHandler) UploadProfilePhoto(c *fiber.Ctx) error {
+	ctx := c.Context()
+	userID := middleware.GetUserID(c)
+
+	if userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, http.ErrUnauthorized, "userID not found in context")
+	}
+
+	// Get file from form
+	file := middleware.GetUploadedFile(c)
+	if file == nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "No file uploaded", "")
+	}
+
+	// Upload profile photo using existing UploadAvatar service
+	avatarURL, err := h.userService.UploadAvatar(ctx, userID, file)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to upload profile photo", err.Error())
+	}
+
+	return utils.CreatedResponse(c, "Profile photo uploaded successfully", fiber.Map{"avatar_url": avatarURL})
+}
