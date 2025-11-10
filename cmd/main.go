@@ -11,6 +11,7 @@ import (
 	"keerja-backend/internal/cache"
 	"keerja-backend/internal/config"
 	"keerja-backend/internal/handler/http"
+	"keerja-backend/internal/handler/http/admin"
 	"keerja-backend/internal/handler/http/master"
 	"keerja-backend/internal/jobs"
 	"keerja-backend/internal/middleware"
@@ -224,6 +225,26 @@ func main() {
 	appLogger.Info("Initializing admin handlers...")
 	adminHandler := http.NewAdminHandler(adminJobService)
 
+	// Initialize admin master data services
+	appLogger.Info("Initializing admin master data services...")
+	adminIndustryService := service.NewAdminIndustryService(industryService, industryRepo, db, cacheService)
+	adminCompanySizeService := service.NewAdminCompanySizeService(companySizeService, companySizeRepo, db, cacheService)
+	adminProvinceService := service.NewAdminProvinceService(provinceService, provinceRepo, db, cacheService)
+	adminCityService := service.NewAdminCityService(cityService, cityRepo, db, cacheService)
+	adminDistrictService := service.NewAdminDistrictService(districtService, districtRepo, db, cacheService)
+	adminJobTypeService := service.NewAdminJobTypeService(jobOptionsService, jobOptionsRepo, db, cacheService)
+	appLogger.Info("✓ Admin master data services initialized")
+
+	// Initialize admin master data handler
+	adminMasterDataHandler := admin.NewAdminMasterDataHandler(
+		adminProvinceService,
+		adminCityService,
+		adminDistrictService,
+		adminIndustryService,
+		adminCompanySizeService,
+		adminJobTypeService,
+	)
+
 	// Initialize master data handlers
 	appLogger.Info("Initializing master data handlers...")
 	skillsMasterHandler := http.NewSkillsMasterHandler(skillsMasterService)
@@ -295,6 +316,7 @@ func main() {
 		JobHandler:         jobHandler,
 		ApplicationHandler: applicationHandler,
 		AdminHandler:       adminHandler,
+		AdminMasterDataHandler: adminMasterDataHandler,
 
 		// Company handlers (split by domain)
 		CompanyBasicHandler:   companyBasicHandler,

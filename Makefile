@@ -103,12 +103,14 @@ docker-restart:
 ## migrate-up: Run database migrations (placeholder)
 migrate-up:
 	@echo "Running migrations..."
-	@echo "Migrations not implemented yet. Use your migration tool here."
+	@echo "Running migrations (go run ./cmd/migrate)..."
+	$(GOCMD) run ./cmd/migrate -dir up
 
 ## migrate-down: Rollback database migrations (placeholder)
 migrate-down:
 	@echo "Rolling back migrations..."
-	@echo "Migrations not implemented yet. Use your migration tool here."
+	@echo "Rolling back migrations (go run ./cmd/migrate)..."
+	$(GOCMD) run ./cmd/migrate -dir down
 
 ## seed: Run database seeders
 seed:
