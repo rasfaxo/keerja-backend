@@ -5,6 +5,7 @@ const (
 	// Generic errors
 	ErrInvalidID        = "Invalid ID parameter"
 	ErrInvalidRequest   = "Invalid request body"
+	ErrInvalidBody      = "Invalid request body format"
 	ErrInvalidJSON      = "Invalid JSON format"
 	ErrValidationFailed = "Validation failed"
 	ErrInternalServer   = "Internal server error"
@@ -57,6 +58,7 @@ const (
 	ErrInvalidApplicationStage = "Invalid application stage"
 
 	// Company errors
+	ErrInvalidCompanyID   = "Invalid company ID"
 	ErrCompanyNotFound    = "Company not found"
 	ErrNotCompanyMember   = "You are not a member of this company"
 	ErrCompanyNotVerified = "Company is not verified"

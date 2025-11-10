@@ -5,6 +5,7 @@ import (
 	"keerja-backend/internal/domain/company"
 	"keerja-backend/internal/handler/http"
 	"keerja-backend/internal/handler/http/admin"
+	"keerja-backend/internal/handler/http/company"
 	"keerja-backend/internal/middleware"
 
 	"github.com/gofiber/fiber/v2"
@@ -25,12 +26,11 @@ type Dependencies struct {
 	AdminAuthMiddleware *middleware.AdminAuthMiddleware // Admin auth middleware
 
 	// Company handlers (split by domain for better organization)
-	CompanyBasicHandler   *http.CompanyBasicHandler   // CRUD operations (10 endpoints)
-	CompanyProfileHandler *http.CompanyProfileHandler // Profile & social features (8 endpoints)
-	CompanyReviewHandler  *http.CompanyReviewHandler  // Review system (5 endpoints)
-	CompanyStatsHandler   *http.CompanyStatsHandler   // Statistics & queries (3 endpoints)
-	CompanyInviteHandler  *http.CompanyInviteHandler  // Employee invitation (5 endpoints)
-
+	CompanyBasicHandler   *companyhandler.CompanyBasicHandler   // CRUD operations (10 endpoints)
+	CompanyProfileHandler *companyhandler.CompanyProfileHandler // Profile & social features (8 endpoints)
+	CompanyReviewHandler  *companyhandler.CompanyReviewHandler  // Review system (5 endpoints)
+	CompanyStatsHandler   *companyhandler.CompanyStatsHandler   // Statistics & queries (3 endpoints)
+	CompanyInviteHandler  *companyhandler.CompanyInviteHandler  // Employee invitation (5 endpoints)
 	// Master data handlers
 	SkillsMasterHandler *http.SkillsMasterHandler // Skills master data (8 endpoints)
 	MasterDataHandlers  *MasterDataHandlers       // Industry, company size, location (10 endpoints)

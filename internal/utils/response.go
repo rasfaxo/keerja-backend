@@ -8,12 +8,12 @@ import (
 type Response struct {
 	Success bool        `json:"success"`
 	Message string      `json:"message,omitempty"`
-	Data    interface{} `json:"data,omitempty"`
-	Meta    interface{} `json:"meta,omitempty"`
-	Errors  interface{} `json:"errors,omitempty"`
+	Data    any `json:"data,omitempty"`
+	Meta    any `json:"meta,omitempty"`
+	Errors  any `json:"errors,omitempty"`
 }
 
-func SuccessResponse(c *fiber.Ctx, message string, data interface{}) error {
+func SuccessResponse(c *fiber.Ctx, message string, data any) error {
 	return c.Status(fiber.StatusOK).JSON(Response{
 		Success: true,
 		Message: message,
@@ -21,7 +21,7 @@ func SuccessResponse(c *fiber.Ctx, message string, data interface{}) error {
 	})
 }
 
-func SuccessResponseWithMeta(c *fiber.Ctx, message string, data interface{}, meta interface{}) error {
+func SuccessResponseWithMeta(c *fiber.Ctx, message string, data any, meta any) error {
 	return c.Status(fiber.StatusOK).JSON(Response{
 		Success: true,
 		Message: message,
@@ -30,7 +30,7 @@ func SuccessResponseWithMeta(c *fiber.Ctx, message string, data interface{}, met
 	})
 }
 
-func CreatedResponse(c *fiber.Ctx, message string, data interface{}) error {
+func CreatedResponse(c *fiber.Ctx, message string, data any) error {
 	return c.Status(fiber.StatusCreated).JSON(Response{
 		Success: true,
 		Message: message,
@@ -52,7 +52,7 @@ func ErrorResponse(c *fiber.Ctx, statusCode int, message string, details ...stri
 	return c.Status(statusCode).JSON(resp)
 }
 
-func ErrorResponseWithErrors(c *fiber.Ctx, statusCode int, message string, errors interface{}) error {
+func ErrorResponseWithErrors(c *fiber.Ctx, statusCode int, message string, errors any) error {
 	return c.Status(statusCode).JSON(Response{
 		Success: false,
 		Message: message,
@@ -60,7 +60,7 @@ func ErrorResponseWithErrors(c *fiber.Ctx, statusCode int, message string, error
 	})
 }
 
-func ValidationErrorResponse(c *fiber.Ctx, message string, errors interface{}) error {
+func ValidationErrorResponse(c *fiber.Ctx, message string, errors any) error {
 	if message == "" {
 		message = "Validation failed"
 	}
@@ -117,7 +117,7 @@ func NoContentResponse(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
-func PaginatedResponse(c *fiber.Ctx, data interface{}, page, limit int, totalRows int64) error {
+func PaginatedResponse(c *fiber.Ctx, data any, page, limit int, totalRows int64) error {
 	meta := GetPaginationMeta(page, limit, totalRows)
 	return SuccessResponseWithMeta(c, "Data retrieved successfully", data, meta)
 }

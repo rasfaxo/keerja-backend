@@ -13,6 +13,7 @@ import (
 	"keerja-backend/internal/handler/http"
 	"keerja-backend/internal/handler/http/admin"
 	"keerja-backend/internal/handler/http/master"
+	"keerja-backend/internal/handler/http/company"
 	"keerja-backend/internal/jobs"
 	"keerja-backend/internal/middleware"
 	"keerja-backend/internal/repository/postgres"
@@ -213,7 +214,7 @@ func main() {
 
 	// Initialize company handlers (split by domain)
 	appLogger.Info("Initializing company handlers...")
-	companyBasicHandler := http.NewCompanyBasicHandler(
+	companyBasicHandler := companyhandler.NewCompanyBasicHandler(
 		companyService,
 		industryRepo,
 		companySizeRepo,
@@ -221,10 +222,10 @@ func main() {
 		cityRepo,
 		districtRepo,
 	)
-	companyProfileHandler := http.NewCompanyProfileHandler(companyService)
-	companyReviewHandler := http.NewCompanyReviewHandler(companyService)
-	companyStatsHandler := http.NewCompanyStatsHandler(companyService)
-	companyInviteHandler := http.NewCompanyInviteHandler(companyService, emailService, userService)
+	companyProfileHandler := companyhandler.NewCompanyProfileHandler(companyService)
+	companyReviewHandler := companyhandler.NewCompanyReviewHandler(companyService)
+	companyStatsHandler := companyhandler.NewCompanyStatsHandler(companyService)
+	companyInviteHandler := companyhandler.NewCompanyInviteHandler(companyService, emailService, userService)
 
 	// Initialize job & application handlers
 	appLogger.Info("Initializing job & application handlers...")
