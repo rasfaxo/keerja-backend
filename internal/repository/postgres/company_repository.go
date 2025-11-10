@@ -872,6 +872,12 @@ func (r *companyRepository) GetCompaniesByUserID(ctx context.Context, userID int
 		Where("employer_users.user_id = ? AND employer_users.is_active = ?", userID, true).
 		Preload("Profile").
 		Preload("Verification").
+		Preload("IndustryRelation").
+		Preload("CompanySizeRelation").
+		Preload("ProvinceRelation").
+		Preload("CityRelation").
+		Preload("DistrictRelation").
+		Preload("Reviews").
 		Order("companies.created_at DESC").
 		Find(&companies).Error
 	return companies, err

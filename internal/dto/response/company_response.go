@@ -57,6 +57,7 @@ type CompanyDetailResponse struct {
 	LocationDetail    *CompanyLocationResponse   `json:"location_detail,omitempty"`
 	FullAddress       string                     `json:"full_address,omitempty"`
 	Description       string                     `json:"description,omitempty"`
+	ShortDescription  string                     `json:"short_description,omitempty"` // From about field
 
 	// Legacy Fields (for backward compatibility)
 	Industry     string `json:"industry,omitempty"`
@@ -66,24 +67,30 @@ type CompanyDetailResponse struct {
 	Address      string `json:"address,omitempty"`
 
 	// Other Fields
-	CompanyType string     `json:"company_type,omitempty"`
-	WebsiteURL  string     `json:"website_url,omitempty"`
-	EmailDomain string     `json:"email_domain,omitempty"`
-	Phone       string     `json:"phone,omitempty"`
-	Country     string     `json:"country"`
-	PostalCode  string     `json:"postal_code,omitempty"`
-	Latitude    *float64   `json:"latitude,omitempty"`
-	Longitude   *float64   `json:"longitude,omitempty"`
-	LogoURL     string     `json:"logo_url,omitempty"`
-	BannerURL   string     `json:"banner_url,omitempty"`
-	About       string     `json:"about,omitempty"`
-	Culture     string     `json:"culture,omitempty"`
-	Benefits    []string   `json:"benefits,omitempty"`
-	Verified    bool       `json:"verified"`
-	VerifiedAt  *time.Time `json:"verified_at,omitempty"`
-	IsActive    bool       `json:"is_active"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at"`
+	CompanyType string `json:"company_type,omitempty"`
+	WebsiteURL  string `json:"website_url,omitempty"`
+	EmailDomain string `json:"email_domain,omitempty"`
+	Phone       string `json:"phone,omitempty"`
+
+	// Social Media URLs
+	InstagramURL string `json:"instagram_url,omitempty"`
+	FacebookURL  string `json:"facebook_url,omitempty"`
+	LinkedinURL  string `json:"linkedin_url,omitempty"`
+	TwitterURL   string `json:"twitter_url,omitempty"`
+
+	Country    string     `json:"country"`
+	PostalCode string     `json:"postal_code,omitempty"`
+	Latitude   *float64   `json:"latitude,omitempty"`
+	Longitude  *float64   `json:"longitude,omitempty"`
+	LogoURL    string     `json:"logo_url,omitempty"`
+	BannerURL  string     `json:"banner_url,omitempty"`
+	Culture    string     `json:"culture,omitempty"`
+	Benefits   []string   `json:"benefits,omitempty"`
+	Verified   bool       `json:"verified"`
+	VerifiedAt *time.Time `json:"verified_at,omitempty"`
+	IsActive   bool       `json:"is_active"`
+	CreatedAt  time.Time  `json:"created_at"`
+	UpdatedAt  time.Time  `json:"updated_at"`
 
 	// Relations
 	Profile    *CompanyProfileResponse   `json:"profile,omitempty"`

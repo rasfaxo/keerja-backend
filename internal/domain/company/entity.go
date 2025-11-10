@@ -34,9 +34,16 @@ type Company struct {
 	EmailDomain  *string `gorm:"type:varchar(100)" json:"email_domain,omitempty"`
 	Phone        *string `gorm:"type:varchar(30)" json:"phone,omitempty"`
 
+	// Social Media URLs
+	InstagramURL *string `gorm:"type:text" json:"instagram_url,omitempty"`
+	FacebookURL  *string `gorm:"type:text" json:"facebook_url,omitempty"`
+	LinkedinURL  *string `gorm:"type:text" json:"linkedin_url,omitempty"`
+	TwitterURL   *string `gorm:"type:text" json:"twitter_url,omitempty"`
+
 	// Location Information
-	FullAddress string  `gorm:"type:text" json:"full_address,omitempty"`
-	Description *string `gorm:"type:text" json:"description,omitempty"`
+	FullAddress      string  `gorm:"type:text" json:"full_address,omitempty"`
+	Description      *string `gorm:"type:text" json:"description,omitempty"`
+	ShortDescription *string `gorm:"type:text" json:"short_description,omitempty"`
 
 	// Legacy location fields (kept for backward compatibility)
 	Address    *string        `gorm:"type:text" json:"address,omitempty"`

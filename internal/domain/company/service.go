@@ -11,7 +11,7 @@ type CompanyService interface {
 	RegisterCompany(ctx context.Context, req *RegisterCompanyRequest, userID int64) (*Company, error)
 	GetCompany(ctx context.Context, id int64) (*Company, error)
 	GetCompanyBySlug(ctx context.Context, slug string) (*Company, error)
-	UpdateCompany(ctx context.Context, companyID int64, req *UpdateCompanyRequest) error
+	UpdateCompany(ctx context.Context, companyID int64, req *UpdateCompanyRequest, bannerFile, logoFile *multipart.FileHeader) error
 	DeleteCompany(ctx context.Context, companyID int64) error
 	ListCompanies(ctx context.Context, filter *CompanyFilter) ([]Company, int64, error)
 	SearchCompanies(ctx context.Context, query string, filter *CompanyFilter) ([]Company, int64, error)
@@ -142,37 +142,26 @@ type RegisterCompanyRequest struct {
 }
 
 type UpdateCompanyRequest struct {
-	CompanyName        *string
-	LegalName          *string
-	RegistrationNumber *string
+	// NOTE: CompanyName, Country, Province, City, EmployeeCount/SizeCategory, Industry
+	// akan diambil dari data company yang sudah ada (read-only)
+	// Fields ini tidak perlu di-update
 
-	// Master Data Relations
-	IndustryID    *int64
-	CompanySizeID *int64
-	DistrictID    *int64
-	FullAddress   *string
-	Description   *string
+	// Full Address (dari data company saat create, bisa di-edit)
+	FullAddress *string
 
-	// Legacy Fields (for backward compatibility)
-	Industry     *string
-	CompanyType  *string
-	SizeCategory *string
-	Address      *string
-	City         *string
-	Province     *string
+	// Deskripsi Singkat - Visi dan Misi Perusahaan (required)
+	ShortDescription *string
 
-	// Location
-	Latitude  *float64
-	Longitude *float64
+	// Website & Social Media
+	WebsiteURL   *string
+	InstagramURL *string
+	FacebookURL  *string
+	LinkedinURL  *string
+	TwitterURL   *string
 
-	// Other Fields
-	WebsiteURL  *string
-	EmailDomain *string
-	Phone       *string
-	PostalCode  *string
-	About       *string
-	Culture     *string
-	Benefits    []string
+	// Rich Text Descriptions
+	CompanyDescription *string // Deskripsi Perusahaan (required)
+	CompanyCulture     *string // Budaya Perusahaan (optional)
 }
 
 type CreateProfileRequest struct {

@@ -251,125 +251,86 @@ func (s *companyService) GetCompanyBySlug(ctx context.Context, slug string) (*co
 	return fullComp, nil
 }
 
-// UpdateCompany updates company information
-func (s *companyService) UpdateCompany(ctx context.Context, companyID int64, req *company.UpdateCompanyRequest) error {
+// UpdateCompany updates company information with banner and logo
+func (s *companyService) UpdateCompany(ctx context.Context, companyID int64, req *company.UpdateCompanyRequest, bannerFile, logoFile *multipart.FileHeader) error {
 	// Get existing company
 	comp, err := s.companyRepo.FindByID(ctx, companyID)
 	if err != nil {
 		return fmt.Errorf("company not found: %w", err)
 	}
 
-	// Validate Master Data IDs if provided
-	if req.IndustryID != nil || req.CompanySizeID != nil || req.DistrictID != nil {
-		err := s.ValidateMasterDataIDs(ctx, req.IndustryID, req.CompanySizeID, req.DistrictID)
+	// Upload banner if provided
+	if bannerFile != nil {
+		// Delete old banner if exists
+		if comp.BannerURL != nil && *comp.BannerURL != "" {
+			_ = s.uploadService.DeleteFile(ctx, *comp.BannerURL)
+		}
+
+		// Upload new banner
+		bannerPath, err := s.uploadService.UploadFile(ctx, bannerFile, fmt.Sprintf("companies/%d/banner", companyID))
 		if err != nil {
-			return fmt.Errorf("master data validation failed: %w", err)
+			return fmt.Errorf("failed to upload banner: %w", err)
 		}
-
-		// Auto-populate City and Province from District if provided
-		if req.DistrictID != nil {
-			district, err := s.districtService.GetByID(ctx, *req.DistrictID)
-			if err == nil && district != nil {
-				if district.City != nil {
-					cityID := district.City.ID
-					comp.CityID = &cityID
-					if district.City.Province != nil {
-						provinceID := district.City.Province.ID
-						comp.ProvinceID = &provinceID
-					}
-				}
-			}
-		}
+		comp.BannerURL = &bannerPath
 	}
 
-	// Update fields if provided
-	if req.CompanyName != nil {
-		comp.CompanyName = *req.CompanyName
-		// Regenerate slug if name changes
-		newSlug := utils.GenerateSlug(*req.CompanyName)
-		if newSlug != comp.Slug {
-			// Check uniqueness
-			_, err := s.companyRepo.FindBySlug(ctx, newSlug)
-			if err == nil {
-				newSlug = utils.GenerateSlugSimple(*req.CompanyName)
-			}
-			comp.Slug = newSlug
+	// Upload logo if provided
+	if logoFile != nil {
+		// Delete old logo if exists
+		if comp.LogoURL != nil && *comp.LogoURL != "" {
+			_ = s.uploadService.DeleteFile(ctx, *comp.LogoURL)
 		}
-	}
-	if req.LegalName != nil {
-		comp.LegalName = req.LegalName
-	}
-	if req.RegistrationNumber != nil {
-		comp.RegistrationNumber = req.RegistrationNumber
+
+		// Upload new logo
+		logoPath, err := s.uploadService.UploadFile(ctx, logoFile, fmt.Sprintf("companies/%d/logo", companyID))
+		if err != nil {
+			return fmt.Errorf("failed to upload logo: %w", err)
+		}
+		comp.LogoURL = &logoPath
 	}
 
-	// Master Data Fields (NEW - Phase 9)
-	if req.IndustryID != nil {
-		comp.IndustryID = req.IndustryID
-	}
-	if req.CompanySizeID != nil {
-		comp.CompanySizeID = req.CompanySizeID
-	}
-	if req.DistrictID != nil {
-		comp.DistrictID = req.DistrictID
-	}
+	// NOTE: CompanyName, Country, Province, City, SizeCategory/EmployeeCount, Industry
+	// tidak di-update karena sudah di-set saat create company
+	// Data tersebut bersifat read-only dan akan di-get dari database
+
+	// Full Address (bisa di-edit, dari data company saat create)
 	if req.FullAddress != nil {
 		comp.FullAddress = *req.FullAddress
 	}
-	if req.Description != nil {
-		comp.Description = req.Description
+
+	// Update Deskripsi Singkat - Visi dan Misi Perusahaan (mapped to About field)
+	if req.ShortDescription != nil {
+		comp.About = req.ShortDescription
 	}
 
-	// Legacy Fields (for backward compatibility)
-	if req.Industry != nil {
-		comp.Industry = req.Industry
-	}
-	if req.CompanyType != nil {
-		comp.CompanyType = req.CompanyType
-	}
-	if req.SizeCategory != nil {
-		comp.SizeCategory = req.SizeCategory
-	}
-	if req.Address != nil {
-		comp.Address = req.Address
-	}
-	if req.City != nil {
-		comp.City = req.City
-	}
-	if req.Province != nil {
-		comp.Province = req.Province
-	}
-
-	// Other Fields
+	// Website & Social Media
 	if req.WebsiteURL != nil {
 		comp.WebsiteURL = req.WebsiteURL
 	}
-	if req.EmailDomain != nil {
-		comp.EmailDomain = req.EmailDomain
+	if req.InstagramURL != nil {
+		comp.InstagramURL = req.InstagramURL
 	}
-	if req.Phone != nil {
-		comp.Phone = req.Phone
+	if req.FacebookURL != nil {
+		comp.FacebookURL = req.FacebookURL
 	}
-	if req.PostalCode != nil {
-		comp.PostalCode = req.PostalCode
+	if req.LinkedinURL != nil {
+		comp.LinkedinURL = req.LinkedinURL
 	}
-	if req.Latitude != nil {
-		comp.Latitude = req.Latitude
-	}
-	if req.Longitude != nil {
-		comp.Longitude = req.Longitude
-	}
-	if req.About != nil {
-		comp.About = req.About
-	}
-	if req.Culture != nil {
-		comp.Culture = req.Culture
-	}
-	if req.Benefits != nil {
-		comp.Benefits = req.Benefits
+	if req.TwitterURL != nil {
+		comp.TwitterURL = req.TwitterURL
 	}
 
-	// Update company
+	// Rich Text Descriptions
+	// CompanyDescription (deskripsi lengkap) mapped to Description field
+	if req.CompanyDescription != nil {
+		comp.Description = req.CompanyDescription
+	}
+	// CompanyCulture mapped to Culture field
+	if req.CompanyCulture != nil {
+		comp.Culture = req.CompanyCulture
+	}
+
+	// Update company in database
 	if err := s.companyRepo.Update(ctx, comp); err != nil {
 		return fmt.Errorf("failed to update company: %w", err)
 	}

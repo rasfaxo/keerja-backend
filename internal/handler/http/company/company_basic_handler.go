@@ -440,13 +440,23 @@ func (h *CompanyBasicHandler) GetCompanyBySlug(c *fiber.Ctx) error {
 
 // UpdateCompany godoc
 // @Summary Update a company profile
-// @Description Update the details of a company profile (Only owner/admin can update)
+// @Description Update company profile with banner, logo, and editable information. Company name, location (country/province/city), employee count, and industry are read-only (set during company creation). Full address is fetched from company creation but can be edited here.
 // @Tags companies
-// @Accept json
+// @Accept multipart/form-data
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Company ID"
-// @Param request body request.UpdateCompanyRequest true "Update company request"
+// @Param banner formData file false "Company banner image (800x300px, jpg/jpeg/png)"
+// @Param logo formData file false "Company logo image (120x120px, jpg/jpeg/png)"
+// @Param full_address formData string false "Full address (dari data company saat create, bisa di-edit)"
+// @Param short_description formData string true "Deskripsi Singkat - Visi dan Misi Perusahaan (max 1000 chars)"
+// @Param website_url formData string false "Website URL"
+// @Param instagram_url formData string false "Instagram URL"
+// @Param facebook_url formData string false "Facebook URL"
+// @Param linkedin_url formData string false "LinkedIn URL"
+// @Param twitter_url formData string false "Twitter URL"
+// @Param company_description formData string true "Company description (Deskripsi Perusahaan)"
+// @Param company_culture formData string false "Company culture (Budaya Perusahaan)"
 // @Success 200 {object} utils.Response
 // @Failure 400 {object} utils.Response
 // @Failure 401 {object} utils.Response
@@ -478,108 +488,143 @@ func (h *CompanyBasicHandler) UpdateCompany(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusForbidden, "You don't have permission to update this company. Only company owner or admin company can perform this action.", "")
 	}
 
-	// Parse request body
-	var req request.UpdateCompanyRequest
-	if err := c.BodyParser(&req); err != nil {
-		return utils.BadRequestResponse(c, http.ErrInvalidRequest)
+	// Parse multipart form
+	form, err := c.MultipartForm()
+	if err != nil {
+		// If multipart form parsing fails, try to parse as JSON (backward compatibility)
+		var req request.UpdateCompanyRequest
+		if err := c.BodyParser(&req); err != nil {
+			return utils.BadRequestResponse(c, http.ErrInvalidRequest)
+		}
+
+		// Validate request
+		if err := utils.ValidateStruct(&req); err != nil {
+			errors := utils.FormatValidationErrors(err)
+			return utils.ValidationErrorResponse(c, http.ErrValidationFailed, errors)
+		}
+
+		// Convert request to domain request
+		domainReq := &company.UpdateCompanyRequest{
+			FullAddress:        req.FullAddress,
+			ShortDescription:   req.ShortDescription,
+			WebsiteURL:         req.WebsiteURL,
+			InstagramURL:       req.InstagramURL,
+			FacebookURL:        req.FacebookURL,
+			LinkedinURL:        req.LinkedinURL,
+			TwitterURL:         req.TwitterURL,
+			CompanyDescription: req.CompanyDescription,
+			CompanyCulture:     req.CompanyCulture,
+		}
+
+		// Call service without files (backward compatibility)
+		if err := h.companyService.UpdateCompany(ctx, int64(companyID), domainReq, nil, nil); err != nil {
+			return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
+		}
+
+		return utils.SuccessResponse(c, http.MsgUpdatedSuccess, nil)
+	}
+
+	// Get form values
+	// NOTE: company_name, country, province, city, employee_count, industry
+	// tidak perlu di-parse karena read-only (sudah ada saat create company)
+	fullAddress := c.FormValue("full_address")
+	shortDescription := c.FormValue("short_description")
+	websiteURL := c.FormValue("website_url")
+	instagramURL := c.FormValue("instagram_url")
+	facebookURL := c.FormValue("facebook_url")
+	linkedinURL := c.FormValue("linkedin_url")
+	twitterURL := c.FormValue("twitter_url")
+	companyDescription := c.FormValue("company_description")
+	companyCulture := c.FormValue("company_culture")
+
+	// Build request
+	req := &request.UpdateCompanyRequest{}
+
+	if fullAddress != "" {
+		req.FullAddress = &fullAddress
+	}
+	if shortDescription != "" {
+		req.ShortDescription = &shortDescription
+	}
+	if websiteURL != "" {
+		req.WebsiteURL = &websiteURL
+	}
+	if instagramURL != "" {
+		req.InstagramURL = &instagramURL
+	}
+	if facebookURL != "" {
+		req.FacebookURL = &facebookURL
+	}
+	if linkedinURL != "" {
+		req.LinkedinURL = &linkedinURL
+	}
+	if twitterURL != "" {
+		req.TwitterURL = &twitterURL
+	}
+	if companyDescription != "" {
+		req.CompanyDescription = &companyDescription
+	}
+	if companyCulture != "" {
+		req.CompanyCulture = &companyCulture
 	}
 
 	// Validate request
-	if err := utils.ValidateStruct(&req); err != nil {
+	if err := utils.ValidateStruct(req); err != nil {
 		errors := utils.FormatValidationErrors(err)
 		return utils.ValidationErrorResponse(c, http.ErrValidationFailed, errors)
 	}
 
-	// Sanitize all string pointer fields
-	if req.CompanyName != nil {
-		sanitized := utils.SanitizeString(*req.CompanyName)
-		req.CompanyName = &sanitized
-	}
-	if req.LegalName != nil {
-		sanitized := utils.SanitizeString(*req.LegalName)
-		req.LegalName = &sanitized
-	}
-	if req.About != nil {
-		sanitized := utils.SanitizeHTML(*req.About)
-		if !utils.ValidateNoXSS(sanitized) {
-			return utils.BadRequestResponse(c, http.ErrPotentialXSS)
-		}
-		req.About = &sanitized
-	}
-	if req.Culture != nil {
-		sanitized := utils.SanitizeHTML(*req.Culture)
-		if !utils.ValidateNoXSS(sanitized) {
-			return utils.BadRequestResponse(c, http.ErrPotentialXSS)
-		}
-		req.Culture = &sanitized
-	}
-
-	// Sanitize FullAddress
+	// Sanitize fields
 	if req.FullAddress != nil {
 		sanitized := utils.SanitizeString(*req.FullAddress)
 		req.FullAddress = &sanitized
 	}
-
-	// Sanitize Description
-	if req.Description != nil {
-		sanitized := utils.SanitizeHTML(*req.Description)
+	if req.ShortDescription != nil {
+		sanitized := utils.SanitizeString(*req.ShortDescription)
+		req.ShortDescription = &sanitized
+	}
+	if req.CompanyDescription != nil {
+		sanitized := utils.SanitizeHTML(*req.CompanyDescription)
 		if !utils.ValidateNoXSS(sanitized) {
 			return utils.BadRequestResponse(c, http.ErrPotentialXSS)
 		}
-		req.Description = &sanitized
+		req.CompanyDescription = &sanitized
+	}
+	if req.CompanyCulture != nil {
+		sanitized := utils.SanitizeHTML(*req.CompanyCulture)
+		if !utils.ValidateNoXSS(sanitized) {
+			return utils.BadRequestResponse(c, http.ErrPotentialXSS)
+		}
+		req.CompanyCulture = &sanitized
 	}
 
-	// Sanitize legacy address fields (for backward compatibility)
-	if req.Address != nil {
-		sanitized := utils.SanitizeString(*req.Address)
-		req.Address = &sanitized
-	}
-	if req.City != nil {
-		sanitized := utils.SanitizeString(*req.City)
-		req.City = &sanitized
-	}
-	if req.Province != nil {
-		sanitized := utils.SanitizeString(*req.Province)
-		req.Province = &sanitized
+	// Get banner file (optional)
+	var bannerFile *multipart.FileHeader
+	if files := form.File["banner"]; len(files) > 0 {
+		bannerFile = files[0]
 	}
 
-	// Convert to domain request
+	// Get logo file (optional)
+	var logoFile *multipart.FileHeader
+	if files := form.File["logo"]; len(files) > 0 {
+		logoFile = files[0]
+	}
+
+	// Convert request to domain request
 	domainReq := &company.UpdateCompanyRequest{
-		CompanyName:        req.CompanyName,
-		LegalName:          req.LegalName,
-		RegistrationNumber: req.RegistrationNumber,
-
-		// Master Data Relations
-		IndustryID:    req.IndustryID,
-		CompanySizeID: req.CompanySizeID,
-		DistrictID:    req.DistrictID,
-		FullAddress:   req.FullAddress,
-		Description:   req.Description,
-
-		// Legacy Fields (for backward compatibility)
-		Industry:     req.Industry,
-		CompanyType:  req.CompanyType,
-		SizeCategory: req.SizeCategory,
-		Address:      req.Address,
-		City:         req.City,
-		Province:     req.Province,
-
-		// Location
-		Latitude:  req.Latitude,
-		Longitude: req.Longitude,
-
-		// Other Fields
-		WebsiteURL:  req.WebsiteURL,
-		EmailDomain: req.EmailDomain,
-		Phone:       req.Phone,
-		PostalCode:  req.PostalCode,
-		About:       req.About,
-		Culture:     req.Culture,
-		Benefits:    req.Benefits,
+		FullAddress:        req.FullAddress,
+		ShortDescription:   req.ShortDescription,
+		WebsiteURL:         req.WebsiteURL,
+		InstagramURL:       req.InstagramURL,
+		FacebookURL:        req.FacebookURL,
+		LinkedinURL:        req.LinkedinURL,
+		TwitterURL:         req.TwitterURL,
+		CompanyDescription: req.CompanyDescription,
+		CompanyCulture:     req.CompanyCulture,
 	}
 
-	// Update the company profile
-	if err := h.companyService.UpdateCompany(ctx, int64(companyID), domainReq); err != nil {
+	// Update the company profile with files
+	if err := h.companyService.UpdateCompany(ctx, int64(companyID), domainReq, bannerFile, logoFile); err != nil {
 		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
 	}
 
@@ -753,12 +798,12 @@ func (h *CompanyBasicHandler) DeleteBanner(c *fiber.Ctx) error {
 
 // GetMyCompanies godoc
 // @Summary Get my companies
-// @Description Get all companies where the authenticated user is a member
+// @Description Get all companies where the authenticated user is a member with full company details
 // @Tags companies
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} utils.Response{data=[]response.CompanyResponse}
+// @Success 200 {object} utils.Response{data=[]response.CompanyDetailResponse}
 // @Failure 401 {object} utils.Response
 // @Failure 500 {object} utils.Response
 // @Router /companies/my-companies [get]
@@ -777,10 +822,12 @@ func (h *CompanyBasicHandler) GetMyCompanies(c *fiber.Ctx) error {
 		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
 	}
 
-	// Map to response DTOs
-	responses := make([]response.CompanyResponse, 0, len(companies))
+	// Map to response DTOs with full company details
+	responses := make([]response.CompanyDetailResponse, 0, len(companies))
 	for _, comp := range companies {
-		responses = append(responses, *mapper.ToCompanyResponse(&comp))
+		if detail := mapper.ToCompanyDetailResponse(&comp); detail != nil {
+			responses = append(responses, *detail)
+		}
 	}
 
 	return utils.SuccessResponse(c, http.MsgFetchedSuccess, responses)
