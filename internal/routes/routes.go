@@ -6,6 +6,7 @@ import (
 	"keerja-backend/internal/handler/http"
 	"keerja-backend/internal/handler/http/admin"
 	companyhandler "keerja-backend/internal/handler/http/company"
+	userhandler "keerja-backend/internal/handler/http/jobseeker"
 	"keerja-backend/internal/middleware"
 
 	"github.com/gofiber/fiber/v2"
@@ -13,12 +14,12 @@ import (
 
 // Dependencies holds all handler dependencies
 type Dependencies struct {
-	Config             *config.Config
-	AuthHandler        *http.AuthHandler
-	UserHandler        *http.UserHandler
-	JobHandler         *http.JobHandler         // Job management (9 endpoints)
-	ApplicationHandler *http.ApplicationHandler // Application management (21 endpoints)
-	AdminHandler       *http.AdminHandler       // Admin moderation & job approval
+	Config                 *config.Config
+	AuthHandler            *http.AuthHandler
+	UserHandler            *userhandler.UserHandler
+	JobHandler             *http.JobHandler              // Job management (9 endpoints)
+	ApplicationHandler     *http.ApplicationHandler      // Application management (21 endpoints)
+	AdminHandler           *http.AdminHandler            // Admin moderation & job approval
 	AdminMasterDataHandler *admin.AdminMasterDataHandler // Admin master data CRUD
 
 	// Admin handlers

@@ -1,4 +1,4 @@
-package http
+package userhandler
 
 import (
 	"fmt"
@@ -9,6 +9,7 @@ import (
 	"keerja-backend/internal/dto/mapper"
 	"keerja-backend/internal/dto/request"
 	"keerja-backend/internal/dto/response"
+	"keerja-backend/internal/handler/http"
 	"keerja-backend/internal/middleware"
 	"keerja-backend/internal/utils"
 
@@ -93,13 +94,13 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 	// Parse request body
 	var req request.UpdateProfileRequest
 	if err := c.BodyParser(&req); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body", err.Error())
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, http.ErrInvalidRequest, err.Error())
 	}
 
 	// Validate request
 	if err := utils.ValidateStruct(&req); err != nil {
 		errors := utils.FormatValidationErrors(err)
-		return utils.ValidationErrorResponse(c, "Validation failed", errors)
+		return utils.ValidationErrorResponse(c, http.ErrValidationFailed, errors)
 	}
 
 	// Sanitize text input fields
@@ -159,10 +160,10 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 
 	// Update profile
 	if err := h.userService.UpdateProfile(ctx, userID, domainReq); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update profile", err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, http.ErrFailedOperation, err.Error())
 	}
 
-	return utils.SuccessResponse(c, "Profile updated successfully", nil)
+	return utils.SuccessResponse(c, http.MsgOperationSuccess, nil)
 }
 
 // GetEducations godoc
@@ -182,7 +183,7 @@ func (h *UserHandler) GetEducations(c *fiber.Ctx) error {
 
 	usr, err := h.userService.GetProfile(ctx, userID)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get educations", err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, http.ErrFailedOperation, err.Error())
 	}
 
 	educations := make([]response.UserEducationResponse, 0, len(usr.Educations))
@@ -192,7 +193,7 @@ func (h *UserHandler) GetEducations(c *fiber.Ctx) error {
 		}
 	}
 
-	return utils.SuccessResponse(c, "Educations retrieved successfully", educations)
+	return utils.SuccessResponse(c, http.MsgOperationSuccess, educations)
 }
 
 // GetExperiences godoc
@@ -212,7 +213,7 @@ func (h *UserHandler) GetExperiences(c *fiber.Ctx) error {
 
 	usr, err := h.userService.GetProfile(ctx, userID)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get experiences", err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, http.ErrFailedOperation, err.Error())
 	}
 
 	experiences := make([]response.UserExperienceResponse, 0, len(usr.Experiences))
@@ -222,7 +223,7 @@ func (h *UserHandler) GetExperiences(c *fiber.Ctx) error {
 		}
 	}
 
-	return utils.SuccessResponse(c, "Experiences retrieved successfully", experiences)
+	return utils.SuccessResponse(c, http.MsgOperationSuccess, experiences)
 }
 
 // GetSkills godoc
@@ -242,7 +243,7 @@ func (h *UserHandler) GetSkills(c *fiber.Ctx) error {
 
 	usr, err := h.userService.GetProfile(ctx, userID)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get skills", err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, http.ErrFailedOperation, err.Error())
 	}
 
 	skills := make([]response.UserSkillResponse, 0, len(usr.Skills))
@@ -252,7 +253,7 @@ func (h *UserHandler) GetSkills(c *fiber.Ctx) error {
 		}
 	}
 
-	return utils.SuccessResponse(c, "Skills retrieved successfully", skills)
+	return utils.SuccessResponse(c, http.MsgOperationSuccess, skills)
 }
 
 // GetCertifications godoc
@@ -272,7 +273,7 @@ func (h *UserHandler) GetCertifications(c *fiber.Ctx) error {
 
 	usr, err := h.userService.GetProfile(ctx, userID)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get certifications", err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, http.ErrFailedOperation, err.Error())
 	}
 
 	certifications := make([]response.UserCertificationResponse, 0, len(usr.Certifications))
@@ -282,7 +283,7 @@ func (h *UserHandler) GetCertifications(c *fiber.Ctx) error {
 		}
 	}
 
-	return utils.SuccessResponse(c, "Certifications retrieved successfully", certifications)
+	return utils.SuccessResponse(c, http.MsgOperationSuccess, certifications)
 }
 
 // GetLanguages godoc
@@ -302,7 +303,7 @@ func (h *UserHandler) GetLanguages(c *fiber.Ctx) error {
 
 	usr, err := h.userService.GetProfile(ctx, userID)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get languages", err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, http.ErrFailedOperation, err.Error())
 	}
 
 	languages := make([]response.UserLanguageResponse, 0, len(usr.Languages))
@@ -312,7 +313,7 @@ func (h *UserHandler) GetLanguages(c *fiber.Ctx) error {
 		}
 	}
 
-	return utils.SuccessResponse(c, "Languages retrieved successfully", languages)
+	return utils.SuccessResponse(c, http.MsgOperationSuccess, languages)
 }
 
 // GetProjects godoc
@@ -332,7 +333,7 @@ func (h *UserHandler) GetProjects(c *fiber.Ctx) error {
 
 	usr, err := h.userService.GetProfile(ctx, userID)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get projects", err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, http.ErrFailedOperation, err.Error())
 	}
 
 	projects := make([]response.UserProjectResponse, 0, len(usr.Projects))
@@ -342,7 +343,7 @@ func (h *UserHandler) GetProjects(c *fiber.Ctx) error {
 		}
 	}
 
-	return utils.SuccessResponse(c, "Projects retrieved successfully", projects)
+	return utils.SuccessResponse(c, http.MsgOperationSuccess, projects)
 }
 
 // GetDocuments godoc
@@ -362,7 +363,7 @@ func (h *UserHandler) GetDocuments(c *fiber.Ctx) error {
 
 	usr, err := h.userService.GetProfile(ctx, userID)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get documents", err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, http.ErrFailedOperation, err.Error())
 	}
 
 	documents := make([]response.UserDocumentResponse, 0, len(usr.Documents))
@@ -372,7 +373,7 @@ func (h *UserHandler) GetDocuments(c *fiber.Ctx) error {
 		}
 	}
 
-	return utils.SuccessResponse(c, "Documents retrieved successfully", documents)
+	return utils.SuccessResponse(c, http.MsgOperationSuccess, documents)
 }
 
 // AddEducation godoc
@@ -394,12 +395,12 @@ func (h *UserHandler) AddEducation(c *fiber.Ctx) error {
 
 	var req request.AddEducationRequest
 	if err := c.BodyParser(&req); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body", err.Error())
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, http.ErrInvalidRequest, err.Error())
 	}
 
 	if err := utils.ValidateStruct(&req); err != nil {
 		errors := utils.FormatValidationErrors(err)
-		return utils.ValidationErrorResponse(c, "Validation failed", errors)
+		return utils.ValidationErrorResponse(c, http.ErrValidationFailed, errors)
 	}
 
 	// Sanitize text input fields
@@ -436,11 +437,11 @@ func (h *UserHandler) AddEducation(c *fiber.Ctx) error {
 
 	education, err := h.userService.AddEducation(ctx, userID, domainReq)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to add education", err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, http.ErrFailedOperation, err.Error())
 	}
 
 	response := mapper.ToEducationResponse(education)
-	return utils.CreatedResponse(c, "Education added successfully", response)
+	return utils.CreatedResponse(c, http.MsgOperationSuccess, response)
 }
 
 // UpdateEducation godoc
@@ -464,17 +465,17 @@ func (h *UserHandler) UpdateEducation(c *fiber.Ctx) error {
 
 	educationID, err := strconv.ParseInt(c.Params("id"), 10, 64)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid education ID", err.Error())
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, http.ErrInvalidRequest, err.Error())
 	}
 
 	var req request.UpdateEducationRequest
 	if err := c.BodyParser(&req); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body", err.Error())
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, http.ErrInvalidRequest, err.Error())
 	}
 
 	if err := utils.ValidateStruct(&req); err != nil {
 		errors := utils.FormatValidationErrors(err)
-		return utils.ValidationErrorResponse(c, "Validation failed", errors)
+		return utils.ValidationErrorResponse(c, http.ErrValidationFailed, errors)
 	}
 
 	// Sanitize text input fields
