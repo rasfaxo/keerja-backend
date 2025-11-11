@@ -1,0 +1,4994 @@
+{
+	"info": {
+		"_postman_id": "2174a6fb-f5db-494a-be9a-88c8f13525ec",
+		"name": "Keerja Backend API",
+		"description": "Complete API collection with JWT Bearer authentication and auto-token management",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "30776351"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Verify Email",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"token\": \"248258662f3f4a49e1a1606bcd7130668f9362b9123e1205181eb4b38f023e5a\"\n}"
+						},
+						"url": "{{base_url}}/api/v1/auth/verify-email"
+					},
+					"response": [
+						{
+							"name": "Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"token\": \"248258662f3f4a49e1a1606bcd7130668f9362b9123e1205181eb4b38f023e5a\"\n}"
+								},
+								"url": "{{base_url}}/api/v1/auth/verify-email"
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "Server",
+									"value": "Keerja"
+								},
+								{
+									"key": "Date",
+									"value": "Thu, 23 Oct 2025 11:55:03 GMT"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Content-Length",
+									"value": "56"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": ""
+								},
+								{
+									"key": "Access-Control-Allow-Credentials",
+									"value": "true"
+								},
+								{
+									"key": "Access-Control-Expose-Headers",
+									"value": "Content-Length,Content-Type,Authorization"
+								},
+								{
+									"key": "X-Frame-Options",
+									"value": "DENY"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Strict-Transport-Security",
+									"value": "max-age=31536000; includeSubDomains"
+								},
+								{
+									"key": "Referrer-Policy",
+									"value": "strict-origin-when-cross-origin"
+								},
+								{
+									"key": "Content-Security-Policy",
+									"value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+								},
+								{
+									"key": "Permissions-Policy",
+									"value": "geolocation=(), microphone=(), camera=()"
+								},
+								{
+									"key": "X-Ratelimit-Limit",
+									"value": "100"
+								},
+								{
+									"key": "X-Ratelimit-Remaining",
+									"value": "99"
+								},
+								{
+									"key": "X-Ratelimit-Reset",
+									"value": "60"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Email verified successfully\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Register via OTP",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"full_name\": \"user owner\",\r\n  \"email\": \"userowner@example.com\",\r\n  \"password\": \"password123\",\r\n  \"phone\": \"+62812345678\",\r\n  \"user_type\": \"employer\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/api/v1/auth/register-otp"
+					},
+					"response": [
+						{
+							"name": "Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"full_name\": \"Naufal Farraz\",\r\n  \"email\": \"naufal@example.com\",\r\n  \"password\": \"password123\",\r\n  \"phone\": \"+62812345678\",\r\n  \"user_type\": \"jobseeker\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": "{{base_url}}/api/v1/auth/register-otp"
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "Server",
+									"value": "Keerja"
+								},
+								{
+									"key": "Date",
+									"value": "Fri, 24 Oct 2025 05:54:25 GMT"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Content-Length",
+									"value": "184"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": ""
+								},
+								{
+									"key": "Access-Control-Allow-Credentials",
+									"value": "true"
+								},
+								{
+									"key": "Access-Control-Expose-Headers",
+									"value": "Content-Length,Content-Type,Authorization"
+								},
+								{
+									"key": "X-Frame-Options",
+									"value": "DENY"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Strict-Transport-Security",
+									"value": "max-age=31536000; includeSubDomains"
+								},
+								{
+									"key": "Referrer-Policy",
+									"value": "strict-origin-when-cross-origin"
+								},
+								{
+									"key": "Content-Security-Policy",
+									"value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+								},
+								{
+									"key": "Permissions-Policy",
+									"value": "geolocation=(), microphone=(), camera=()"
+								},
+								{
+									"key": "X-Ratelimit-Limit",
+									"value": "100"
+								},
+								{
+									"key": "X-Ratelimit-Remaining",
+									"value": "98"
+								},
+								{
+									"key": "X-Ratelimit-Reset",
+									"value": "4"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Registration successful. Please check your email for OTP verification code.\",\n    \"data\": {\n        \"email\": \"naufal@example.com\",\n        \"note\": \"OTP code is valid for 5 minutes.\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Verify OTP",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"userowner@example.com\",\r\n    \"otp_code\": \"337772\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/api/v1/auth/verify-email-otp"
+					},
+					"response": [
+						{
+							"name": "Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"email\": \"naufal@example.com\",\r\n    \"otp_code\": \"256141\"\r\n  \r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": "{{base_url}}/api/v1/auth/verify-email-otp"
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "Server",
+									"value": "Keerja"
+								},
+								{
+									"key": "Date",
+									"value": "Fri, 24 Oct 2025 05:56:43 GMT"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Content-Length",
+									"value": "625"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": ""
+								},
+								{
+									"key": "Access-Control-Allow-Credentials",
+									"value": "true"
+								},
+								{
+									"key": "Access-Control-Expose-Headers",
+									"value": "Content-Length,Content-Type,Authorization"
+								},
+								{
+									"key": "X-Frame-Options",
+									"value": "DENY"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Strict-Transport-Security",
+									"value": "max-age=31536000; includeSubDomains"
+								},
+								{
+									"key": "Referrer-Policy",
+									"value": "strict-origin-when-cross-origin"
+								},
+								{
+									"key": "Content-Security-Policy",
+									"value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+								},
+								{
+									"key": "Permissions-Policy",
+									"value": "geolocation=(), microphone=(), camera=()"
+								},
+								{
+									"key": "X-Ratelimit-Limit",
+									"value": "100"
+								},
+								{
+									"key": "X-Ratelimit-Remaining",
+									"value": "97"
+								},
+								{
+									"key": "X-Ratelimit-Reset",
+									"value": "48"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Email verified successfully\",\n    \"data\": {\n        \"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxOCwiZW1haWwiOiJuYXVmYWxAZXhhbXBsZS5jb20iLCJ1c2VyX3R5cGUiOiJqb2JzZWVrZXIiLCJpc3MiOiJrZWVyamEtYXBpIiwic3ViIjoiMTgiLCJleHAiOjE3NjEzNzE4MDMsIm5iZiI6MTc2MTI4NTQwMywiaWF0IjoxNzYxMjg1NDAzfQ.KS_bq89uCabncdS6htiWfbrj936mETkO8cddxY_XOhE\",\n        \"refresh_token\": \"\",\n        \"token_type\": \"Bearer\",\n        \"expires_in\": 3600,\n        \"user\": {\n            \"id\": 18,\n            \"uuid\": \"52d07947-1040-40cf-82ed-471398848aa5\",\n            \"full_name\": \"Naufal Farraz\",\n            \"email\": \"naufal@example.com\",\n            \"phone\": \"+62812345678\",\n            \"user_type\": \"jobseeker\",\n            \"is_verified\": true,\n            \"status\": \"active\"\n        }\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Resend OTP",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"naufal@example.com\",\r\n    \"type\": \"email_verification\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/api/v1/auth/resend-otp"
+					},
+					"response": [
+						{
+							"name": "Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"email\": \"naufal@example.com\",\r\n    \"otp_code\": \"256141\"\r\n  \r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": "{{base_url}}/api/v1/auth/verify-email-otp"
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "Server",
+									"value": "Keerja"
+								},
+								{
+									"key": "Date",
+									"value": "Fri, 24 Oct 2025 05:56:43 GMT"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Content-Length",
+									"value": "625"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": ""
+								},
+								{
+									"key": "Access-Control-Allow-Credentials",
+									"value": "true"
+								},
+								{
+									"key": "Access-Control-Expose-Headers",
+									"value": "Content-Length,Content-Type,Authorization"
+								},
+								{
+									"key": "X-Frame-Options",
+									"value": "DENY"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Strict-Transport-Security",
+									"value": "max-age=31536000; includeSubDomains"
+								},
+								{
+									"key": "Referrer-Policy",
+									"value": "strict-origin-when-cross-origin"
+								},
+								{
+									"key": "Content-Security-Policy",
+									"value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+								},
+								{
+									"key": "Permissions-Policy",
+									"value": "geolocation=(), microphone=(), camera=()"
+								},
+								{
+									"key": "X-Ratelimit-Limit",
+									"value": "100"
+								},
+								{
+									"key": "X-Ratelimit-Remaining",
+									"value": "97"
+								},
+								{
+									"key": "X-Ratelimit-Reset",
+									"value": "48"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Email verified successfully\",\n    \"data\": {\n        \"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxOCwiZW1haWwiOiJuYXVmYWxAZXhhbXBsZS5jb20iLCJ1c2VyX3R5cGUiOiJqb2JzZWVrZXIiLCJpc3MiOiJrZWVyamEtYXBpIiwic3ViIjoiMTgiLCJleHAiOjE3NjEzNzE4MDMsIm5iZiI6MTc2MTI4NTQwMywiaWF0IjoxNzYxMjg1NDAzfQ.KS_bq89uCabncdS6htiWfbrj936mETkO8cddxY_XOhE\",\n        \"refresh_token\": \"\",\n        \"token_type\": \"Bearer\",\n        \"expires_in\": 3600,\n        \"user\": {\n            \"id\": 18,\n            \"uuid\": \"52d07947-1040-40cf-82ed-471398848aa5\",\n            \"full_name\": \"Naufal Farraz\",\n            \"email\": \"naufal@example.com\",\n            \"phone\": \"+62812345678\",\n            \"user_type\": \"jobseeker\",\n            \"is_verified\": true,\n            \"status\": \"active\"\n        }\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Login",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"userowner@example.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": "{{base_url}}/api/v1/auth/login"
+					},
+					"response": [
+						{
+							"name": "Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"userjhon2@example.com\",\n  \"password\": \"Password123\"\n}"
+								},
+								"url": "{{base_url}}/api/v1/auth/login"
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "Server",
+									"value": "Keerja"
+								},
+								{
+									"key": "Date",
+									"value": "Thu, 23 Oct 2025 11:55:31 GMT"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Content-Length",
+									"value": "613"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": ""
+								},
+								{
+									"key": "Access-Control-Allow-Credentials",
+									"value": "true"
+								},
+								{
+									"key": "Access-Control-Expose-Headers",
+									"value": "Content-Length,Content-Type,Authorization"
+								},
+								{
+									"key": "X-Frame-Options",
+									"value": "DENY"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Strict-Transport-Security",
+									"value": "max-age=31536000; includeSubDomains"
+								},
+								{
+									"key": "Referrer-Policy",
+									"value": "strict-origin-when-cross-origin"
+								},
+								{
+									"key": "Content-Security-Policy",
+									"value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+								},
+								{
+									"key": "Permissions-Policy",
+									"value": "geolocation=(), microphone=(), camera=()"
+								},
+								{
+									"key": "X-Ratelimit-Limit",
+									"value": "100"
+								},
+								{
+									"key": "X-Ratelimit-Remaining",
+									"value": "98"
+								},
+								{
+									"key": "X-Ratelimit-Reset",
+									"value": "32"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Login successful\",\n    \"data\": {\n        \"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo4LCJlbWFpbCI6InVzZXJqaG9uMkBleGFtcGxlLmNvbSIsInVzZXJfdHlwZSI6ImpvYnNlZWtlciIsImlzcyI6ImtlZXJqYS1hcGkiLCJzdWIiOiI4IiwiZXhwIjoxNzYxMzA2OTMxLCJuYmYiOjE3NjEyMjA1MzEsImlhdCI6MTc2MTIyMDUzMX0.MhqpUslrEFx04PecL-w3qj52A0ua7dXmjZUFhEYOR80\",\n        \"refresh_token\": \"\",\n        \"token_type\": \"Bearer\",\n        \"expires_in\": 3600,\n        \"user\": {\n            \"id\": 8,\n            \"uuid\": \"232a9edc-563b-407a-86c9-10347a2c323c\",\n            \"full_name\": \"userjhon2\",\n            \"email\": \"userjhon2@example.com\",\n            \"phone\": \"081234567897\",\n            \"user_type\": \"jobseeker\",\n            \"is_verified\": true,\n            \"status\": \"active\"\n        }\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Forgot Password OTP",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"userjhon2@example.com\"\n}"
+						},
+						"url": "{{base_url}}/api/v1/auth/forgot-password-otp"
+					},
+					"response": []
+				},
+				{
+					"name": "Reset Password OTP",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"userjhon2@example.com\",\n    \"otp_code\": \"911815\",\n    \"new_password\": \"NewSecurePass123!\"\n}"
+						},
+						"url": "{{base_url}}/api/v1/auth/reset-password-otp"
+					},
+					"response": []
+				},
+				{
+					"name": "Forgot Password",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"userjhon2@example.com\"\n}"
+						},
+						"url": "{{base_url}}/api/v1/auth/forgot-password"
+					},
+					"response": [
+						{
+							"name": "Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"userjhon2@example.com\"\n}"
+								},
+								"url": "{{base_url}}/api/v1/auth/forgot-password"
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "Server",
+									"value": "Keerja"
+								},
+								{
+									"key": "Date",
+									"value": "Thu, 23 Oct 2025 11:56:06 GMT"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Content-Length",
+									"value": "67"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": ""
+								},
+								{
+									"key": "Access-Control-Allow-Credentials",
+									"value": "true"
+								},
+								{
+									"key": "Access-Control-Expose-Headers",
+									"value": "Content-Length,Content-Type,Authorization"
+								},
+								{
+									"key": "X-Frame-Options",
+									"value": "DENY"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Strict-Transport-Security",
+									"value": "max-age=31536000; includeSubDomains"
+								},
+								{
+									"key": "Referrer-Policy",
+									"value": "strict-origin-when-cross-origin"
+								},
+								{
+									"key": "Content-Security-Policy",
+									"value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+								},
+								{
+									"key": "Permissions-Policy",
+									"value": "geolocation=(), microphone=(), camera=()"
+								},
+								{
+									"key": "X-Ratelimit-Limit",
+									"value": "100"
+								},
+								{
+									"key": "X-Ratelimit-Remaining",
+									"value": "98"
+								},
+								{
+									"key": "X-Ratelimit-Reset",
+									"value": "57"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Password reset link sent to your email\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"token\": \"f8336870c29c86fd728ef29754092ad1c79d1d480d49ba58b7b9c6943fed8c1b\",\n  \"new_password\": \"NewPassword123!\"\n}"
+						},
+						"url": "{{base_url}}/api/v1/auth/reset-password"
+					},
+					"response": [
+						{
+							"name": "Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"token\": \"f8336870c29c86fd728ef29754092ad1c79d1d480d49ba58b7b9c6943fed8c1b\",\n  \"new_password\": \"NewPassword123!\"\n}"
+								},
+								"url": "{{base_url}}/api/v1/auth/reset-password"
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "Server",
+									"value": "Keerja"
+								},
+								{
+									"key": "Date",
+									"value": "Thu, 23 Oct 2025 11:58:00 GMT"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Content-Length",
+									"value": "56"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": ""
+								},
+								{
+									"key": "Access-Control-Allow-Credentials",
+									"value": "true"
+								},
+								{
+									"key": "Access-Control-Expose-Headers",
+									"value": "Content-Length,Content-Type,Authorization"
+								},
+								{
+									"key": "X-Frame-Options",
+									"value": "DENY"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Strict-Transport-Security",
+									"value": "max-age=31536000; includeSubDomains"
+								},
+								{
+									"key": "Referrer-Policy",
+									"value": "strict-origin-when-cross-origin"
+								},
+								{
+									"key": "Content-Security-Policy",
+									"value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+								},
+								{
+									"key": "Permissions-Policy",
+									"value": "geolocation=(), microphone=(), camera=()"
+								},
+								{
+									"key": "X-Ratelimit-Limit",
+									"value": "100"
+								},
+								{
+									"key": "X-Ratelimit-Remaining",
+									"value": "99"
+								},
+								{
+									"key": "X-Ratelimit-Reset",
+									"value": "3"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Password reset successfully\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Resend Verification",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"userjhon3@example.com\"\n}"
+						},
+						"url": "{{base_url}}/api/v1/auth/resend-verification"
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
+						},
+						"url": "{{base_url}}/api/v1/auth/refresh-token"
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Clear tokens on logout",
+									"pm.collectionVariables.set('access_token', '');",
+									"pm.collectionVariables.set('refresh_token', '');",
+									"console.log('✅ Tokens cleared');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": "{{base_url}}/api/v1/auth/logout"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "GET",
+					"item": [
+						{
+							"name": "Get profile",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/api/v1/users/me"
+							},
+							"response": [
+								{
+									"name": "Response",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": "{{base_url}}/api/v1/users/me"
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "Text",
+									"header": [
+										{
+											"key": "Server",
+											"value": "Keerja"
+										},
+										{
+											"key": "Date",
+											"value": "Thu, 23 Oct 2025 11:58:33 GMT"
+										},
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										},
+										{
+											"key": "Content-Length",
+											"value": "538"
+										},
+										{
+											"key": "Vary",
+											"value": "Origin"
+										},
+										{
+											"key": "Access-Control-Allow-Origin",
+											"value": ""
+										},
+										{
+											"key": "Access-Control-Allow-Credentials",
+											"value": "true"
+										},
+										{
+											"key": "Access-Control-Expose-Headers",
+											"value": "Content-Length,Content-Type,Authorization"
+										},
+										{
+											"key": "X-Frame-Options",
+											"value": "DENY"
+										},
+										{
+											"key": "X-Content-Type-Options",
+											"value": "nosniff"
+										},
+										{
+											"key": "X-Xss-Protection",
+											"value": "1; mode=block"
+										},
+										{
+											"key": "Strict-Transport-Security",
+											"value": "max-age=31536000; includeSubDomains"
+										},
+										{
+											"key": "Referrer-Policy",
+											"value": "strict-origin-when-cross-origin"
+										},
+										{
+											"key": "Content-Security-Policy",
+											"value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+										},
+										{
+											"key": "Permissions-Policy",
+											"value": "geolocation=(), microphone=(), camera=()"
+										},
+										{
+											"key": "X-Ratelimit-Limit",
+											"value": "100"
+										},
+										{
+											"key": "X-Ratelimit-Remaining",
+											"value": "99"
+										},
+										{
+											"key": "X-Ratelimit-Reset",
+											"value": "31"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Profile retrieved successfully\",\n    \"data\": {\n        \"id\": 8,\n        \"uuid\": \"232a9edc-563b-407a-86c9-10347a2c323c\",\n        \"full_name\": \"userjhon2\",\n        \"email\": \"userjhon2@example.com\",\n        \"phone\": \"081234567897\",\n        \"user_type\": \"jobseeker\",\n        \"is_verified\": true,\n        \"status\": \"active\",\n        \"last_login\": \"2025-10-23T18:55:31.769948Z\",\n        \"created_at\": \"2025-10-22T15:23:36.765438Z\",\n        \"profile\": {\n            \"id\": 6,\n            \"user_id\": 8,\n            \"availability_status\": \"open\",\n            \"profile_visibility\": true,\n            \"slug\": \"userjhon2\",\n            \"created_at\": \"2025-10-22T15:23:38.425179Z\",\n            \"updated_at\": \"2025-10-22T15:23:38.425179Z\"\n        }\n    }\n}"
+								}
+							]
+						},
+						{
+							"name": "Custom Include (Selective)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/users/me?include=educations,skills,projects",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"users",
+										"me"
+									],
+									"query": [
+										{
+											"key": "include",
+											"value": "educations,skills,projects"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Full Profile (All Data)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/users/me?include=all",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"users",
+										"me"
+									],
+									"query": [
+										{
+											"key": "include",
+											"value": "all"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Educations Only",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/api/v1/users/me/educations"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Experiences Only",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/api/v1/users/me/experiences"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Skills Only",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/api/v1/users/me/skills"
+							},
+							"response": []
+						},
+						{
+							"name": "Get All Skills with pagination",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/skills?page=1&page_size=15",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"skills"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "page_size",
+											"value": "15"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Search skills",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/skills/search?q=a&page=1&page_size=10",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"skills",
+										"search"
+									],
+									"query": [
+										{
+											"key": "q",
+											"value": "a"
+										},
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "page_size",
+											"value": "10"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Filter by type",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/skills/type/soft?page=1&page_size=30",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"skills",
+										"type",
+										"soft"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "page_size",
+											"value": "30"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Certifications Only",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/api/v1/users/me/certifications"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Languages Only",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/api/v1/users/me/languages"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Projects Only",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/api/v1/users/me/projects"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Documents Only",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/api/v1/users/me/documents"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "PUT",
+					"item": [
+						{
+							"name": "Update Profile",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n \"full_name\": \"Muhammad Naufal Farraz\",\n  \"phone\": \"+62812345678\",\n  \"headline\": \"Senior Backend Developer | Go Expert\",\n  \"bio\": \"Passionate about building scalable systems\",\n  \"birth_date\": \"1995-08-17\",\n  \"gender\": \"male\",\n  \"nationality\": \"Indonesia\",\n  \"address\": \"Jl. Sudirman No. 123\",\n  \"location_city\": \"Jakarta\",\n  \"location_state\": \"DKI Jakarta\",\n  \"location_country\": \"Indonesia\",\n  \"postal_code\": \"12345\",\n  \"linkedin_url\": \"https://linkedin.com/in/naufal\",\n  \"portfolio_url\": \"https://naufal.dev\",\n  \"github_url\": \"https://github.com/naufal\",\n  \"desired_position\": \"Senior Backend Engineer\",\n  \"desired_salary_min\": 10000000,\n  \"desired_salary_max\": 20000000,\n  \"experience_level\": \"senior\",\n  \"industry_interest\": \"Technology\",\n  \"availability_status\": \"looking_actively\"\n}"
+								},
+								"url": "{{base_url}}/api/v1/users/me"
+							},
+							"response": [
+								{
+									"name": "Response",
+									"originalRequest": {
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"full_name\": \"John Doe Updated\",\n  \"phone\": \"081234567899\",\n  \"bio\": \"Experienced software engineer\",\n  \"location\": \"Jakarta\"\n}"
+										},
+										"url": "{{base_url}}/api/v1/users/me"
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "Text",
+									"header": [
+										{
+											"key": "Server",
+											"value": "Keerja"
+										},
+										{
+											"key": "Date",
+											"value": "Thu, 23 Oct 2025 12:00:11 GMT"
+										},
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										},
+										{
+											"key": "Content-Length",
+											"value": "57"
+										},
+										{
+											"key": "Vary",
+											"value": "Origin"
+										},
+										{
+											"key": "Access-Control-Allow-Origin",
+											"value": ""
+										},
+										{
+											"key": "Access-Control-Allow-Credentials",
+											"value": "true"
+										},
+										{
+											"key": "Access-Control-Expose-Headers",
+											"value": "Content-Length,Content-Type,Authorization"
+										},
+										{
+											"key": "X-Frame-Options",
+											"value": "DENY"
+										},
+										{
+											"key": "X-Content-Type-Options",
+											"value": "nosniff"
+										},
+										{
+											"key": "X-Xss-Protection",
+											"value": "1; mode=block"
+										},
+										{
+											"key": "Strict-Transport-Security",
+											"value": "max-age=31536000; includeSubDomains"
+										},
+										{
+											"key": "Referrer-Policy",
+											"value": "strict-origin-when-cross-origin"
+										},
+										{
+											"key": "Content-Security-Policy",
+											"value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+										},
+										{
+											"key": "Permissions-Policy",
+											"value": "geolocation=(), microphone=(), camera=()"
+										},
+										{
+											"key": "X-Ratelimit-Limit",
+											"value": "100"
+										},
+										{
+											"key": "X-Ratelimit-Remaining",
+											"value": "99"
+										},
+										{
+											"key": "X-Ratelimit-Reset",
+											"value": "60"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Profile updated successfully\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Update Education",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"institution_name\": \"University of America\",\n  \"major\": \"Computer Science\",\n  \"degree_level\": \"S1\",\n  \"start_year\": 2022,\n  \"end_year\": 2026,\n  \"gpa\": 3.75,\n  \"activities\": \"Member of Computer Club\",\n  \"description\": \"Focus on software engineering and AI.\",\n  \"is_current\": false\n}"
+								},
+								"url": "{{base_url}}/api/v1/users/me/education/8"
+							},
+							"response": [
+								{
+									"name": "Response",
+									"originalRequest": {
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"institution_name\": \"University of Indonesia\",\n  \"major\": \"Computer Science\",\n  \"degree_level\": \"S1\",\n  \"start_year\": 2022,\n  \"end_year\": 2026,\n  \"gpa\": 3.75,\n  \"activities\": \"Member of Computer Club\",\n  \"description\": \"Focus on software engineering and AI.\",\n  \"is_current\": false\n}"
+										},
+										"url": "{{base_url}}/api/v1/users/me/education/5"
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "Text",
+									"header": [
+										{
+											"key": "Server",
+											"value": "Keerja"
+										},
+										{
+											"key": "Date",
+											"value": "Thu, 23 Oct 2025 14:53:53 GMT"
+										},
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										},
+										{
+											"key": "Content-Length",
+											"value": "59"
+										},
+										{
+											"key": "Vary",
+											"value": "Origin"
+										},
+										{
+											"key": "Access-Control-Allow-Origin",
+											"value": ""
+										},
+										{
+											"key": "Access-Control-Allow-Credentials",
+											"value": "true"
+										},
+										{
+											"key": "Access-Control-Expose-Headers",
+											"value": "Content-Length,Content-Type,Authorization"
+										},
+										{
+											"key": "X-Frame-Options",
+											"value": "DENY"
+										},
+										{
+											"key": "X-Content-Type-Options",
+											"value": "nosniff"
+										},
+										{
+											"key": "X-Xss-Protection",
+											"value": "1; mode=block"
+										},
+										{
+											"key": "Strict-Transport-Security",
+											"value": "max-age=31536000; includeSubDomains"
+										},
+										{
+											"key": "Referrer-Policy",
+											"value": "strict-origin-when-cross-origin"
+										},
+										{
+											"key": "Content-Security-Policy",
+											"value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+										},
+										{
+											"key": "Permissions-Policy",
+											"value": "geolocation=(), microphone=(), camera=()"
+										},
+										{
+											"key": "X-Ratelimit-Limit",
+											"value": "100"
+										},
+										{
+											"key": "X-Ratelimit-Remaining",
+											"value": "99"
+										},
+										{
+											"key": "X-Ratelimit-Reset",
+											"value": "60"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Education updated successfully\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Update Experience",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"company_name\": \"PT Teknologi Nusantara\",\n  \"position_title\": \"Senior Backend Developer\",\n  \"industry\": \"Information Technology update\",\n  \"employment_type\": \"part-time\",\n  \"start_date\": \"2022-07-01\",\n  \"end_date\": \"2024-10-31\",\n  \"is_current\": false,\n  \"description\": \"Developed and maintained backend services using Go and php.\",\n  \"achievements\": \"Employee of the Month, Led migration to microservices and ddd.\",\n  \"location_city\": \"depok\",\n  \"location_country\": \"america\"\n}"
+								},
+								"url": "{{base_url}}/api/v1/users/me/experience/5"
+							},
+							"response": [
+								{
+									"name": "Response",
+									"originalRequest": {
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"company_name\": \"Tech Company\",\n  \"title\": \"Senior Software Engineer\",\n  \"description\": \"Lead backend development\"\n}"
+										},
+										"url": "{{base_url}}/api/v1/users/me/experience/3"
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "Text",
+									"header": [
+										{
+											"key": "Server",
+											"value": "Keerja"
+										},
+										{
+											"key": "Date",
+											"value": "Thu, 23 Oct 2025 16:19:06 GMT"
+										},
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										},
+										{
+											"key": "Content-Length",
+											"value": "60"
+										},
+										{
+											"key": "Vary",
+											"value": "Origin"
+										},
+										{
+											"key": "Access-Control-Allow-Origin",
+											"value": ""
+										},
+										{
+											"key": "Access-Control-Allow-Credentials",
+											"value": "true"
+										},
+										{
+											"key": "Access-Control-Expose-Headers",
+											"value": "Content-Length,Content-Type,Authorization"
+										},
+										{
+											"key": "X-Frame-Options",
+											"value": "DENY"
+										},
+										{
+											"key": "X-Content-Type-Options",
+											"value": "nosniff"
+										},
+										{
+											"key": "X-Xss-Protection",
+											"value": "1; mode=block"
+										},
+										{
+											"key": "Strict-Transport-Security",
+											"value": "max-age=31536000; includeSubDomains"
+										},
+										{
+											"key": "Referrer-Policy",
+											"value": "strict-origin-when-cross-origin"
+										},
+										{
+											"key": "Content-Security-Policy",
+											"value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+										},
+										{
+											"key": "Permissions-Policy",
+											"value": "geolocation=(), microphone=(), camera=()"
+										},
+										{
+											"key": "X-Ratelimit-Limit",
+											"value": "100"
+										},
+										{
+											"key": "X-Ratelimit-Remaining",
+											"value": "99"
+										},
+										{
+											"key": "X-Ratelimit-Reset",
+											"value": "60"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Experience updated successfully\"\n}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "POST",
+					"item": [
+						{
+							"name": "Add Education",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"institution_name\": \"University of Indonesia\",\n  \"major\": \"Computer Science\",\n  \"degree_level\": \"S1\",\n  \"start_year\": 2015,\n  \"end_year\": 2019,\n  \"gpa\": 3.75,\n  \"activities\": \"Member of Computer Club\",\n  \"description\": \"Focus on software engineering and AI.\",\n  \"is_current\": false\n}"
+								},
+								"url": "{{base_url}}/api/v1/users/me/education"
+							},
+							"response": [
+								{
+									"name": "Response",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"institution_name\": \"University of Indonesia\",\n  \"major\": \"Computer Science\",\n  \"degree_level\": \"S1\",\n  \"start_year\": 2015,\n  \"end_year\": 2019,\n  \"gpa\": 3.75,\n  \"activities\": \"Member of Computer Club\",\n  \"description\": \"Focus on software engineering and AI.\",\n  \"is_current\": false\n}"
+										},
+										"url": "{{base_url}}/api/v1/users/me/education"
+									},
+									"status": "Created",
+									"code": 201,
+									"_postman_previewlanguage": "Text",
+									"header": [
+										{
+											"key": "Server",
+											"value": "Keerja"
+										},
+										{
+											"key": "Date",
+											"value": "Thu, 23 Oct 2025 14:50:35 GMT"
+										},
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										},
+										{
+											"key": "Content-Length",
+											"value": "358"
+										},
+										{
+											"key": "Vary",
+											"value": "Origin"
+										},
+										{
+											"key": "Access-Control-Allow-Origin",
+											"value": ""
+										},
+										{
+											"key": "Access-Control-Allow-Credentials",
+											"value": "true"
+										},
+										{
+											"key": "Access-Control-Expose-Headers",
+											"value": "Content-Length,Content-Type,Authorization"
+										},
+										{
+											"key": "X-Frame-Options",
+											"value": "DENY"
+										},
+										{
+											"key": "X-Content-Type-Options",
+											"value": "nosniff"
+										},
+										{
+											"key": "X-Xss-Protection",
+											"value": "1; mode=block"
+										},
+										{
+											"key": "Strict-Transport-Security",
+											"value": "max-age=31536000; includeSubDomains"
+										},
+										{
+											"key": "Referrer-Policy",
+											"value": "strict-origin-when-cross-origin"
+										},
+										{
+											"key": "Content-Security-Policy",
+											"value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+										},
+										{
+											"key": "Permissions-Policy",
+											"value": "geolocation=(), microphone=(), camera=()"
+										},
+										{
+											"key": "X-Ratelimit-Limit",
+											"value": "100"
+										},
+										{
+											"key": "X-Ratelimit-Remaining",
+											"value": "99"
+										},
+										{
+											"key": "X-Ratelimit-Reset",
+											"value": "60"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Education added successfully\",\n    \"data\": {\n        \"id\": 5,\n        \"institution_name\": \"University of Indonesia\",\n        \"major\": \"Computer Science\",\n        \"degree_level\": \"S1\",\n        \"start_year\": 2015,\n        \"end_year\": 2019,\n        \"gpa\": 3.75,\n        \"activities\": \"Member of Computer Club\",\n        \"description\": \"Focus on software engineering and AI.\",\n        \"is_current\": false,\n        \"created_at\": \"2025-10-23T21:50:35Z\"\n    }\n}"
+								}
+							]
+						},
+						{
+							"name": "Add Experience",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"company_name\": \"PT Teknologi Nusantara\",\n  \"position_title\": \"Backend Developer\",\n  \"industry\": \"Information Technology\",\n  \"employment_type\": \"full-time\",\n  \"start_date\": \"2021-07-01\",\n  \"end_date\": \"2023-10-31\",\n  \"is_current\": false,\n  \"description\": \"Developed and maintained backend services using Go.\",\n  \"achievements\": \"Employee of the Month, Led migration to microservices.\",\n  \"location_city\": \"Jakarta\",\n  \"location_country\": \"Indonesia\"\n}"
+								},
+								"url": "{{base_url}}/api/v1/users/me/experience"
+							},
+							"response": [
+								{
+									"name": "Response",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"company_name\": \"PT Teknologi Nusantara\",\n  \"position_title\": \"Backend Developer\",\n  \"industry\": \"Information Technology\",\n  \"employment_type\": \"full-time\",\n  \"start_date\": \"2021-07-01\",\n  \"end_date\": \"2023-10-31\",\n  \"is_current\": false,\n  \"description\": \"Developed and maintained backend services using Go.\",\n  \"achievements\": \"Employee of the Month, Led migration to microservices.\",\n  \"location_city\": \"Jakarta\",\n  \"location_country\": \"Indonesia\"\n}"
+										},
+										"url": "{{base_url}}/api/v1/users/me/experience"
+									},
+									"status": "Created",
+									"code": 201,
+									"_postman_previewlanguage": "Text",
+									"header": [
+										{
+											"key": "Server",
+											"value": "Keerja"
+										},
+										{
+											"key": "Date",
+											"value": "Thu, 23 Oct 2025 15:22:23 GMT"
+										},
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										},
+										{
+											"key": "Content-Length",
+											"value": "519"
+										},
+										{
+											"key": "Vary",
+											"value": "Origin"
+										},
+										{
+											"key": "Access-Control-Allow-Origin",
+											"value": ""
+										},
+										{
+											"key": "Access-Control-Allow-Credentials",
+											"value": "true"
+										},
+										{
+											"key": "Access-Control-Expose-Headers",
+											"value": "Content-Length,Content-Type,Authorization"
+										},
+										{
+											"key": "X-Frame-Options",
+											"value": "DENY"
+										},
+										{
+											"key": "X-Content-Type-Options",
+											"value": "nosniff"
+										},
+										{
+											"key": "X-Xss-Protection",
+											"value": "1; mode=block"
+										},
+										{
+											"key": "Strict-Transport-Security",
+											"value": "max-age=31536000; includeSubDomains"
+										},
+										{
+											"key": "Referrer-Policy",
+											"value": "strict-origin-when-cross-origin"
+										},
+										{
+											"key": "Content-Security-Policy",
+											"value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+										},
+										{
+											"key": "Permissions-Policy",
+											"value": "geolocation=(), microphone=(), camera=()"
+										},
+										{
+											"key": "X-Ratelimit-Limit",
+											"value": "100"
+										},
+										{
+											"key": "X-Ratelimit-Remaining",
+											"value": "99"
+										},
+										{
+											"key": "X-Ratelimit-Reset",
+											"value": "60"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Experience added successfully\",\n    \"data\": {\n        \"id\": 3,\n        \"company_name\": \"PT Teknologi Nusantara\",\n        \"position_title\": \"Backend Developer\",\n        \"industry\": \"Information Technology\",\n        \"employment_type\": \"full-time\",\n        \"start_date\": \"2021-07-01\",\n        \"end_date\": \"2023-10-31\",\n        \"is_current\": false,\n        \"description\": \"Developed and maintained backend services using Go.\",\n        \"achievements\": \"Employee of the Month, Led migration to microservices.\",\n        \"location_city\": \"Jakarta\",\n        \"location_country\": \"Indonesia\",\n        \"created_at\": \"2025-10-23T22:22:23Z\"\n    }\n}"
+								}
+							]
+						},
+						{
+							"name": "Add Multiple Skill",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"skills\": [\n    {\n      \"skill_id\": 5,\n      \"proficiency_level\": \"advanced\",\n      \"years_of_experience\": 3\n    },\n    {\n      \"skill_name\": \"Figma\",\n      \"proficiency_level\": \"expert\",\n      \"years_of_experience\": 5\n    },\n    {\n      \"skill_id\": 13,\n      \"proficiency_level\": \"beginner\",\n      \"years_of_experience\": 1\n    }\n  ]\n}"
+								},
+								"url": "{{base_url}}/api/v1/users/me/skills/batch"
+							},
+							"response": []
+						},
+						{
+							"name": "Upload Document",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "file",
+											"description": "File yang ingin di-upload",
+											"type": "file",
+											"src": "/D:/cv.pdf"
+										},
+										{
+											"key": "document_type",
+											"value": "resume",
+											"description": "Tipe dokumen",
+											"type": "text"
+										},
+										{
+											"key": "title",
+											"value": "My Resume",
+											"description": "Judul dokumen (opsional)",
+											"type": "text"
+										},
+										{
+											"key": "description",
+											"value": "Updated resume for 2025",
+											"description": "Deskripsi dokumen (opsional)",
+											"type": "text"
+										}
+									]
+								},
+								"url": "{{base_url}}/api/v1/users/me/documents"
+							},
+							"response": [
+								{
+									"name": "Response",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "formdata",
+											"formdata": [
+												{
+													"key": "file",
+													"description": "File yang ingin di-upload",
+													"type": "file",
+													"src": "/D:/cv.pdf"
+												},
+												{
+													"key": "document_type",
+													"value": "resume",
+													"description": "Tipe dokumen",
+													"type": "text"
+												},
+												{
+													"key": "title",
+													"value": "My Resume",
+													"description": "Judul dokumen (opsional)",
+													"type": "text"
+												},
+												{
+													"key": "description",
+													"value": "Updated resume for 2025",
+													"description": "Deskripsi dokumen (opsional)",
+													"type": "text"
+												}
+											]
+										},
+										"url": "{{base_url}}/api/v1/users/me/documents"
+									},
+									"status": "Created",
+									"code": 201,
+									"_postman_previewlanguage": "Text",
+									"header": [
+										{
+											"key": "Server",
+											"value": "Keerja"
+										},
+										{
+											"key": "Date",
+											"value": "Thu, 23 Oct 2025 19:43:13 GMT"
+										},
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										},
+										{
+											"key": "Content-Length",
+											"value": "568"
+										},
+										{
+											"key": "Vary",
+											"value": "Origin"
+										},
+										{
+											"key": "Access-Control-Allow-Origin",
+											"value": ""
+										},
+										{
+											"key": "Access-Control-Allow-Credentials",
+											"value": "true"
+										},
+										{
+											"key": "Access-Control-Expose-Headers",
+											"value": "Content-Length,Content-Type,Authorization"
+										},
+										{
+											"key": "X-Frame-Options",
+											"value": "DENY"
+										},
+										{
+											"key": "X-Content-Type-Options",
+											"value": "nosniff"
+										},
+										{
+											"key": "X-Xss-Protection",
+											"value": "1; mode=block"
+										},
+										{
+											"key": "Strict-Transport-Security",
+											"value": "max-age=31536000; includeSubDomains"
+										},
+										{
+											"key": "Referrer-Policy",
+											"value": "strict-origin-when-cross-origin"
+										},
+										{
+											"key": "Content-Security-Policy",
+											"value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+										},
+										{
+											"key": "Permissions-Policy",
+											"value": "geolocation=(), microphone=(), camera=()"
+										},
+										{
+											"key": "X-Ratelimit-Limit",
+											"value": "100"
+										},
+										{
+											"key": "X-Ratelimit-Remaining",
+											"value": "98"
+										},
+										{
+											"key": "X-Ratelimit-Reset",
+											"value": "26"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Document uploaded successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"user_id\": 8,\n        \"document_type\": \"resume\",\n        \"document_name\": \"cv.pdf\",\n        \"file_url\": \"http://localhost:8080/documents/7ad4a9c7-9bd7-4b3f-adcf-79d5dab52779_20251024024313.pdf\",\n        \"file_size\": 44512,\n        \"mime_type\": \"application/pdf\",\n        \"description\": \"Updated resume for 2025\",\n        \"uploaded_at\": \"2025-10-24T02:43:13.330399Z\",\n        \"verified\": false,\n        \"is_active\": true,\n        \"checksum\": \"19573b1ccc55a19779af38d1f8725ced8965a2ece643cf59bc4a073a30fa6e15\",\n        \"created_at\": \"2025-10-24T02:43:13.330399Z\",\n        \"updated_at\": \"2025-10-24T02:43:13.330399Z\"\n    }\n}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "Delete Education",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": "{{base_url}}/api/v1/users/me/education/6"
+					},
+					"response": [
+						{
+							"name": "Response",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": "{{base_url}}/api/v1/users/me/education/1"
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "Server",
+									"value": "Keerja"
+								},
+								{
+									"key": "Date",
+									"value": "Thu, 23 Oct 2025 14:43:41 GMT"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Content-Length",
+									"value": "59"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": ""
+								},
+								{
+									"key": "Access-Control-Allow-Credentials",
+									"value": "true"
+								},
+								{
+									"key": "Access-Control-Expose-Headers",
+									"value": "Content-Length,Content-Type,Authorization"
+								},
+								{
+									"key": "X-Frame-Options",
+									"value": "DENY"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Strict-Transport-Security",
+									"value": "max-age=31536000; includeSubDomains"
+								},
+								{
+									"key": "Referrer-Policy",
+									"value": "strict-origin-when-cross-origin"
+								},
+								{
+									"key": "Content-Security-Policy",
+									"value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+								},
+								{
+									"key": "Permissions-Policy",
+									"value": "geolocation=(), microphone=(), camera=()"
+								},
+								{
+									"key": "X-Ratelimit-Limit",
+									"value": "100"
+								},
+								{
+									"key": "X-Ratelimit-Remaining",
+									"value": "98"
+								},
+								{
+									"key": "X-Ratelimit-Reset",
+									"value": "59"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Education deleted successfully\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete Experience",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": "{{base_url}}/api/v1/users/me/experience/5"
+					},
+					"response": [
+						{
+							"name": "Response",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": "{{base_url}}/api/v1/users/me/experience/3"
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "Server",
+									"value": "Keerja"
+								},
+								{
+									"key": "Date",
+									"value": "Thu, 23 Oct 2025 16:25:18 GMT"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Content-Length",
+									"value": "60"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": ""
+								},
+								{
+									"key": "Access-Control-Allow-Credentials",
+									"value": "true"
+								},
+								{
+									"key": "Access-Control-Expose-Headers",
+									"value": "Content-Length,Content-Type,Authorization"
+								},
+								{
+									"key": "X-Frame-Options",
+									"value": "DENY"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "1; mode=block"
+								},
+								{
+									"key": "Strict-Transport-Security",
+									"value": "max-age=31536000; includeSubDomains"
+								},
+								{
+									"key": "Referrer-Policy",
+									"value": "strict-origin-when-cross-origin"
+								},
+								{
+									"key": "Content-Security-Policy",
+									"value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+								},
+								{
+									"key": "Permissions-Policy",
+									"value": "geolocation=(), microphone=(), camera=()"
+								},
+								{
+									"key": "X-Ratelimit-Limit",
+									"value": "100"
+								},
+								{
+									"key": "X-Ratelimit-Remaining",
+									"value": "98"
+								},
+								{
+									"key": "X-Ratelimit-Reset",
+									"value": "34"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Experience deleted successfully\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete Skill",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": "{{base_url}}/api/v1/users/me/skills/7"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Companies",
+			"item": [
+				{
+					"name": "Public",
+					"item": [
+						{
+							"name": "List Companies",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/companies?page=1&limit=20",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"companies"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "20"
+										},
+										{
+											"key": "industry",
+											"value": "Technology",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": [
+								{
+									"name": "List Companies",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/api/v1/companies?page=1&limit=20",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"companies"
+											],
+											"query": [
+												{
+													"key": "page",
+													"value": "1"
+												},
+												{
+													"key": "limit",
+													"value": "20"
+												},
+												{
+													"key": "industry",
+													"value": "Technology",
+													"disabled": true
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "Text",
+									"header": [
+										{
+											"key": "Server",
+											"value": "Keerja"
+										},
+										{
+											"key": "Date",
+											"value": "Thu, 23 Oct 2025 20:08:03 GMT"
+										},
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										},
+										{
+											"key": "Content-Length",
+											"value": "8092"
+										},
+										{
+											"key": "Vary",
+											"value": "Origin"
+										},
+										{
+											"key": "Access-Control-Allow-Origin",
+											"value": ""
+										},
+										{
+											"key": "Access-Control-Allow-Credentials",
+											"value": "true"
+										},
+										{
+											"key": "Access-Control-Expose-Headers",
+											"value": "Content-Length,Content-Type,Authorization"
+										},
+										{
+											"key": "X-Frame-Options",
+											"value": "DENY"
+										},
+										{
+											"key": "X-Content-Type-Options",
+											"value": "nosniff"
+										},
+										{
+											"key": "X-Xss-Protection",
+											"value": "1; mode=block"
+										},
+										{
+											"key": "Strict-Transport-Security",
+											"value": "max-age=31536000; includeSubDomains"
+										},
+										{
+											"key": "Referrer-Policy",
+											"value": "strict-origin-when-cross-origin"
+										},
+										{
+											"key": "Content-Security-Policy",
+											"value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+										},
+										{
+											"key": "Permissions-Policy",
+											"value": "geolocation=(), microphone=(), camera=()"
+										},
+										{
+											"key": "X-Ratelimit-Limit",
+											"value": "100"
+										},
+										{
+											"key": "X-Ratelimit-Remaining",
+											"value": "99"
+										},
+										{
+											"key": "X-Ratelimit-Reset",
+											"value": "60"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Resource retrieved successfully\",\n    \"data\": {\n        \"companies\": [\n            {\n                \"id\": 1,\n                \"uuid\": \"612bfed1-6e15-43fc-9188-ef431ed22135\",\n                \"company_name\": \"Gojek Indonesia\",\n                \"slug\": \"gojek-indonesia\",\n                \"industry\": \"Technology\",\n                \"company_type\": \"startup\",\n                \"size_category\": \"1000+\",\n                \"website_url\": \"https://www.gojek.com\",\n                \"phone\": \"+62-21-50884200\",\n                \"city\": \"Jakarta\",\n                \"province\": \"DKI Jakarta\",\n                \"country\": \"Indonesia\",\n                \"about\": \"Super app providing on-demand services including ride-hailing, food delivery, logistics, and payments.\",\n                \"verified\": true,\n                \"is_active\": true,\n                \"created_at\": \"2025-10-24T00:26:12.688644Z\",\n                \"followers_count\": 0,\n                \"jobs_count\": 0,\n                \"average_rating\": 0,\n                \"reviews_count\": 0\n            },\n            {\n                \"id\": 2,\n                \"uuid\": \"dd03b27f-b4cb-4ec6-a3cb-27bd6d08844f\",\n                \"company_name\": \"Tokopedia\",\n                \"slug\": \"tokopedia\",\n                \"industry\": \"E-Commerce\",\n                \"company_type\": \"startup\",\n                \"size_category\": \"1000+\",\n                \"website_url\": \"https://www.tokopedia.com\",\n                \"city\": \"Jakarta\",\n                \"province\": \"DKI Jakarta\",\n                \"country\": \"Indonesia\",\n                \"about\": \"Indonesia's leading e-commerce platform connecting millions of buyers and sellers.\",\n                \"verified\": true,\n                \"is_active\": true,\n                \"created_at\": \"2025-10-24T00:26:12.688644Z\",\n                \"followers_count\": 0,\n                \"jobs_count\": 0,\n                \"average_rating\": 0,\n                \"reviews_count\": 0\n            },\n            {\n                \"id\": 3,\n                \"uuid\": \"757b40da-cde2-4dcb-9489-f8e3ef439476\",\n                \"company_name\": \"Bukalapak\",\n                \"slug\": \"bukalapak\",\n                \"industry\": \"E-Commerce\",\n                \"company_type\": \"public\",\n                \"size_category\": \"1000+\",\n                \"website_url\": \"https://www.bukalapak.com\",\n                \"city\": \"Jakarta\",\n                \"province\": \"DKI Jakarta\",\n                \"country\": \"Indonesia\",\n                \"about\": \"Indonesian e-commerce company empowering small and medium enterprises.\",\n                \"verified\": true,\n                \"is_active\": true,\n                \"created_at\": \"2025-10-24T00:26:12.688644Z\",\n                \"followers_count\": 0,\n                \"jobs_count\": 0,\n                \"average_rating\": 0,\n                \"reviews_count\": 0\n            },\n            {\n                \"id\": 4,\n                \"uuid\": \"79ddb625-351a-4704-a36a-281d47448ffd\",\n                \"company_name\": \"Traveloka\",\n                \"slug\": \"traveloka\",\n                \"industry\": \"Travel & Tourism\",\n                \"company_type\": \"startup\",\n                \"size_category\": \"1000+\",\n                \"website_url\": \"https://www.traveloka.com\",\n                \"city\": \"Jakarta\",\n                \"province\": \"DKI Jakarta\",\n                \"country\": \"Indonesia\",\n                \"about\": \"Southeast Asia's leading travel platform for booking flights, hotels, and activities.\",\n                \"verified\": true,\n                \"is_active\": true,\n                \"created_at\": \"2025-10-24T00:26:12.688644Z\",\n                \"followers_count\": 0,\n                \"jobs_count\": 0,\n                \"average_rating\": 0,\n                \"reviews_count\": 0\n            },\n            {\n                \"id\": 5,\n                \"uuid\": \"3b306c90-5e8b-462c-9683-952c8c1cb1e4\",\n                \"company_name\": \"Shopee Indonesia\",\n                \"slug\": \"shopee-indonesia\",\n                \"industry\": \"E-Commerce\",\n                \"company_type\": \"private\",\n                \"size_category\": \"1000+\",\n                \"website_url\": \"https://www.shopee.co.id\",\n                \"city\": \"Jakarta\",\n                \"province\": \"DKI Jakarta\",\n                \"country\": \"Indonesia\",\n                \"about\": \"Leading mobile-first marketplace in Southeast Asia and Taiwan.\",\n                \"verified\": true,\n                \"is_active\": true,\n                \"created_at\": \"2025-10-24T00:26:12.688644Z\",\n                \"followers_count\": 0,\n                \"jobs_count\": 0,\n                \"average_rating\": 0,\n                \"reviews_count\": 0\n            },\n            {\n                \"id\": 6,\n                \"uuid\": \"74a02e6f-9b06-49a8-bf93-f39934416f84\",\n                \"company_name\": \"Grab Indonesia\",\n                \"slug\": \"grab-indonesia\",\n                \"industry\": \"Technology\",\n                \"company_type\": \"startup\",\n                \"size_category\": \"1000+\",\n                \"website_url\": \"https://www.grab.com\",\n                \"city\": \"Jakarta\",\n                \"province\": \"DKI Jakarta\",\n                \"country\": \"Indonesia\",\n                \"about\": \"Southeast Asia's leading superapp offering transport, food delivery, and financial services.\",\n                \"verified\": true,\n                \"is_active\": true,\n                \"created_at\": \"2025-10-24T00:26:12.688644Z\",\n                \"followers_count\": 0,\n                \"jobs_count\": 0,\n                \"average_rating\": 0,\n                \"reviews_count\": 0\n            },\n            {\n                \"id\": 7,\n                \"uuid\": \"1b08af2a-8c4c-450d-bb05-f5ad33665570\",\n                \"company_name\": \"Ruangguru\",\n                \"slug\": \"ruangguru\",\n                \"industry\": \"Education Technology\",\n                \"company_type\": \"startup\",\n                \"size_category\": \"201-1000\",\n                \"website_url\": \"https://www.ruangguru.com\",\n                \"city\": \"Jakarta\",\n                \"province\": \"DKI Jakarta\",\n                \"country\": \"Indonesia\",\n                \"about\": \"Indonesia's largest online learning platform providing educational content and tutoring services.\",\n                \"verified\": true,\n                \"is_active\": true,\n                \"created_at\": \"2025-10-24T00:26:12.688644Z\",\n                \"followers_count\": 0,\n                \"jobs_count\": 0,\n                \"average_rating\": 0,\n                \"reviews_count\": 0\n            },\n            {\n                \"id\": 8,\n                \"uuid\": \"0c0830fe-2a38-472c-9761-fab7c376226c\",\n                \"company_name\": \"Bank Mandiri\",\n                \"slug\": \"bank-mandiri\",\n                \"industry\": \"Banking & Finance\",\n                \"company_type\": \"public\",\n                \"size_category\": \"1000+\",\n                \"website_url\": \"https://www.bankmandiri.co.id\",\n                \"city\": \"Jakarta\",\n                \"province\": \"DKI Jakarta\",\n                \"country\": \"Indonesia\",\n                \"about\": \"Indonesia's largest bank by assets, providing comprehensive banking services.\",\n                \"verified\": true,\n                \"is_active\": true,\n                \"created_at\": \"2025-10-24T00:26:12.688644Z\",\n                \"followers_count\": 0,\n                \"jobs_count\": 0,\n                \"average_rating\": 0,\n                \"reviews_count\": 0\n            },\n            {\n                \"id\": 9,\n                \"uuid\": \"50179f4e-d2a4-491e-aa92-64a53201445b\",\n                \"company_name\": \"Telkom Indonesia\",\n                \"slug\": \"telkom-indonesia\",\n                \"industry\": \"Telecommunications\",\n                \"company_type\": \"public\",\n                \"size_category\": \"1000+\",\n                \"website_url\": \"https://www.telkom.co.id\",\n                \"city\": \"Bandung\",\n                \"province\": \"Jawa Barat\",\n                \"country\": \"Indonesia\",\n                \"about\": \"State-owned telecommunications and network provider in Indonesia.\",\n                \"verified\": true,\n                \"is_active\": true,\n                \"created_at\": \"2025-10-24T00:26:12.688644Z\",\n                \"followers_count\": 0,\n                \"jobs_count\": 0,\n                \"average_rating\": 0,\n                \"reviews_count\": 0\n            },\n            {\n                \"id\": 10,\n                \"uuid\": \"b13bbbeb-5ef8-4a16-a2a1-6ab3895bc799\",\n                \"company_name\": \"OVO\",\n                \"slug\": \"ovo\",\n                \"industry\": \"Financial Technology\",\n                \"company_type\": \"startup\",\n                \"size_category\": \"201-1000\",\n                \"website_url\": \"https://www.ovo.id\",\n                \"city\": \"Jakarta\",\n                \"province\": \"DKI Jakarta\",\n                \"country\": \"Indonesia\",\n                \"about\": \"Leading Indonesian fintech company providing digital payment and financial services.\",\n                \"verified\": true,\n                \"is_active\": true,\n                \"created_at\": \"2025-10-24T00:26:12.688644Z\",\n                \"followers_count\": 0,\n                \"jobs_count\": 0,\n                \"average_rating\": 0,\n                \"reviews_count\": 0\n            },\n            {\n                \"id\": 11,\n                \"uuid\": \"ff568046-7d9b-4654-b376-50a24510da7f\",\n                \"company_name\": \"Blibli\",\n                \"slug\": \"blibli\",\n                \"industry\": \"E-Commerce\",\n                \"company_type\": \"public\",\n                \"size_category\": \"1000+\",\n                \"website_url\": \"https://www.blibli.com\",\n                \"city\": \"Jakarta\",\n                \"province\": \"DKI Jakarta\",\n                \"country\": \"Indonesia\",\n                \"about\": \"Omnichannel platform offering a wide range of products and services.\",\n                \"verified\": true,\n                \"is_active\": true,\n                \"created_at\": \"2025-10-24T00:26:12.688644Z\",\n                \"followers_count\": 0,\n                \"jobs_count\": 0,\n                \"average_rating\": 0,\n                \"reviews_count\": 0\n            },\n            {\n                \"id\": 12,\n                \"uuid\": \"dc9d544a-64d5-4675-a7bd-31d13395edfc\",\n                \"company_name\": \"Xendit\",\n                \"slug\": \"xendit\",\n                \"industry\": \"Financial Technology\",\n                \"company_type\": \"startup\",\n                \"size_category\": \"201-1000\",\n                \"website_url\": \"https://www.xendit.co\",\n                \"city\": \"Jakarta\",\n                \"province\": \"DKI Jakarta\",\n                \"country\": \"Indonesia\",\n                \"about\": \"Payment gateway infrastructure for Southeast Asia, helping businesses accept payments.\",\n                \"verified\": true,\n                \"is_active\": true,\n                \"created_at\": \"2025-10-24T00:26:12.688644Z\",\n                \"followers_count\": 0,\n                \"jobs_count\": 0,\n                \"average_rating\": 0,\n                \"reviews_count\": 0\n            },\n            {\n                \"id\": 13,\n                \"uuid\": \"d09da39b-a809-4167-b60a-c99a21637f1a\",\n                \"company_name\": \"Tiket.com\",\n                \"slug\": \"tiket-com\",\n                \"industry\": \"Travel & Tourism\",\n                \"company_type\": \"private\",\n                \"size_category\": \"201-1000\",\n                \"website_url\": \"https://www.tiket.com\",\n                \"city\": \"Jakarta\",\n                \"province\": \"DKI Jakarta\",\n                \"country\": \"Indonesia\",\n                \"about\": \"Online travel booking platform for flights, hotels, trains, and attractions.\",\n                \"verified\": true,\n                \"is_active\": true,\n                \"created_at\": \"2025-10-24T00:26:12.688644Z\",\n                \"followers_count\": 0,\n                \"jobs_count\": 0,\n                \"average_rating\": 0,\n                \"reviews_count\": 0\n            },\n            {\n                \"id\": 14,\n                \"uuid\": \"75ddceb5-1891-4f4b-a55c-0b3a4273687b\",\n                \"company_name\": \"Halodoc\",\n                \"slug\": \"halodoc\",\n                \"industry\": \"Healthcare Technology\",\n                \"company_type\": \"startup\",\n                \"size_category\": \"201-1000\",\n                \"website_url\": \"https://www.halodoc.com\",\n                \"city\": \"Jakarta\",\n                \"province\": \"DKI Jakarta\",\n                \"country\": \"Indonesia\",\n                \"about\": \"Indonesia's leading healthtech platform connecting patients with doctors and pharmacies.\",\n                \"verified\": true,\n                \"is_active\": true,\n                \"created_at\": \"2025-10-24T00:26:12.688644Z\",\n                \"followers_count\": 0,\n                \"jobs_count\": 0,\n                \"average_rating\": 0,\n                \"reviews_count\": 0\n            },\n            {\n                \"id\": 15,\n                \"uuid\": \"5e1056ed-f527-49b3-bd33-0a1a46b82408\",\n                \"company_name\": \"Sayurbox\",\n                \"slug\": \"sayurbox\",\n                \"industry\": \"E-Commerce\",\n                \"company_type\": \"startup\",\n                \"size_category\": \"51-200\",\n                \"website_url\": \"https://www.sayurbox.com\",\n                \"city\": \"Jakarta\",\n                \"province\": \"DKI Jakarta\",\n                \"country\": \"Indonesia\",\n                \"about\": \"Online grocery platform delivering fresh produce directly from farmers.\",\n                \"verified\": true,\n                \"is_active\": true,\n                \"created_at\": \"2025-10-24T00:26:12.688644Z\",\n                \"followers_count\": 0,\n                \"jobs_count\": 0,\n                \"average_rating\": 0,\n                \"reviews_count\": 0\n            }\n        ]\n    },\n    \"meta\": {\n        \"has_next\": false,\n        \"has_prev\": false,\n        \"limit\": 20,\n        \"page\": 1,\n        \"total_pages\": 1,\n        \"total_rows\": 15\n    }\n}"
+								}
+							]
+						},
+						{
+							"name": "Get Company by ID",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/api/v1/companies/{{company_id}}"
+							},
+							"response": [
+								{
+									"name": "Get Company by ID",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": "{{base_url}}/api/v1/companies/{{company_id}}"
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "Text",
+									"header": [
+										{
+											"key": "Server",
+											"value": "Keerja"
+										},
+										{
+											"key": "Date",
+											"value": "Thu, 23 Oct 2025 20:08:47 GMT"
+										},
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										},
+										{
+											"key": "Content-Length",
+											"value": "642"
+										},
+										{
+											"key": "Vary",
+											"value": "Origin"
+										},
+										{
+											"key": "Access-Control-Allow-Origin",
+											"value": ""
+										},
+										{
+											"key": "Access-Control-Allow-Credentials",
+											"value": "true"
+										},
+										{
+											"key": "Access-Control-Expose-Headers",
+											"value": "Content-Length,Content-Type,Authorization"
+										},
+										{
+											"key": "X-Frame-Options",
+											"value": "DENY"
+										},
+										{
+											"key": "X-Content-Type-Options",
+											"value": "nosniff"
+										},
+										{
+											"key": "X-Xss-Protection",
+											"value": "1; mode=block"
+										},
+										{
+											"key": "Strict-Transport-Security",
+											"value": "max-age=31536000; includeSubDomains"
+										},
+										{
+											"key": "Referrer-Policy",
+											"value": "strict-origin-when-cross-origin"
+										},
+										{
+											"key": "Content-Security-Policy",
+											"value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+										},
+										{
+											"key": "Permissions-Policy",
+											"value": "geolocation=(), microphone=(), camera=()"
+										},
+										{
+											"key": "X-Ratelimit-Limit",
+											"value": "100"
+										},
+										{
+											"key": "X-Ratelimit-Remaining",
+											"value": "98"
+										},
+										{
+											"key": "X-Ratelimit-Reset",
+											"value": "16"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Resource retrieved successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"uuid\": \"612bfed1-6e15-43fc-9188-ef431ed22135\",\n        \"company_name\": \"Gojek Indonesia\",\n        \"slug\": \"gojek-indonesia\",\n        \"industry\": \"Technology\",\n        \"company_type\": \"startup\",\n        \"size_category\": \"1000+\",\n        \"website_url\": \"https://www.gojek.com\",\n        \"phone\": \"+62-21-50884200\",\n        \"city\": \"Jakarta\",\n        \"province\": \"DKI Jakarta\",\n        \"country\": \"Indonesia\",\n        \"about\": \"Super app providing on-demand services including ride-hailing, food delivery, logistics, and payments.\",\n        \"verified\": true,\n        \"is_active\": true,\n        \"created_at\": \"2025-10-24T00:26:12.688644Z\",\n        \"followers_count\": 0,\n        \"jobs_count\": 0,\n        \"average_rating\": 0,\n        \"reviews_count\": 0\n    }\n}"
+								}
+							]
+						},
+						{
+							"name": "Get Company by Slug",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/api/v1/companies/slug/gojek-indonesia"
+							},
+							"response": [
+								{
+									"name": "Get Company by Slug",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": "{{base_url}}/api/v1/companies/slug/gojek-indonesia"
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "Text",
+									"header": [
+										{
+											"key": "Server",
+											"value": "Keerja"
+										},
+										{
+											"key": "Date",
+											"value": "Thu, 23 Oct 2025 20:10:54 GMT"
+										},
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										},
+										{
+											"key": "Content-Length",
+											"value": "642"
+										},
+										{
+											"key": "Vary",
+											"value": "Origin"
+										},
+										{
+											"key": "Access-Control-Allow-Origin",
+											"value": ""
+										},
+										{
+											"key": "Access-Control-Allow-Credentials",
+											"value": "true"
+										},
+										{
+											"key": "Access-Control-Expose-Headers",
+											"value": "Content-Length,Content-Type,Authorization"
+										},
+										{
+											"key": "X-Frame-Options",
+											"value": "DENY"
+										},
+										{
+											"key": "X-Content-Type-Options",
+											"value": "nosniff"
+										},
+										{
+											"key": "X-Xss-Protection",
+											"value": "1; mode=block"
+										},
+										{
+											"key": "Strict-Transport-Security",
+											"value": "max-age=31536000; includeSubDomains"
+										},
+										{
+											"key": "Referrer-Policy",
+											"value": "strict-origin-when-cross-origin"
+										},
+										{
+											"key": "Content-Security-Policy",
+											"value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+										},
+										{
+											"key": "Permissions-Policy",
+											"value": "geolocation=(), microphone=(), camera=()"
+										},
+										{
+											"key": "X-Ratelimit-Limit",
+											"value": "100"
+										},
+										{
+											"key": "X-Ratelimit-Remaining",
+											"value": "99"
+										},
+										{
+											"key": "X-Ratelimit-Reset",
+											"value": "8"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Resource retrieved successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"uuid\": \"612bfed1-6e15-43fc-9188-ef431ed22135\",\n        \"company_name\": \"Gojek Indonesia\",\n        \"slug\": \"gojek-indonesia\",\n        \"industry\": \"Technology\",\n        \"company_type\": \"startup\",\n        \"size_category\": \"1000+\",\n        \"website_url\": \"https://www.gojek.com\",\n        \"phone\": \"+62-21-50884200\",\n        \"city\": \"Jakarta\",\n        \"province\": \"DKI Jakarta\",\n        \"country\": \"Indonesia\",\n        \"about\": \"Super app providing on-demand services including ride-hailing, food delivery, logistics, and payments.\",\n        \"verified\": true,\n        \"is_active\": true,\n        \"created_at\": \"2025-10-24T00:26:12.688644Z\",\n        \"followers_count\": 0,\n        \"jobs_count\": 0,\n        \"average_rating\": 0,\n        \"reviews_count\": 0\n    }\n}"
+								}
+							]
+						},
+						{
+							"name": "Get Verified Companies",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/api/v1/companies/verified"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Top Rated Companies",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/api/v1/companies/top-rated"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Company Reviews",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/api/v1/companies/{{company_id}}/reviews"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Average Ratings",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/api/v1/companies/{{company_id}}/ratings"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Company Profile",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/api/v1/companies/{{company_id}}/profile"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Company Followers",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/api/v1/companies/{{company_id}}/followers"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Company Stats",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/api/v1/companies/{{company_id}}/stats"
+							},
+							"response": []
+						},
+						{
+							"name": "Get My Company",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/api/v1/companies/my-companies"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Protected",
+					"item": [
+						{
+							"name": "Company invite/accept flow",
+							"item": [
+								{
+									"name": "Invite employee",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													""
+												],
+												"type": "text/javascript",
+												"packages": {},
+												"requests": {}
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													""
+												],
+												"type": "text/javascript",
+												"packages": {},
+												"requests": {}
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											},
+											{
+												"key": "Authorization",
+												"value": "Bearer {{auth_token}}"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"email\": \"employer@example.com\",\n  \"full_name\": \"user employer\",\n  \"position\": \"Recuiter\",\n  \"role\": \"recruiter\"\n}"
+										},
+										"url": "{{base_url}}/api/v1/companies/{{company_id}}/invite-employee"
+									},
+									"response": []
+								},
+								{
+									"name": "List pending invitations",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('List invitations 200', function () { pm.expect(pm.response.code).to.equal(200); });",
+													"try {",
+													"  var res = pm.response.json();",
+													"  var items = res.data || res.invitations || res.items || res;",
+													"  if (Array.isArray(items)) {",
+													"    var match = items.find(i => i.email === pm.collectionVariables.get('invite_email'));",
+													"    if (match) {",
+													"      if (match.id) pm.collectionVariables.set('invite_id', match.id.toString());",
+													"      if (match.token) pm.collectionVariables.set('invite_token', match.token);",
+													"    }",
+													"  }",
+													"} catch(e) { console.log('list parse error', e); }"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{auth_token}}"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json"
+											}
+										],
+										"url": "{{base_url}}/api/v1/companies/{{company_id}}/invitations"
+									},
+									"response": []
+								},
+								{
+									"name": "Accept invitation",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													""
+												],
+												"type": "text/javascript",
+												"packages": {},
+												"requests": {}
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": ""
+										},
+										"url": {
+											"raw": "{{base_url}}/api/v1/companies/invitations/accept?token=F5ipprdN-S4LlkPj4RstJiNGNXcs1QrhLV4i_N7kt94=",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"companies",
+												"invitations",
+												"accept"
+											],
+											"query": [
+												{
+													"key": "token",
+													"value": "F5ipprdN-S4LlkPj4RstJiNGNXcs1QrhLV4i_N7kt94="
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Resend invitation",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Resend invitation status 200/201', function () { pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+													"try {",
+													"  var res = pm.response.json();",
+													"  var data = res.data || res.invitation || res;",
+													"  if (data && data.token) pm.collectionVariables.set('invite_token', data.token);",
+													"} catch(e) { console.log('resend parse error', e); }"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{auth_token}}"
+											},
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"url": "{{base_url}}/api/v1/companies/{{company_id}}/invitations/{{invite_id}}/resend"
+									},
+									"response": []
+								},
+								{
+									"name": "Cancel (delete) invitation",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Cancel invitation status 200/204', function () { pm.expect(pm.response.code).to.be.oneOf([200,204]); });",
+													"try { pm.collectionVariables.set('invite_id',''); pm.collectionVariables.set('invite_token',''); } catch(e) {}"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "DELETE",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{auth_token}}"
+											}
+										],
+										"url": "{{base_url}}/api/v1/companies/{{company_id}}/invitations/{{invite_id}}"
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Create Company",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// ============================================",
+											"// Test Suite: Create Company",
+											"// Business Rule: 1 User = 1 Company",
+											"// ============================================",
+											"",
+											"const isFirstAttempt = !pm.collectionVariables.get('company_created');",
+											"",
+											"if (isFirstAttempt) {",
+											"    // ============================================",
+											"    // FIRST ATTEMPT: Should succeed (201 Created)",
+											"    // ============================================",
+											"    ",
+											"    pm.test('Status code is 201 Created', function () {",
+											"        pm.response.to.have.status(201);",
+											"    });",
+											"    ",
+											"    pm.test('Response time is acceptable', function () {",
+											"        pm.expect(pm.response.responseTime).to.be.below(2000);",
+											"        console.log('Response Time:', pm.response.responseTime, 'ms');",
+											"    });",
+											"    ",
+											"    pm.test('Response has correct structure', function () {",
+											"        var jsonData = pm.response.json();",
+											"        pm.expect(jsonData).to.have.property('success', true);",
+											"        pm.expect(jsonData).to.have.property('message');",
+											"        pm.expect(jsonData).to.have.property('data');",
+											"    });",
+											"    ",
+											"    pm.test('Company data has required fields', function () {",
+											"        var jsonData = pm.response.json();",
+											"        var company = jsonData.data;",
+											"        ",
+											"        pm.expect(company).to.have.property('id');",
+											"        pm.expect(company).to.have.property('uuid');",
+											"        pm.expect(company).to.have.property('company_name');",
+											"        pm.expect(company).to.have.property('slug');",
+											"        pm.expect(company).to.have.property('verified', false);",
+											"        pm.expect(company).to.have.property('is_active', true);",
+											"        pm.expect(company).to.have.property('created_at');",
+											"        ",
+											"        console.log('✅ Company created successfully!');",
+											"        console.log('Company ID:', company.id);",
+											"        console.log('Company Name:', company.company_name);",
+											"        console.log('Slug:', company.slug);",
+											"    });",
+											"    ",
+											"    pm.test('Company name matches request', function () {",
+											"        var jsonData = pm.response.json();",
+											"        var requestBody = JSON.parse(pm.request.body.raw);",
+											"        pm.expect(jsonData.data.company_name).to.equal(requestBody.company_name);",
+											"    });",
+											"    ",
+											"    pm.test('Slug is generated from company name', function () {",
+											"        var jsonData = pm.response.json();",
+											"        pm.expect(jsonData.data.slug).to.be.a('string');",
+											"        pm.expect(jsonData.data.slug.length).to.be.above(0);",
+											"    });",
+											"    ",
+											"    pm.test('UUID is valid format', function () {",
+											"        var jsonData = pm.response.json();",
+											"        var uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;",
+											"        pm.expect(jsonData.data.uuid).to.match(uuidRegex);",
+											"    });",
+											"    ",
+											"    pm.test('New company is not verified by default', function () {",
+											"        var jsonData = pm.response.json();",
+											"        pm.expect(jsonData.data.verified).to.be.false;",
+											"    });",
+											"    ",
+											"    pm.test('New company is active by default', function () {",
+											"        var jsonData = pm.response.json();",
+											"        pm.expect(jsonData.data.is_active).to.be.true;",
+											"    });",
+											"    ",
+											"    // Save company ID and mark as created",
+											"    var jsonData = pm.response.json();",
+											"    if (jsonData.data && jsonData.data.id) {",
+											"        pm.collectionVariables.set('company_id', jsonData.data.id);",
+											"        pm.collectionVariables.set('company_created', 'true');",
+											"        console.log('✅ Saved company_id:', jsonData.data.id);",
+											"        console.log('✅ Marked company as created');",
+											"        console.log('');",
+											"        console.log('⚠️ NOTE: Run this request again to test 403 Forbidden (duplicate company)');",
+											"    }",
+											"    ",
+											"} else {",
+											"    // ============================================",
+											"    // SECOND ATTEMPT: Should fail (403 Forbidden)",
+											"    // Business Rule: 1 User = 1 Company",
+											"    // ============================================",
+											"    ",
+											"    pm.test('Status code is 403 Forbidden', function () {",
+											"        pm.response.to.have.status(403);",
+											"    });",
+											"    ",
+											"    pm.test('Response has error structure', function () {",
+											"        var jsonData = pm.response.json();",
+											"        pm.expect(jsonData).to.have.property('success', false);",
+											"        pm.expect(jsonData).to.have.property('message');",
+											"    });",
+											"    ",
+											"    pm.test('Error message indicates duplicate company', function () {",
+											"        var jsonData = pm.response.json();",
+											"        pm.expect(jsonData.message.toLowerCase()).to.include('already');",
+											"        console.log('✅ Business Rule Enforced: User already owns a company');",
+											"        console.log('Error Message:', jsonData.message);",
+											"    });",
+											"    ",
+											"    pm.test('Business rule violation detected', function () {",
+											"        var jsonData = pm.response.json();",
+											"        var errorMessage = jsonData.message.toLowerCase();",
+											"        var detailMessage = jsonData.error ? jsonData.error.toLowerCase() : '';",
+											"        ",
+											"        var hasBusinessRuleKeyword = ",
+											"            errorMessage.includes('already owns') ||",
+											"            errorMessage.includes('business rule') ||",
+											"            errorMessage.includes('one company') ||",
+											"            detailMessage.includes('already owns') ||",
+											"            detailMessage.includes('business rule');",
+											"        ",
+											"        pm.expect(hasBusinessRuleKeyword).to.be.true;",
+											"    });",
+											"    ",
+											"    console.log('');",
+											"    console.log('=== Test Complete ===');",
+											"    console.log('✅ First attempt: Company created (201)');",
+											"    console.log('✅ Second attempt: Duplicate rejected (403)');",
+											"    console.log('✅ Business rule validated: 1 User = 1 Company');",
+											"    console.log('');",
+											"    console.log('💡 To reset: Delete variable \"company_created\" and run again');",
+											"    ",
+											"    // Optional: Reset for next test run",
+											"    // pm.collectionVariables.unset('company_created');",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "logo",
+											"type": "file",
+											"src": [
+												"postman-cloud:///1f0b88b1-eb79-4cc0-bcac-957ef6478e82",
+												"/C:/Users/ASUS/Downloads/Gambar WhatsApp 2025-10-25 pukul 04.26.28_7d7d5b0e.jpg"
+											]
+										},
+										{
+											"key": "company_name",
+											"value": "PT Test Company",
+											"type": "text"
+										},
+										{
+											"key": "industry_id",
+											"value": "1",
+											"type": "text"
+										},
+										{
+											"key": "company_size_id",
+											"value": "1",
+											"type": "text"
+										},
+										{
+											"key": "province_name",
+											"value": "Sulawesi Selatan",
+											"type": "text"
+										},
+										{
+											"key": "city_name",
+											"value": "Kota Makassar",
+											"type": "text"
+										},
+										{
+											"key": "district_name",
+											"value": "kota depok",
+											"type": "text"
+										},
+										{
+											"key": "full_address",
+											"value": "Jl. Sudirman No. 123",
+											"type": "text"
+										},
+										{
+											"key": "description",
+											"value": "A leading technology company innovating for a better future. We specialize in software development, IT consulting, and digital transformation services",
+											"type": "text"
+										}
+									]
+								},
+								"url": "{{base_url}}/api/v1/companies"
+							},
+							"response": [
+								{
+									"name": "Response",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"company_name\": \"PT Tech Innovators\",\n  \"industry_id\": 1,\n  \"company_size_id\": 2,\n  \"description\": \"A leading technology company innovating for a better future. We specialize in software development, IT consulting, and digital transformation services.\",\n  \"district_id\": 1,\n  \"full_address\": \"Jl. Sudirman No. 123, Jakarta Pusat\"\n}"
+										},
+										"url": "{{base_url}}/api/v1/companies"
+									},
+									"status": "Created",
+									"code": 201,
+									"_postman_previewlanguage": "Text",
+									"header": [
+										{
+											"key": "Server",
+											"value": "Keerja"
+										},
+										{
+											"key": "Date",
+											"value": "Thu, 23 Oct 2025 20:30:27 GMT"
+										},
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										},
+										{
+											"key": "Content-Length",
+											"value": "600"
+										},
+										{
+											"key": "Vary",
+											"value": "Origin"
+										},
+										{
+											"key": "Access-Control-Allow-Origin",
+											"value": ""
+										},
+										{
+											"key": "Access-Control-Allow-Credentials",
+											"value": "true"
+										},
+										{
+											"key": "Access-Control-Expose-Headers",
+											"value": "Content-Length,Content-Type,Authorization"
+										},
+										{
+											"key": "X-Frame-Options",
+											"value": "DENY"
+										},
+										{
+											"key": "X-Content-Type-Options",
+											"value": "nosniff"
+										},
+										{
+											"key": "X-Xss-Protection",
+											"value": "1; mode=block"
+										},
+										{
+											"key": "Strict-Transport-Security",
+											"value": "max-age=31536000; includeSubDomains"
+										},
+										{
+											"key": "Referrer-Policy",
+											"value": "strict-origin-when-cross-origin"
+										},
+										{
+											"key": "Content-Security-Policy",
+											"value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+										},
+										{
+											"key": "Permissions-Policy",
+											"value": "geolocation=(), microphone=(), camera=()"
+										},
+										{
+											"key": "X-Ratelimit-Limit",
+											"value": "100"
+										},
+										{
+											"key": "X-Ratelimit-Remaining",
+											"value": "98"
+										},
+										{
+											"key": "X-Ratelimit-Reset",
+											"value": "38"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Resource created successfully\",\n    \"data\": {\n        \"id\": 17,\n        \"uuid\": \"37f20274-3b12-40ed-ac3c-c0f31e2c80c9\",\n        \"company_name\": \"Tech Innovators\",\n        \"slug\": \"tech-innovators\",\n        \"industry\": \"Information Technology\",\n        \"company_type\": \"startup\",\n        \"size_category\": \"51-200\",\n        \"website_url\": \"https://techinnovators.com\",\n        \"phone\": \"+62 81234567890\",\n        \"city\": \"Jakarta\",\n        \"province\": \"DKI Jakarta\",\n        \"country\": \"Indonesia\",\n        \"about\": \"Innovating technology for a better future.\",\n        \"verified\": false,\n        \"is_active\": true,\n        \"created_at\": \"2025-10-24T03:30:28.353095Z\",\n        \"followers_count\": 0,\n        \"jobs_count\": 0,\n        \"average_rating\": 0,\n        \"reviews_count\": 0\n    }\n}"
+								}
+							]
+						},
+						{
+							"name": "Update Company",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"company_name\": \"Tech company test Updated\",\n  \"legal_name\": \"PT Tech company test Indonesia Updated\",\n  \"registration_number\": \"12345678\",\n  \"industry\": \"Software dev\",\n  \"company_type\": \"private\",\n  \"size_category\": \"201-1000\",\n  \"website_url\": \"https://updated-techinnovators.com\",\n  \"email_domain\": \"updated-techinnovators.com\",\n  \"phone\": \"+62 81234567891\",\n  \"address\": \"Jl. Thamrin No. 456\",\n  \"city\": \"Bandung\",\n  \"province\": \"Jawa Barat\",\n  \"country\": \"Indonesia\",\n  \"postal_code\": \"40111\",\n  \"latitude\": -6.917464,\n  \"longitude\": 107.619123,\n  \"about\": \"Updated description about the company.\",\n  \"culture\": \"Innovative and collaborative.\",\n  \"benefits\": [\"Health Insurance\", \"Flexible Working Hours\"]\n}"
+								},
+								"url": "{{base_url}}/api/v1/companies/{{company_id}}"
+							},
+							"response": [
+								{
+									"name": "Response",
+									"originalRequest": {
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"company_name\": \"Tech Innovators Updated\",\n  \"legal_name\": \"PT Tech Innovators Indonesia Updated\",\n  \"registration_number\": \"987654321\",\n  \"industry\": \"Software Development\",\n  \"company_type\": \"private\",\n  \"size_category\": \"201-1000\",\n  \"website_url\": \"https://updated-techinnovators.com\",\n  \"email_domain\": \"updated-techinnovators.com\",\n  \"phone\": \"+62 81234567891\",\n  \"address\": \"Jl. Thamrin No. 456\",\n  \"city\": \"Bandung\",\n  \"province\": \"Jawa Barat\",\n  \"country\": \"Indonesia\",\n  \"postal_code\": \"40111\",\n  \"latitude\": -6.917464,\n  \"longitude\": 107.619123,\n  \"about\": \"Updated description about the company.\",\n  \"culture\": \"Innovative and collaborative.\",\n  \"benefits\": [\"Health Insurance\", \"Flexible Working Hours\"]\n}"
+										},
+										"url": "{{base_url}}/api/v1/companies/{{company_id}}"
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "Text",
+									"header": [
+										{
+											"key": "Server",
+											"value": "Keerja"
+										},
+										{
+											"key": "Date",
+											"value": "Thu, 23 Oct 2025 20:31:04 GMT"
+										},
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										},
+										{
+											"key": "Content-Length",
+											"value": "58"
+										},
+										{
+											"key": "Vary",
+											"value": "Origin"
+										},
+										{
+											"key": "Access-Control-Allow-Origin",
+											"value": ""
+										},
+										{
+											"key": "Access-Control-Allow-Credentials",
+											"value": "true"
+										},
+										{
+											"key": "Access-Control-Expose-Headers",
+											"value": "Content-Length,Content-Type,Authorization"
+										},
+										{
+											"key": "X-Frame-Options",
+											"value": "DENY"
+										},
+										{
+											"key": "X-Content-Type-Options",
+											"value": "nosniff"
+										},
+										{
+											"key": "X-Xss-Protection",
+											"value": "1; mode=block"
+										},
+										{
+											"key": "Strict-Transport-Security",
+											"value": "max-age=31536000; includeSubDomains"
+										},
+										{
+											"key": "Referrer-Policy",
+											"value": "strict-origin-when-cross-origin"
+										},
+										{
+											"key": "Content-Security-Policy",
+											"value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+										},
+										{
+											"key": "Permissions-Policy",
+											"value": "geolocation=(), microphone=(), camera=()"
+										},
+										{
+											"key": "X-Ratelimit-Limit",
+											"value": "100"
+										},
+										{
+											"key": "X-Ratelimit-Remaining",
+											"value": "96"
+										},
+										{
+											"key": "X-Ratelimit-Reset",
+											"value": "1"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Resource updated successfully\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Delete Company",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": "{{base_url}}/api/v1/companies/{{company_id}}"
+							},
+							"response": [
+								{
+									"name": "Response",
+									"originalRequest": {
+										"method": "DELETE",
+										"header": [],
+										"url": "{{base_url}}/api/v1/companies/{{company_id}}"
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "Text",
+									"header": [
+										{
+											"key": "Server",
+											"value": "Keerja"
+										},
+										{
+											"key": "Date",
+											"value": "Thu, 23 Oct 2025 20:30:06 GMT"
+										},
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										},
+										{
+											"key": "Content-Length",
+											"value": "58"
+										},
+										{
+											"key": "Vary",
+											"value": "Origin"
+										},
+										{
+											"key": "Access-Control-Allow-Origin",
+											"value": ""
+										},
+										{
+											"key": "Access-Control-Allow-Credentials",
+											"value": "true"
+										},
+										{
+											"key": "Access-Control-Expose-Headers",
+											"value": "Content-Length,Content-Type,Authorization"
+										},
+										{
+											"key": "X-Frame-Options",
+											"value": "DENY"
+										},
+										{
+											"key": "X-Content-Type-Options",
+											"value": "nosniff"
+										},
+										{
+											"key": "X-Xss-Protection",
+											"value": "1; mode=block"
+										},
+										{
+											"key": "Strict-Transport-Security",
+											"value": "max-age=31536000; includeSubDomains"
+										},
+										{
+											"key": "Referrer-Policy",
+											"value": "strict-origin-when-cross-origin"
+										},
+										{
+											"key": "Content-Security-Policy",
+											"value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+										},
+										{
+											"key": "Permissions-Policy",
+											"value": "geolocation=(), microphone=(), camera=()"
+										},
+										{
+											"key": "X-Ratelimit-Limit",
+											"value": "100"
+										},
+										{
+											"key": "X-Ratelimit-Remaining",
+											"value": "99"
+										},
+										{
+											"key": "X-Ratelimit-Reset",
+											"value": "60"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"message\": \"Resource deleted successfully\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Upload Logo",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"logo_url\": \"https://example.com/logo.png\"\n}"
+								},
+								"url": "{{base_url}}/api/v1/companies/{{company_id}}/logo"
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Logo",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": "{{base_url}}/api/v1/companies/{{company_id}}/logo"
+							},
+							"response": []
+						},
+						{
+							"name": "Upload Banner",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"banner_url\": \"https://example.com/banner.jpg\"\n}"
+								},
+								"url": "{{base_url}}/api/v1/companies/{{company_id}}/banner"
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Banner",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": "{{base_url}}/api/v1/companies/{{company_id}}/banner"
+							},
+							"response": []
+						},
+						{
+							"name": "Update Profile",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"about\": \"Updated company profile\",\n  \"vision\": \"Our vision statement\",\n  \"mission\": \"Our mission statement\"\n}"
+								},
+								"url": "{{base_url}}/api/v1/companies/{{company_id}}/profile"
+							},
+							"response": []
+						},
+						{
+							"name": "Publish Profile",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": "{{base_url}}/api/v1/companies/{{company_id}}/profile/publish"
+							},
+							"response": []
+						},
+						{
+							"name": "Unpublish Profile",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": "{{base_url}}/api/v1/companies/{{company_id}}/profile/unpublish"
+							},
+							"response": []
+						},
+						{
+							"name": "Follow Company",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": "{{base_url}}/api/v1/companies/{{company_id}}/follow"
+							},
+							"response": []
+						},
+						{
+							"name": "Unfollow Company",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": "{{base_url}}/api/v1/companies/{{company_id}}/follow"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Followed Companies",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/api/v1/companies/followed"
+							},
+							"response": []
+						},
+						{
+							"name": "Add Review",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"rating_overall\": 4.5,\n  \"rating_culture\": 4.0,\n  \"rating_work_life\": 4.8,\n  \"rating_salary\": 4.2,\n  \"rating_management\": 4.0,\n  \"reviewer_type\": \"Former Employee\",\n  \"position_title\": \"Software Engineer\",\n  \"employment_period\": \"2019-2023\",\n  \"pros\": \"Great work culture and supportive management.\",\n  \"cons\": \"Limited career growth opportunities.\",\n  \"advice_to_management\": \"Focus on employee career development.\",\n  \"is_anonymous\": true,\n  \"recommend_to_friend\": true\n}"
+								},
+								"url": "{{base_url}}/api/v1/companies/{{company_id}}/review"
+							},
+							"response": []
+						},
+						{
+							"name": "Update Review",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"rating\": 5,\n  \"title\": \"Updated review\",\n  \"review_text\": \"Still a great company\"\n}"
+								},
+								"url": "{{base_url}}/api/v1/companies/{{company_id}}/review/1"
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Review",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": "{{base_url}}/api/v1/companies/{{company_id}}/review/1"
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Jobs",
+			"item": [
+				{
+					"name": "Public",
+					"item": [
+						{
+							"name": "List All Jobs",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/jobs?page=1&limit=20",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"jobs"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "20"
+										},
+										{
+											"key": "location",
+											"value": "Jakarta",
+											"disabled": true
+										},
+										{
+											"key": "type",
+											"value": "full-time",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Job by ID",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/api/v1/jobs/{{job_id}}"
+							},
+							"response": []
+						},
+						{
+							"name": "Search Jobs",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"query\": \"software engineer\",\n  \"location\": \"Jakarta\",\n  \"type\": \"full-time\",\n  \"experience_level\": \"mid\",\n  \"page\": 1,\n  \"limit\": 20\n}"
+								},
+								"url": "{{base_url}}/api/v1/jobs/search"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Employer",
+					"item": [
+						{
+							"name": "Create Job",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"company_id\": {{company_id}},\n  \"title\": \"Senior Software Engineer\",\n  \"description\": \"We are looking for an experienced software engineer...\",\n  \"requirements\": \"5+ years of experience in backend development\",\n  \"location\": \"Jakarta\",\n  \"type\": \"full-time\",\n  \"experience_level\": \"senior\",\n  \"salary_min\": 15000000,\n  \"salary_max\": 25000000,\n  \"benefits\": [\"Health Insurance\", \"Remote Work\"],\n  \"skills\": [\"Go\", \"PostgreSQL\", \"Docker\"]\n}"
+								},
+								"url": "{{base_url}}/api/v1/jobs"
+							},
+							"response": []
+						},
+						{
+							"name": "Update Job",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"Senior Software Engineer (Updated)\",\n  \"description\": \"Updated job description...\",\n  \"salary_max\": 30000000\n}"
+								},
+								"url": "{{base_url}}/api/v1/jobs/{{job_id}}"
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Job",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": "{{base_url}}/api/v1/jobs/{{job_id}}"
+							},
+							"response": []
+						},
+						{
+							"name": "Get My Jobs",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/jobs/my-jobs?page=1&limit=20",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"jobs",
+										"my-jobs"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "20"
+										},
+										{
+											"key": "status",
+											"value": "published",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Publish Job",
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"url": "{{base_url}}/api/v1/jobs/{{job_id}}/publish"
+							},
+							"response": []
+						},
+						{
+							"name": "Close Job",
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"url": "{{base_url}}/api/v1/jobs/{{job_id}}/close"
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Applications",
+			"item": [
+				{
+					"name": "Candidate",
+					"item": [
+						{
+							"name": "Submit Application",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"job_id\": {{job_id}},\n  \"cover_letter\": \"I am very interested in this position...\",\n  \"resume_url\": \"https://example.com/resume.pdf\",\n  \"expected_salary\": 20000000,\n  \"available_from\": \"2025-11-01\"\n}"
+								},
+								"url": "{{base_url}}/api/v1/applications"
+							},
+							"response": []
+						},
+						{
+							"name": "Apply to Specific Job",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"cover_letter\": \"I am applying for this specific job...\",\n  \"resume_url\": \"https://example.com/resume.pdf\",\n  \"expected_salary\": 20000000\n}"
+								},
+								"url": "{{base_url}}/api/v1/applications/jobs/{{job_id}}/apply"
+							},
+							"response": []
+						},
+						{
+							"name": "Get My Applications",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/applications/my-applications?page=1&limit=20",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"applications",
+										"my-applications"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "20"
+										},
+										{
+											"key": "status",
+											"value": "pending",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Application Details",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/api/v1/applications/{{application_id}}"
+							},
+							"response": []
+						},
+						{
+							"name": "Withdraw Application",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": "{{base_url}}/api/v1/applications/{{application_id}}/withdraw"
+							},
+							"response": []
+						},
+						{
+							"name": "Upload Document",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"document_type\": \"resume\",\n  \"document_url\": \"https://example.com/updated-resume.pdf\",\n  \"file_name\": \"resume-updated.pdf\"\n}"
+								},
+								"url": "{{base_url}}/api/v1/applications/{{application_id}}/documents"
+							},
+							"response": []
+						},
+						{
+							"name": "Rate Experience",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"rating\": 5,\n  \"comment\": \"Great interview experience!\"\n}"
+								},
+								"url": "{{base_url}}/api/v1/applications/{{application_id}}/rate"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Employer",
+					"item": [
+						{
+							"name": "List Applications by Job",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/applications/job/{{job_id}}?page=1&limit=20",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"applications",
+										"job",
+										"{{job_id}}"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "20"
+										},
+										{
+											"key": "status",
+											"value": "pending",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Search Applications",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"query\": \"software engineer\",\n  \"status\": \"pending\",\n  \"job_id\": {{job_id}},\n  \"page\": 1,\n  \"limit\": 20\n}"
+								},
+								"url": "{{base_url}}/api/v1/applications/search"
+							},
+							"response": []
+						},
+						{
+							"name": "Update Application Status",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"status\": \"shortlisted\",\n  \"notes\": \"Candidate has good experience\"\n}"
+								},
+								"url": "{{base_url}}/api/v1/applications/{{application_id}}/status"
+							},
+							"response": []
+						},
+						{
+							"name": "Bulk Update Status",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"application_ids\": [1, 2, 3],\n  \"status\": \"screening\"\n}"
+								},
+								"url": "{{base_url}}/api/v1/applications/bulk-status"
+							},
+							"response": []
+						},
+						{
+							"name": "Update Hiring Stage",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"status\": \"interview\",\n  \"notes\": \"Moving to interview stage\"\n}"
+								},
+								"url": "{{base_url}}/api/v1/applications/{{application_id}}/stage"
+							},
+							"response": []
+						},
+						{
+							"name": "Add Note",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"content\": \"Candidate shows great potential\",\n  \"is_private\": true\n}"
+								},
+								"url": "{{base_url}}/api/v1/applications/{{application_id}}/notes"
+							},
+							"response": []
+						},
+						{
+							"name": "Update Note",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"content\": \"Updated note: Candidate is excellent\",\n  \"is_private\": true\n}"
+								},
+								"url": "{{base_url}}/api/v1/applications/{{application_id}}/notes/1"
+							},
+							"response": []
+						},
+						{
+							"name": "Schedule Interview",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"type\": \"technical\",\n  \"scheduled_at\": \"2025-11-15T10:00:00Z\",\n  \"duration\": 60,\n  \"location\": \"Office or Zoom link\",\n  \"notes\": \"Please prepare coding challenges\"\n}"
+								},
+								"url": "{{base_url}}/api/v1/applications/{{application_id}}/interviews"
+							},
+							"response": []
+						},
+						{
+							"name": "Update Interview",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"location\": \"Updated location\",\n  \"notes\": \"Updated interview notes\"\n}"
+								},
+								"url": "{{base_url}}/api/v1/applications/{{application_id}}/interviews/1"
+							},
+							"response": []
+						},
+						{
+							"name": "Reschedule Interview",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"scheduled_at\": \"2025-11-16T14:00:00Z\",\n  \"reason\": \"Interviewer conflict\"\n}"
+								},
+								"url": "{{base_url}}/api/v1/applications/{{application_id}}/interviews/1/reschedule"
+							},
+							"response": []
+						},
+						{
+							"name": "Complete Interview",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"feedback\": \"Candidate performed very well\",\n  \"rating\": 5,\n  \"decision\": \"proceed\"\n}"
+								},
+								"url": "{{base_url}}/api/v1/applications/{{application_id}}/interviews/1/complete"
+							},
+							"response": []
+						},
+						{
+							"name": "Cancel Interview",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/applications/{{application_id}}/interviews/1?reason=Position filled",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"applications",
+										"{{application_id}}",
+										"interviews",
+										"1"
+									],
+									"query": [
+										{
+											"key": "reason",
+											"value": "Position filled"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Toggle Bookmark",
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"url": "{{base_url}}/api/v1/applications/{{application_id}}/bookmark"
+							},
+							"response": []
+						},
+						{
+							"name": "Mark as Viewed",
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"url": "{{base_url}}/api/v1/applications/{{application_id}}/viewed"
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Master Data",
+			"item": [
+				{
+					"name": "Get All Industries",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test: Response status is 200",
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Test: Response time is less than 500ms (cache hit target: <50ms)",
+									"pm.test('Response time is acceptable', function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(500);",
+									"    ",
+									"    // Log performance info",
+									"    console.log('Response Time:', pm.response.responseTime, 'ms');",
+									"    if (pm.response.responseTime < 50) {",
+									"        console.log('✅ Cache HIT - Excellent performance!');",
+									"    } else if (pm.response.responseTime < 200) {",
+									"        console.log('⚠️ Possible cache MISS - Good but not optimal');",
+									"    } else {",
+									"        console.log('❌ Cache MISS - Needs optimization');",
+									"    }",
+									"});",
+									"",
+									"// Test: Response has correct structure",
+									"pm.test('Response has correct structure', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success', true);",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"});",
+									"",
+									"// Test: Industries array is not empty",
+									"pm.test('Industries data is not empty', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.length).to.be.above(0);",
+									"    console.log('Total Industries:', jsonData.data.length);",
+									"});",
+									"",
+									"// Test: Each industry has required fields",
+									"pm.test('Each industry has required fields', function () {",
+									"    var jsonData = pm.response.json();",
+									"    var industry = jsonData.data[0];",
+									"    ",
+									"    pm.expect(industry).to.have.property('id');",
+									"    pm.expect(industry).to.have.property('name');",
+									"    pm.expect(industry).to.have.property('slug');",
+									"    pm.expect(industry).to.have.property('is_active');",
+									"    pm.expect(industry).to.have.property('created_at');",
+									"});",
+									"",
+									"// Test: Cache header check",
+									"pm.test('Check if response is from cache', function () {",
+									"    var cacheControl = pm.response.headers.get('Cache-Control');",
+									"    var xCacheStatus = pm.response.headers.get('X-Cache-Status');",
+									"    ",
+									"    if (xCacheStatus) {",
+									"        console.log('X-Cache-Status:', xCacheStatus);",
+									"        if (xCacheStatus === 'HIT') {",
+									"            pm.expect(pm.response.responseTime).to.be.below(100);",
+									"        }",
+									"    }",
+									"    ",
+									"    if (cacheControl) {",
+									"        console.log('Cache-Control:', cacheControl);",
+									"    }",
+									"});",
+									"",
+									"// Save first industry_id for other tests",
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.length > 0) {",
+									"    pm.collectionVariables.set('industry_id', jsonData.data[0].id);",
+									"    console.log('✅ Saved industry_id:', jsonData.data[0].id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/api/v1/master/industries"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Industry by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response time is acceptable', function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(500);",
+									"    console.log('Response Time:', pm.response.responseTime, 'ms');",
+									"});",
+									"",
+									"pm.test('Response has correct structure', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success', true);",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.be.an('object');",
+									"});",
+									"",
+									"pm.test('Industry has all required fields', function () {",
+									"    var jsonData = pm.response.json();",
+									"    var industry = jsonData.data;",
+									"    ",
+									"    pm.expect(industry).to.have.property('id');",
+									"    pm.expect(industry).to.have.property('name');",
+									"    pm.expect(industry).to.have.property('slug');",
+									"    pm.expect(industry).to.have.property('description');",
+									"    pm.expect(industry).to.have.property('icon');",
+									"    pm.expect(industry).to.have.property('is_active');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/api/v1/master/industries/{{industry_id}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Company Sizes",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response time is acceptable', function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(500);",
+									"    console.log('Response Time:', pm.response.responseTime, 'ms');",
+									"});",
+									"",
+									"pm.test('Company sizes data is not empty', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.length).to.be.above(0);",
+									"    console.log('Total Company Sizes:', jsonData.data.length);",
+									"});",
+									"",
+									"pm.test('Each company size has required fields', function () {",
+									"    var jsonData = pm.response.json();",
+									"    var companySize = jsonData.data[0];",
+									"    ",
+									"    pm.expect(companySize).to.have.property('id');",
+									"    pm.expect(companySize).to.have.property('size_range');",
+									"    pm.expect(companySize).to.have.property('min_employees');",
+									"    pm.expect(companySize).to.have.property('max_employees');",
+									"    pm.expect(companySize).to.have.property('is_active');",
+									"});",
+									"",
+									"// Validate employee ranges",
+									"pm.test('Employee ranges are valid', function () {",
+									"    var jsonData = pm.response.json();",
+									"    jsonData.data.forEach(function(size) {",
+									"        if (size.max_employees !== null) {",
+									"            pm.expect(size.min_employees).to.be.below(size.max_employees);",
+									"        }",
+									"    });",
+									"});",
+									"",
+									"// Save first company_size_id",
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.length > 0) {",
+									"    pm.collectionVariables.set('company_size_id', jsonData.data[0].id);",
+									"    console.log('✅ Saved company_size_id:', jsonData.data[0].id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/api/v1/master/company-sizes"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Company Size by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has correct structure', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success', true);",
+									"    pm.expect(jsonData.data).to.be.an('object');",
+									"});",
+									"",
+									"pm.test('Company size has all fields', function () {",
+									"    var jsonData = pm.response.json();",
+									"    var companySize = jsonData.data;",
+									"    ",
+									"    pm.expect(companySize).to.have.property('id');",
+									"    pm.expect(companySize).to.have.property('size_range');",
+									"    pm.expect(companySize).to.have.property('description');",
+									"    pm.expect(companySize.min_employees).to.be.a('number');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/api/v1/master/company-sizes/{{company_size_id}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Provinces",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response time is acceptable', function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(500);",
+									"});",
+									"",
+									"pm.test('Provinces data contains 34 provinces', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.length).to.equal(34);",
+									"    console.log('Total Provinces:', jsonData.data.length);",
+									"});",
+									"",
+									"pm.test('Each province has required fields', function () {",
+									"    var jsonData = pm.response.json();",
+									"    var province = jsonData.data[0];",
+									"    ",
+									"    pm.expect(province).to.have.property('id');",
+									"    pm.expect(province).to.have.property('name');",
+									"    pm.expect(province).to.have.property('bps_code');",
+									"    pm.expect(province).to.have.property('is_active');",
+									"});",
+									"",
+									"// Save first province_id for location tests",
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.length > 0) {",
+									"    pm.collectionVariables.set('province_id', jsonData.data[0].id);",
+									"    console.log('✅ Saved province_id:', jsonData.data[0].id);",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/api/v1/master/locations/provinces"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Province by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Province has all required fields', function () {",
+									"    var jsonData = pm.response.json();",
+									"    var province = jsonData.data;",
+									"    ",
+									"    pm.expect(province).to.have.property('id');",
+									"    pm.expect(province).to.have.property('name');",
+									"    pm.expect(province).to.have.property('bps_code');",
+									"    pm.expect(province.bps_code).to.be.a('string');",
+									"    pm.expect(province.bps_code.length).to.equal(2);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/api/v1/master/locations/provinces/{{province_id}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Cities by Province",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response time is acceptable', function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(500);",
+									"});",
+									"",
+									"pm.test('Cities data is not empty', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.length).to.be.above(0);",
+									"    console.log('Total Cities in Province:', jsonData.data.length);",
+									"});",
+									"",
+									"pm.test('Each city has required fields', function () {",
+									"    var jsonData = pm.response.json();",
+									"    var city = jsonData.data[0];",
+									"    ",
+									"    pm.expect(city).to.have.property('id');",
+									"    pm.expect(city).to.have.property('province_id');",
+									"    pm.expect(city).to.have.property('name');",
+									"    pm.expect(city).to.have.property('bps_code');",
+									"    pm.expect(city).to.have.property('type');",
+									"});",
+									"",
+									"pm.test('City type is valid', function () {",
+									"    var jsonData = pm.response.json();",
+									"    var city = jsonData.data[0];",
+									"    ",
+									"    var validTypes = ['Kabupaten', 'Kota'];",
+									"    pm.expect(validTypes).to.include(city.type);",
+									"});",
+									"",
+									"// Save first city_id",
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.length > 0) {",
+									"    pm.collectionVariables.set('city_id', jsonData.data[0].id);",
+									"    console.log('✅ Saved city_id:', jsonData.data[0].id);",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/master/locations/cities?province_id=11",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"master",
+								"locations",
+								"cities"
+							],
+							"query": [
+								{
+									"key": "province_id",
+									"value": "11"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get City by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('City has all required fields', function () {",
+									"    var jsonData = pm.response.json();",
+									"    var city = jsonData.data;",
+									"    ",
+									"    pm.expect(city).to.have.property('id');",
+									"    pm.expect(city).to.have.property('province_id');",
+									"    pm.expect(city).to.have.property('name');",
+									"    pm.expect(city).to.have.property('type');",
+									"    pm.expect(city).to.have.property('bps_code');",
+									"    pm.expect(city.bps_code).to.be.a('string');",
+									"    pm.expect(city.bps_code.length).to.equal(4);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/api/v1/master/cities/{{city_id}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Districts by City",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response time is acceptable', function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);",
+									"});",
+									"",
+									"pm.test('Districts data is not empty', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.length).to.be.above(0);",
+									"    console.log('Total Districts in City:', jsonData.data.length);",
+									"});",
+									"",
+									"pm.test('Each district has required fields', function () {",
+									"    var jsonData = pm.response.json();",
+									"    var district = jsonData.data[0];",
+									"    ",
+									"    pm.expect(district).to.have.property('id');",
+									"    pm.expect(district).to.have.property('city_id');",
+									"    pm.expect(district).to.have.property('name');",
+									"    pm.expect(district).to.have.property('bps_code');",
+									"});",
+									"",
+									"pm.test('BPS code format is valid', function () {",
+									"    var jsonData = pm.response.json();",
+									"    var district = jsonData.data[0];",
+									"    ",
+									"    pm.expect(district.bps_code).to.be.a('string');",
+									"    pm.expect(district.bps_code.length).to.equal(7);",
+									"});",
+									"",
+									"// Save first district_id",
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.length > 0) {",
+									"    pm.collectionVariables.set('district_id', jsonData.data[0].id);",
+									"    console.log('✅ Saved district_id:', jsonData.data[0].id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/api/v1/master/cities/{{city_id}}/districts"
+					},
+					"response": []
+				},
+				{
+					"name": "Get District by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('District has all required fields', function () {",
+									"    var jsonData = pm.response.json();",
+									"    var district = jsonData.data;",
+									"    ",
+									"    pm.expect(district).to.have.property('id');",
+									"    pm.expect(district).to.have.property('city_id');",
+									"    pm.expect(district).to.have.property('name');",
+									"    pm.expect(district).to.have.property('bps_code');",
+									"    pm.expect(district.bps_code).to.be.a('string');",
+									"    pm.expect(district.bps_code.length).to.equal(7);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/api/v1/master/districts/{{district_id}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Cache Performance Test",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Run this request 3 times to test cache performance",
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"var iteration = pm.collectionVariables.get('cache_test_iteration') || 1;",
+									"var firstRequestTime = pm.collectionVariables.get('first_request_time') || 0;",
+									"var currentTime = pm.response.responseTime;",
+									"",
+									"console.log('=== Cache Performance Test ===');",
+									"console.log('Iteration:', iteration);",
+									"console.log('Response Time:', currentTime, 'ms');",
+									"",
+									"if (iteration === 1) {",
+									"    pm.collectionVariables.set('first_request_time', currentTime);",
+									"    console.log('First request (cache MISS):', currentTime, 'ms');",
+									"    ",
+									"    pm.test('First request baseline', function () {",
+									"        pm.expect(currentTime).to.be.below(500);",
+									"    });",
+									"} else {",
+									"    var improvement = ((firstRequestTime - currentTime) / firstRequestTime * 100).toFixed(2);",
+									"    console.log('First request:', firstRequestTime, 'ms');",
+									"    console.log('Current request:', currentTime, 'ms');",
+									"    console.log('Performance improvement:', improvement, '%');",
+									"    ",
+									"    pm.test('Cache should improve performance', function () {",
+									"        pm.expect(currentTime).to.be.below(firstRequestTime);",
+									"    });",
+									"    ",
+									"    pm.test('Cache hit should be fast (<100ms)', function () {",
+									"        pm.expect(currentTime).to.be.below(100);",
+									"    });",
+									"    ",
+									"    if (currentTime < 50) {",
+									"        console.log('✅ Excellent cache performance! Target achieved.');",
+									"    } else if (currentTime < 100) {",
+									"        console.log('⚠️ Good cache performance, but can be optimized.');",
+									"    } else {",
+									"        console.log('❌ Cache not working optimally.');",
+									"    }",
+									"}",
+									"",
+									"// Increment iteration counter",
+									"pm.collectionVariables.set('cache_test_iteration', iteration + 1);",
+									"",
+									"// Reset after 3 iterations",
+									"if (iteration >= 3) {",
+									"    console.log('=== Test Complete - Resetting ===');",
+									"    pm.collectionVariables.set('cache_test_iteration', 1);",
+									"    pm.collectionVariables.set('first_request_time', 0);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/api/v1/master/industries"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Health Check",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": "{{base_url}}/api/v1/health"
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": {
+			"token": "{{access_token}}"
+		}
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Auto-add Bearer token to Authorization header",
+					"const accessToken = pm.collectionVariables.get('access_token');",
+					"if (accessToken && accessToken !== '') {",
+					"    pm.request.headers.add({",
+					"        key: 'Authorization',",
+					"        value: 'Bearer ' + accessToken",
+					"    });",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Auto-save tokens from login/register responses",
+					"if (pm.response.code === 200 || pm.response.code === 201) {",
+					"    try {",
+					"        const jsonData = pm.response.json();",
+					"        ",
+					"        // Save access_token",
+					"        if (jsonData.data && jsonData.data.access_token) {",
+					"            pm.collectionVariables.set('access_token', jsonData.data.access_token);",
+					"            console.log('✅ Access token saved');",
+					"        }",
+					"        ",
+					"        // Save refresh_token",
+					"        if (jsonData.data && jsonData.data.refresh_token) {",
+					"            pm.collectionVariables.set('refresh_token', jsonData.data.refresh_token);",
+					"            console.log('✅ Refresh token saved');",
+					"        }",
+					"        ",
+					"        // Save user_id",
+					"        if (jsonData.data && jsonData.data.user && jsonData.data.user.id) {",
+					"            pm.collectionVariables.set('user_id', jsonData.data.user.id);",
+					"            console.log('✅ User ID saved');",
+					"        }",
+					"        ",
+					"        // Save company_id from create/get company response",
+					"        if (jsonData.data && jsonData.data.id && pm.request.url.toString().includes('/companies')) {",
+					"            pm.collectionVariables.set('company_id', jsonData.data.id);",
+					"            console.log('✅ Company ID saved');",
+					"        }",
+					"        ",
+					"        // Save job_id from create/get job response",
+					"        if (jsonData.data && jsonData.data.id && pm.request.url.toString().includes('/jobs')) {",
+					"            pm.collectionVariables.set('job_id', jsonData.data.id);",
+					"            console.log('✅ Job ID saved');",
+					"        }",
+					"        ",
+					"        // Save application_id from create/get application response",
+					"        if (jsonData.data && jsonData.data.id && pm.request.url.toString().includes('/applications')) {",
+					"            pm.collectionVariables.set('application_id', jsonData.data.id);",
+					"            console.log('✅ Application ID saved');",
+					"        }",
+					"    } catch (e) {",
+					"        // Silent fail if response is not JSON",
+					"    }",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refresh_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "company_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "job_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "application_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "industry_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "company_size_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "province_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "city_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "district_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "cache_test_iteration",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "first_request_time",
+			"value": "0",
+			"type": "string"
+		},
+		{
+			"key": "company_created",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

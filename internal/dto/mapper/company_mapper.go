@@ -54,8 +54,9 @@ func ToCompanyDetailResponse(c *company.Company) *response.CompanyDetailResponse
 		RegistrationNumber: PtrToString(c.RegistrationNumber),
 
 		// Master Data Fields (NEW - Phase 9)
-		FullAddress: c.FullAddress,
-		Description: PtrToString(c.Description),
+		FullAddress:      c.FullAddress,
+		Description:      PtrToString(c.Description),
+		ShortDescription: PtrToString(c.About), // short_description from about field
 
 		// Legacy Fields (backward compatibility)
 		Industry:     c.GetIndustryName(),     // fallback for industry
@@ -69,74 +70,79 @@ func ToCompanyDetailResponse(c *company.Company) *response.CompanyDetailResponse
 		WebsiteURL:  PtrToString(c.WebsiteURL),
 		EmailDomain: PtrToString(c.EmailDomain),
 		Phone:       PtrToString(c.Phone),
-		Country:     c.Country,
-		PostalCode:  PtrToString(c.PostalCode),
-		Latitude:    c.Latitude,
-		Longitude:   c.Longitude,
-		LogoURL:     PtrToString(c.LogoURL),
-		BannerURL:   PtrToString(c.BannerURL),
-		About:       PtrToString(c.About),
-		Culture:     PtrToString(c.Culture),
-		Verified:    c.Verified,
-		VerifiedAt:  c.VerifiedAt,
-		IsActive:    c.IsActive,
-		CreatedAt:   c.CreatedAt,
-		UpdatedAt:   c.UpdatedAt,
+
+		// Social Media URLs
+		InstagramURL: PtrToString(c.InstagramURL),
+		FacebookURL:  PtrToString(c.FacebookURL),
+		LinkedinURL:  PtrToString(c.LinkedinURL),
+		TwitterURL:   PtrToString(c.TwitterURL),
+
+		Country:    c.Country,
+		PostalCode: PtrToString(c.PostalCode),
+		Latitude:   c.Latitude,
+		Longitude:  c.Longitude,
+		LogoURL:    PtrToString(c.LogoURL),
+		BannerURL:  PtrToString(c.BannerURL),
+		Culture:    PtrToString(c.Culture),
+		Benefits:   []string(c.Benefits), // Convert PostgreSQL array to Go slice
+		Verified:   c.Verified,
+		VerifiedAt: c.VerifiedAt,
+		IsActive:   c.IsActive,
+		CreatedAt:  c.CreatedAt,
+		UpdatedAt:  c.UpdatedAt,
 	}
 
-	// Map Master Data Relations
-	if c.HasMasterDataRelations() {
-		// Map Industry
-		if industry := c.GetIndustry(); industry != nil {
-			resp.IndustryDetail = &response.MasterIndustryResponse{
-				ID:          industry.ID,
-				Name:        industry.Name,
-				Slug:        industry.Slug,
-				Description: industry.GetDescription(),
-				IconURL:     industry.GetIconURL(),
-			}
+	// ALWAYS Map Master Data Relations (whether preloaded or not)
+	// Map Industry
+	if industry := c.GetIndustry(); industry != nil {
+		resp.IndustryDetail = &response.MasterIndustryResponse{
+			ID:          industry.ID,
+			Name:        industry.Name,
+			Slug:        industry.Slug,
+			Description: industry.GetDescription(),
+			IconURL:     industry.GetIconURL(),
 		}
+	}
 
-		// Map Company Size
-		if companySize := c.GetCompanySize(); companySize != nil {
-			maxEmp := companySize.GetMaxEmployees()
-			resp.CompanySizeDetail = &response.MasterCompanySizeResponse{
-				ID:           companySize.ID,
-				Label:        companySize.Label,
-				Code:         companySize.Label, // Use label as code
-				MinEmployees: companySize.MinEmployees,
-				MaxEmployees: &maxEmp,
-				Description:  companySize.GetRange(), // Use GetRange() for description
-			}
+	// Map Company Size
+	if companySize := c.GetCompanySize(); companySize != nil {
+		maxEmp := companySize.GetMaxEmployees()
+		resp.CompanySizeDetail = &response.MasterCompanySizeResponse{
+			ID:           companySize.ID,
+			Label:        companySize.Label,
+			Code:         companySize.Label, // Use label as code
+			MinEmployees: companySize.MinEmployees,
+			MaxEmployees: &maxEmp,
+			Description:  companySize.GetRange(), // Use GetRange() for description
 		}
+	}
 
-		// Map Location (District -> City -> Province)
-		if district := c.GetDistrict(); district != nil && c.GetCity() != nil && c.GetProvince() != nil {
-			city := c.GetCity()
-			province := c.GetProvince()
+	// Map Location (District -> City -> Province)
+	if district := c.GetDistrict(); district != nil && c.GetCity() != nil && c.GetProvince() != nil {
+		city := c.GetCity()
+		province := c.GetProvince()
 
-			resp.LocationDetail = &response.CompanyLocationResponse{
-				Province: response.ProvinceResponse{
-					ID:   province.ID,
-					Code: province.Code,
-					Name: province.Name,
-				},
-				City: response.CityResponse{
-					ID:         city.ID,
-					Code:       city.Code,
-					Name:       city.Name,
-					Type:       city.Type,
-					FullName:   city.GetFullName(),
-					ProvinceID: city.ProvinceID,
-				},
-				District: response.DistrictResponse{
-					ID:     district.ID,
-					Code:   district.Code,
-					Name:   district.Name,
-					CityID: district.CityID,
-				},
-				FullLocation: c.GetFullLocation(), // e.g., "Batujajar, Kabupaten Bandung Barat, Jawa Barat"
-			}
+		resp.LocationDetail = &response.CompanyLocationResponse{
+			Province: response.ProvinceResponse{
+				ID:   province.ID,
+				Code: province.Code,
+				Name: province.Name,
+			},
+			City: response.CityResponse{
+				ID:         city.ID,
+				Code:       city.Code,
+				Name:       city.Name,
+				Type:       city.Type,
+				FullName:   city.GetFullName(),
+				ProvinceID: city.ProvinceID,
+			},
+			District: response.DistrictResponse{
+				ID:     district.ID,
+				Code:   district.Code,
+				Name:   district.Name,
+				CityID: district.CityID,
+			},
+			FullLocation: c.GetFullLocation(), // e.g., "Batujajar, Kabupaten Bandung Barat, Jawa Barat"
 		}
 	}
 
@@ -144,6 +150,9 @@ func ToCompanyDetailResponse(c *company.Company) *response.CompanyDetailResponse
 	if c.Profile != nil {
 		resp.Profile = ToCompanyProfileResponse(c.Profile)
 	}
+
+	// Map industries (if available)
+	// Note: This needs to be populated if company has Industries relation
 
 	// Map reviews
 	if len(c.Reviews) > 0 {
@@ -153,8 +162,7 @@ func ToCompanyDetailResponse(c *company.Company) *response.CompanyDetailResponse
 		}
 	}
 
-	// Note: Employees, Verification, Documents need to be populated by handler
-	// as the response structure doesn't match entity structure directly
+	// Note: Employees, Verification, Documents can be populated by handler if needed
 
 	return resp
 }
@@ -281,43 +289,45 @@ func UpdateCompanyRequestToEntity(req *request.UpdateCompanyRequest, c *company.
 		return
 	}
 
-	if req.CompanyName != nil {
-		c.CompanyName = *req.CompanyName
+	// NOTE: CompanyName, Country, Province, City, SizeCategory/EmployeeCount, Industry
+	// tidak di-update karena sudah di-set saat create company (read-only)
+
+	// Full Address (bisa di-edit, dari data company saat create)
+	if req.FullAddress != nil {
+		c.FullAddress = *req.FullAddress
 	}
-	if req.LegalName != nil {
-		c.LegalName = req.LegalName
+
+	// Deskripsi Singkat - Visi dan Misi Perusahaan
+	if req.ShortDescription != nil {
+		c.ShortDescription = req.ShortDescription
 	}
-	if req.Industry != nil {
-		c.Industry = req.Industry
-	}
-	if req.CompanyType != nil {
-		c.CompanyType = req.CompanyType
-	}
-	if req.SizeCategory != nil {
-		c.SizeCategory = req.SizeCategory
-	}
+
+	// Website & Social Media
 	if req.WebsiteURL != nil {
 		c.WebsiteURL = req.WebsiteURL
 	}
-	if req.Phone != nil {
-		c.Phone = req.Phone
+	if req.InstagramURL != nil {
+		c.InstagramURL = req.InstagramURL
 	}
-	if req.Address != nil {
-		c.Address = req.Address
+	if req.FacebookURL != nil {
+		c.FacebookURL = req.FacebookURL
 	}
-	if req.City != nil {
-		c.City = req.City
+	if req.LinkedinURL != nil {
+		c.LinkedinURL = req.LinkedinURL
 	}
-	if req.Province != nil {
-		c.Province = req.Province
+	if req.TwitterURL != nil {
+		c.TwitterURL = req.TwitterURL
 	}
-	if req.PostalCode != nil {
-		c.PostalCode = req.PostalCode
+
+	// Rich Text Descriptions
+	if req.CompanyDescription != nil {
+		c.About = req.CompanyDescription
 	}
-	if req.About != nil {
-		c.About = req.About
+	if req.CompanyCulture != nil {
+		c.Culture = req.CompanyCulture
 	}
-	// Note: LogoURL and BannerURL should be updated via separate upload endpoints
+
+	// Note: LogoURL and BannerURL should be updated via UpdateCompany service
 }
 
 // UpdateCompanyProfileRequestToEntity updates CompanyProfile entity from request

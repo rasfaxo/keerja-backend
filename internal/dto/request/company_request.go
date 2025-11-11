@@ -39,43 +39,29 @@ type RegisterCompanyRequest struct {
 	About       *string `json:"about" validate:"omitempty"`
 }
 
-// UpdateCompanyRequest represents company update request
+// UpdateCompanyRequest represents company update request (Edit Profil Perusahaan)
 type UpdateCompanyRequest struct {
-	CompanyName        *string `json:"company_name" validate:"omitempty,min=2,max=200"`
-	LegalName          *string `json:"legal_name" validate:"omitempty,max=200"`
-	RegistrationNumber *string `json:"registration_number" validate:"omitempty,max=100"`
+	// NOTE: company_name, country, province, city, employee_count (company_size), industry
+	// akan di-get dari data company yang sudah ada saat create company
+	// Fields tersebut tidak perlu di-update via endpoint ini
 
-	// Master Data Relations
-	IndustryID    *int64 `json:"industry_id" validate:"omitempty"`
-	CompanySizeID *int64 `json:"company_size_id" validate:"omitempty"`
-	DistrictID    *int64 `json:"district_id" validate:"omitempty"`
+	// Full Address (dari data company saat create, bisa di-edit)
+	FullAddress *string `form:"full_address" json:"full_address" validate:"omitempty,max=500"`
 
-	// Location Details
-	FullAddress *string `json:"full_address" validate:"omitempty,max=500"`
-	Description *string `json:"description" validate:"omitempty"`
+	// Deskripsi Singkat - Visi dan Misi Perusahaan (required)
+	ShortDescription *string `form:"short_description" json:"short_description" validate:"required,max=1000"`
 
-	// Legacy Fields (kept for backward compatibility)
-	Industry     *string `json:"industry" validate:"omitempty,max=100"`
-	SizeCategory *string `json:"size_category" validate:"omitempty,oneof='1-10' '11-50' '51-200' '201-1000' '1000+'"`
-	City         *string `json:"city" validate:"omitempty,max=100"`
-	Province     *string `json:"province" validate:"omitempty,max=100"`
-	Address      *string `json:"address" validate:"omitempty"`
+	// Website & Social Media
+	WebsiteURL   *string `form:"website_url" json:"website_url" validate:"omitempty,url"`
+	InstagramURL *string `form:"instagram_url" json:"instagram_url" validate:"omitempty"`
+	FacebookURL  *string `form:"facebook_url" json:"facebook_url" validate:"omitempty"`
+	LinkedinURL  *string `form:"linkedin_url" json:"linkedin_url" validate:"omitempty"`
+	TwitterURL   *string `form:"twitter_url" json:"twitter_url" validate:"omitempty"`
 
-	// Other Fields
-	CompanyType *string  `json:"company_type" validate:"omitempty,oneof=private public startup ngo government"`
-	WebsiteURL  *string  `json:"website_url" validate:"omitempty,url"`
-	EmailDomain *string  `json:"email_domain" validate:"omitempty,max=100"`
-	Phone       *string  `json:"phone" validate:"omitempty,max=30"`
-	Country     *string  `json:"country" validate:"omitempty,max=100"`
-	PostalCode  *string  `json:"postal_code" validate:"omitempty,max=10"`
-	Latitude    *float64 `json:"latitude" validate:"omitempty"`
-	Longitude   *float64 `json:"longitude" validate:"omitempty"`
-	About       *string  `json:"about" validate:"omitempty"`
-	Culture     *string  `json:"culture" validate:"omitempty"`
-	Benefits    []string `json:"benefits" validate:"omitempty"`
-}
-
-// UpdateCompanyProfileRequest represents company profile update request
+	// Rich Text Descriptions
+	CompanyDescription *string `form:"company_description" json:"company_description" validate:"required"` // Deskripsi Perusahaan (required)
+	CompanyCulture     *string `form:"company_culture" json:"company_culture" validate:"omitempty"`        // Budaya Perusahaan (optional)
+} // UpdateCompanyProfileRequest represents company profile update request
 type UpdateCompanyProfileRequest struct {
 	FoundedYear    *int16  `json:"founded_year" validate:"omitempty,min=1800,max=2100"`
 	EmployeeCount  *int32  `json:"employee_count" validate:"omitempty,min=0"`
@@ -147,8 +133,9 @@ type UpdateEmployeeRequest struct {
 
 // RequestVerificationRequest represents company verification request
 type RequestVerificationRequest struct {
-	DocumentType string `json:"document_type" validate:"required,oneof='business_license' 'tax_id' 'incorporation_certificate' 'other'"`
-	Notes        string `json:"notes" validate:"omitempty"`
+	NPWPNumber *string `form:"npwp_number" json:"npwp_number" validate:"required"`
+	NIBNumber  *string `form:"nib_number" json:"nib_number" validate:"omitempty"`
+	Notes      *string `form:"notes" json:"notes" validate:"omitempty"`
 }
 
 // UploadCompanyDocumentRequest represents company document upload request

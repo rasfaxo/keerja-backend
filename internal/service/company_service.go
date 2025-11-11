@@ -187,6 +187,9 @@ func (s *companyService) RegisterCompany(ctx context.Context, req *company.Regis
 		s.cache.DeletePattern("companies:verified:*")
 	}
 
+	// Invalidate user companies cache for the owner
+	s.cache.Delete(cache.GenerateCacheKey("user", "companies", userID))
+
 	// Return company with preloaded master data
 	// This ensures response includes full master data details
 	if comp.IndustryID != nil || comp.CompanySizeID != nil || comp.DistrictID != nil {
@@ -248,125 +251,86 @@ func (s *companyService) GetCompanyBySlug(ctx context.Context, slug string) (*co
 	return fullComp, nil
 }
 
-// UpdateCompany updates company information
-func (s *companyService) UpdateCompany(ctx context.Context, companyID int64, req *company.UpdateCompanyRequest) error {
+// UpdateCompany updates company information with banner and logo
+func (s *companyService) UpdateCompany(ctx context.Context, companyID int64, req *company.UpdateCompanyRequest, bannerFile, logoFile *multipart.FileHeader) error {
 	// Get existing company
 	comp, err := s.companyRepo.FindByID(ctx, companyID)
 	if err != nil {
 		return fmt.Errorf("company not found: %w", err)
 	}
 
-	// Validate Master Data IDs if provided
-	if req.IndustryID != nil || req.CompanySizeID != nil || req.DistrictID != nil {
-		err := s.ValidateMasterDataIDs(ctx, req.IndustryID, req.CompanySizeID, req.DistrictID)
+	// Upload banner if provided
+	if bannerFile != nil {
+		// Delete old banner if exists
+		if comp.BannerURL != nil && *comp.BannerURL != "" {
+			_ = s.uploadService.DeleteFile(ctx, *comp.BannerURL)
+		}
+
+		// Upload new banner
+		bannerPath, err := s.uploadService.UploadFile(ctx, bannerFile, fmt.Sprintf("companies/%d/banner", companyID))
 		if err != nil {
-			return fmt.Errorf("master data validation failed: %w", err)
+			return fmt.Errorf("failed to upload banner: %w", err)
 		}
-
-		// Auto-populate City and Province from District if provided
-		if req.DistrictID != nil {
-			district, err := s.districtService.GetByID(ctx, *req.DistrictID)
-			if err == nil && district != nil {
-				if district.City != nil {
-					cityID := district.City.ID
-					comp.CityID = &cityID
-					if district.City.Province != nil {
-						provinceID := district.City.Province.ID
-						comp.ProvinceID = &provinceID
-					}
-				}
-			}
-		}
+		comp.BannerURL = &bannerPath
 	}
 
-	// Update fields if provided
-	if req.CompanyName != nil {
-		comp.CompanyName = *req.CompanyName
-		// Regenerate slug if name changes
-		newSlug := utils.GenerateSlug(*req.CompanyName)
-		if newSlug != comp.Slug {
-			// Check uniqueness
-			_, err := s.companyRepo.FindBySlug(ctx, newSlug)
-			if err == nil {
-				newSlug = utils.GenerateSlugSimple(*req.CompanyName)
-			}
-			comp.Slug = newSlug
+	// Upload logo if provided
+	if logoFile != nil {
+		// Delete old logo if exists
+		if comp.LogoURL != nil && *comp.LogoURL != "" {
+			_ = s.uploadService.DeleteFile(ctx, *comp.LogoURL)
 		}
-	}
-	if req.LegalName != nil {
-		comp.LegalName = req.LegalName
-	}
-	if req.RegistrationNumber != nil {
-		comp.RegistrationNumber = req.RegistrationNumber
+
+		// Upload new logo
+		logoPath, err := s.uploadService.UploadFile(ctx, logoFile, fmt.Sprintf("companies/%d/logo", companyID))
+		if err != nil {
+			return fmt.Errorf("failed to upload logo: %w", err)
+		}
+		comp.LogoURL = &logoPath
 	}
 
-	// Master Data Fields (NEW - Phase 9)
-	if req.IndustryID != nil {
-		comp.IndustryID = req.IndustryID
-	}
-	if req.CompanySizeID != nil {
-		comp.CompanySizeID = req.CompanySizeID
-	}
-	if req.DistrictID != nil {
-		comp.DistrictID = req.DistrictID
-	}
+	// NOTE: CompanyName, Country, Province, City, SizeCategory/EmployeeCount, Industry
+	// tidak di-update karena sudah di-set saat create company
+	// Data tersebut bersifat read-only dan akan di-get dari database
+
+	// Full Address (bisa di-edit, dari data company saat create)
 	if req.FullAddress != nil {
 		comp.FullAddress = *req.FullAddress
 	}
-	if req.Description != nil {
-		comp.Description = req.Description
+
+	// Update Deskripsi Singkat - Visi dan Misi Perusahaan (mapped to About field)
+	if req.ShortDescription != nil {
+		comp.About = req.ShortDescription
 	}
 
-	// Legacy Fields (for backward compatibility)
-	if req.Industry != nil {
-		comp.Industry = req.Industry
-	}
-	if req.CompanyType != nil {
-		comp.CompanyType = req.CompanyType
-	}
-	if req.SizeCategory != nil {
-		comp.SizeCategory = req.SizeCategory
-	}
-	if req.Address != nil {
-		comp.Address = req.Address
-	}
-	if req.City != nil {
-		comp.City = req.City
-	}
-	if req.Province != nil {
-		comp.Province = req.Province
-	}
-
-	// Other Fields
+	// Website & Social Media
 	if req.WebsiteURL != nil {
 		comp.WebsiteURL = req.WebsiteURL
 	}
-	if req.EmailDomain != nil {
-		comp.EmailDomain = req.EmailDomain
+	if req.InstagramURL != nil {
+		comp.InstagramURL = req.InstagramURL
 	}
-	if req.Phone != nil {
-		comp.Phone = req.Phone
+	if req.FacebookURL != nil {
+		comp.FacebookURL = req.FacebookURL
 	}
-	if req.PostalCode != nil {
-		comp.PostalCode = req.PostalCode
+	if req.LinkedinURL != nil {
+		comp.LinkedinURL = req.LinkedinURL
 	}
-	if req.Latitude != nil {
-		comp.Latitude = req.Latitude
-	}
-	if req.Longitude != nil {
-		comp.Longitude = req.Longitude
-	}
-	if req.About != nil {
-		comp.About = req.About
-	}
-	if req.Culture != nil {
-		comp.Culture = req.Culture
-	}
-	if req.Benefits != nil {
-		comp.Benefits = req.Benefits
+	if req.TwitterURL != nil {
+		comp.TwitterURL = req.TwitterURL
 	}
 
-	// Update company
+	// Rich Text Descriptions
+	// CompanyDescription (deskripsi lengkap) mapped to Description field
+	if req.CompanyDescription != nil {
+		comp.Description = req.CompanyDescription
+	}
+	// CompanyCulture mapped to Culture field
+	if req.CompanyCulture != nil {
+		comp.Culture = req.CompanyCulture
+	}
+
+	// Update company in database
 	if err := s.companyRepo.Update(ctx, comp); err != nil {
 		return fmt.Errorf("failed to update company: %w", err)
 	}
@@ -405,6 +369,9 @@ func (s *companyService) DeleteCompany(ctx context.Context, companyID int64) err
 		}
 	}
 
+	// Get all employers before deletion to invalidate their caches
+	employers, _ := s.companyRepo.GetEmployerUsersByCompanyID(ctx, companyID)
+
 	// Delete company (cascade will handle related records)
 	if err := s.companyRepo.Delete(ctx, companyID); err != nil {
 		return fmt.Errorf("failed to delete company: %w", err)
@@ -415,6 +382,11 @@ func (s *companyService) DeleteCompany(ctx context.Context, companyID int64) err
 	s.cache.DeletePattern("companies:list:*")
 	s.cache.DeletePattern("companies:verified:*")
 	s.cache.DeletePattern("companies:top-rated:*")
+
+	// Invalidate user companies cache for all employers
+	for _, emp := range employers {
+		s.cache.Delete(cache.GenerateCacheKey("user", "companies", emp.UserID))
+	}
 
 	return nil
 }
@@ -1703,10 +1675,149 @@ func (s *companyService) CheckEmployerPermission(ctx context.Context, userID, co
 // =============================================================================
 
 // RequestVerification requests company verification
-func (s *companyService) RequestVerification(ctx context.Context, companyID, requestedBy int64) error {
-	if err := s.companyRepo.RequestVerification(ctx, companyID, requestedBy); err != nil {
-		return fmt.Errorf("failed to request verification: %w", err)
+func (s *companyService) RequestVerification(ctx context.Context, companyID, requestedBy int64, npwpNumber string, nibNumber *string, npwpFile *multipart.FileHeader, additionalFiles []*multipart.FileHeader) error {
+	// Validate NPWP number is required
+	if npwpNumber == "" {
+		return fmt.Errorf("npwp_number is required")
 	}
+
+	// Upload NPWP document first
+	var npwpDocPath string
+	if npwpFile != nil {
+		filePath, err := s.uploadService.UploadFile(ctx, npwpFile, "documents/npwp")
+		if err != nil {
+			return fmt.Errorf("failed to upload NPWP document: %w", err)
+		}
+		npwpDocPath = filePath
+	} else {
+		return fmt.Errorf("npwp_file is required")
+	}
+
+	// Start transaction
+	tx := s.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return fmt.Errorf("failed to start transaction: %w", tx.Error)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Create or update verification record with NPWP and NIB
+	verification, err := s.companyRepo.FindVerificationByCompanyID(ctx, companyID)
+
+	if err != nil {
+		// Real error occurred
+		tx.Rollback()
+		return fmt.Errorf("failed to find verification: %w", err)
+	}
+
+	if verification == nil {
+		// Create new verification record (no record exists)
+		verification = &company.CompanyVerification{
+			CompanyID:   companyID,
+			RequestedBy: &requestedBy,
+			Status:      "pending",
+			NPWPNumber:  npwpNumber,
+			NIBNumber:   nibNumber,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		}
+		if err := tx.Create(verification).Error; err != nil {
+			tx.Rollback()
+			return fmt.Errorf("failed to create verification: %w", err)
+		}
+	} else {
+		// Update existing verification
+		verification.Status = "pending"
+		verification.NPWPNumber = npwpNumber
+		verification.NIBNumber = nibNumber
+		verification.RequestedBy = &requestedBy
+		verification.UpdatedAt = time.Now()
+		if err := tx.Save(verification).Error; err != nil {
+			tx.Rollback()
+			return fmt.Errorf("failed to update verification: %w", err)
+		}
+	}
+
+	// Save NPWP document to company_documents
+	npwpDocument := &company.CompanyDocument{
+		CompanyID:      companyID,
+		UploadedBy:     &requestedBy,
+		DocumentType:   "NPWP",
+		DocumentNumber: &npwpNumber,
+		DocumentName:   utils.StringPtr("NPWP Perusahaan"),
+		FilePath:       npwpDocPath,
+		Status:         "pending",
+		IsActive:       true,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
+	}
+	if err := tx.Create(npwpDocument).Error; err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to save NPWP document: %w", err)
+	}
+
+	// Save NIB document if NIB number provided
+	if nibNumber != nil && *nibNumber != "" {
+		// Check if NIB file exists in additional documents (optional)
+		// For now, we just save the NIB number without requiring document
+		nibDocument := &company.CompanyDocument{
+			CompanyID:      companyID,
+			UploadedBy:     &requestedBy,
+			DocumentType:   "NIB",
+			DocumentNumber: nibNumber,
+			DocumentName:   utils.StringPtr("Nomor Induk Berusaha"),
+			FilePath:       "", // NIB is optional, may not have file
+			Status:         "pending",
+			IsActive:       true,
+			CreatedAt:      time.Now(),
+			UpdatedAt:      time.Now(),
+		}
+		// Only create if FilePath is provided or we can skip this
+		// For now, skip if no file
+		_ = nibDocument
+	}
+
+	// Save additional documents
+	if len(additionalFiles) > 0 {
+		for i, file := range additionalFiles {
+			if i >= 5 { // Max 5 files
+				break
+			}
+
+			filePath, err := s.uploadService.UploadFile(ctx, file, "documents/additional")
+			if err != nil {
+				// Continue with other files even if one fails
+				continue
+			}
+
+			additionalDoc := &company.CompanyDocument{
+				CompanyID:    companyID,
+				UploadedBy:   &requestedBy,
+				DocumentType: "LAINNYA",
+				DocumentName: utils.StringPtr(fmt.Sprintf("Dokumen Tambahan %d", i+1)),
+				FilePath:     filePath,
+				Status:       "pending",
+				IsActive:     true,
+				CreatedAt:    time.Now(),
+				UpdatedAt:    time.Now(),
+			}
+			if err := tx.Create(additionalDoc).Error; err != nil {
+				// Continue with other files
+				continue
+			}
+		}
+	}
+
+	// Commit transaction
+	if err := tx.Commit().Error; err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	// Invalidate cache
+	s.cache.Delete(cache.GenerateCacheKey("company", "verification", companyID))
 
 	return nil
 }
@@ -2028,6 +2139,15 @@ func (s *companyService) GetEmployerUser(ctx context.Context, userID, companyID 
 	}
 
 	return employerUser, nil
+}
+
+// GetEmployerUserID retrieves employer_user ID by user ID and company ID
+func (s *companyService) GetEmployerUserID(ctx context.Context, userID, companyID int64) (int64, error) {
+	employerUser, err := s.GetEmployerUser(ctx, userID, companyID)
+	if err != nil {
+		return 0, err
+	}
+	return employerUser.ID, nil
 }
 
 // =============================================================================

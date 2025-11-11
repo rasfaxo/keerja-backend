@@ -1,4 +1,4 @@
-package http
+package companyhandler
 
 import (
 	"strconv"
@@ -9,6 +9,7 @@ import (
 	"keerja-backend/internal/dto/response"
 	"keerja-backend/internal/middleware"
 	"keerja-backend/internal/utils"
+	"keerja-backend/internal/handler/http"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -43,37 +44,37 @@ func (h *CompanyReviewHandler) AddReview(c *fiber.Ctx) error {
 
 	companyID, err := strconv.Atoi(c.Params("id"))
 	if err != nil || companyID <= 0 {
-		return utils.BadRequestResponse(c, ErrInvalidID)
+		return utils.BadRequestResponse(c, http.ErrInvalidID)
 	}
 
 	var req request.AddReviewRequest
 	if err := c.BodyParser(&req); err != nil {
-		return utils.BadRequestResponse(c, ErrInvalidRequest)
+		return utils.BadRequestResponse(c, http.ErrInvalidRequest)
 	}
 	if err := utils.ValidateStruct(&req); err != nil {
 		errs := utils.FormatValidationErrors(err)
-		return utils.ValidationErrorResponse(c, ErrValidationFailed, errs)
+		return utils.ValidationErrorResponse(c, http.ErrValidationFailed, errs)
 	}
 
 	// CRITICAL: Sanitize user-generated content to prevent XSS
 	if req.Pros != nil {
 		sanitized := utils.SanitizeHTML(*req.Pros)
 		if !utils.ValidateNoXSS(sanitized) {
-			return utils.BadRequestResponse(c, ErrPotentialXSS)
+			return utils.BadRequestResponse(c, http.ErrPotentialXSS)
 		}
 		req.Pros = &sanitized
 	}
 	if req.Cons != nil {
 		sanitized := utils.SanitizeHTML(*req.Cons)
 		if !utils.ValidateNoXSS(sanitized) {
-			return utils.BadRequestResponse(c, ErrPotentialXSS)
+			return utils.BadRequestResponse(c, http.ErrPotentialXSS)
 		}
 		req.Cons = &sanitized
 	}
 	if req.AdviceToManagement != nil {
 		sanitized := utils.SanitizeHTML(*req.AdviceToManagement)
 		if !utils.ValidateNoXSS(sanitized) {
-			return utils.BadRequestResponse(c, ErrPotentialXSS)
+			return utils.BadRequestResponse(c, http.ErrPotentialXSS)
 		}
 		req.AdviceToManagement = &sanitized
 	}
@@ -102,10 +103,10 @@ func (h *CompanyReviewHandler) AddReview(c *fiber.Ctx) error {
 
 	rev, err := h.companyService.AddReview(ctx, domainReq)
 	if err != nil {
-		return utils.InternalServerErrorResponse(c, ErrFailedOperation)
+		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
 	}
 	resp := mapper.ToCompanyReviewResponse(rev)
-	return utils.CreatedResponse(c, MsgCreatedSuccess, resp)
+	return utils.CreatedResponse(c, http.MsgCreatedSuccess, resp)
 }
 
 // UpdateReview godoc
@@ -127,37 +128,37 @@ func (h *CompanyReviewHandler) UpdateReview(c *fiber.Ctx) error {
 
 	reviewID, err := strconv.Atoi(c.Params("id"))
 	if err != nil || reviewID <= 0 {
-		return utils.BadRequestResponse(c, ErrInvalidID)
+		return utils.BadRequestResponse(c, http.ErrInvalidID)
 	}
 
 	var req request.UpdateReviewRequest
 	if err := c.BodyParser(&req); err != nil {
-		return utils.BadRequestResponse(c, ErrInvalidRequest)
+		return utils.BadRequestResponse(c, http.ErrInvalidRequest)
 	}
 	if err := utils.ValidateStruct(&req); err != nil {
 		errs := utils.FormatValidationErrors(err)
-		return utils.ValidationErrorResponse(c, ErrValidationFailed, errs)
+		return utils.ValidationErrorResponse(c, http.ErrValidationFailed, errs)
 	}
 
 	// CRITICAL: Sanitize user-generated content
 	if req.Pros != nil {
 		sanitized := utils.SanitizeHTML(*req.Pros)
 		if !utils.ValidateNoXSS(sanitized) {
-			return utils.BadRequestResponse(c, ErrPotentialXSS)
+			return utils.BadRequestResponse(c, http.ErrPotentialXSS)
 		}
 		req.Pros = &sanitized
 	}
 	if req.Cons != nil {
 		sanitized := utils.SanitizeHTML(*req.Cons)
 		if !utils.ValidateNoXSS(sanitized) {
-			return utils.BadRequestResponse(c, ErrPotentialXSS)
+			return utils.BadRequestResponse(c, http.ErrPotentialXSS)
 		}
 		req.Cons = &sanitized
 	}
 	if req.AdviceToManagement != nil {
 		sanitized := utils.SanitizeHTML(*req.AdviceToManagement)
 		if !utils.ValidateNoXSS(sanitized) {
-			return utils.BadRequestResponse(c, ErrPotentialXSS)
+			return utils.BadRequestResponse(c, http.ErrPotentialXSS)
 		}
 		req.AdviceToManagement = &sanitized
 	}
@@ -182,9 +183,9 @@ func (h *CompanyReviewHandler) UpdateReview(c *fiber.Ctx) error {
 	}
 
 	if err := h.companyService.UpdateReview(ctx, int64(reviewID), userID, domainReq); err != nil {
-		return utils.InternalServerErrorResponse(c, ErrFailedOperation)
+		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
 	}
-	return utils.SuccessResponse(c, MsgUpdatedSuccess, nil)
+	return utils.SuccessResponse(c, http.MsgUpdatedSuccess, nil)
 }
 
 // DeleteReview godoc
@@ -204,13 +205,13 @@ func (h *CompanyReviewHandler) DeleteReview(c *fiber.Ctx) error {
 
 	reviewID, err := strconv.Atoi(c.Params("id"))
 	if err != nil || reviewID <= 0 {
-		return utils.BadRequestResponse(c, ErrInvalidID)
+		return utils.BadRequestResponse(c, http.ErrInvalidID)
 	}
 
 	if err := h.companyService.DeleteReview(ctx, int64(reviewID), userID); err != nil {
-		return utils.InternalServerErrorResponse(c, ErrFailedOperation)
+		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
 	}
-	return utils.SuccessResponse(c, MsgDeletedSuccess, nil)
+	return utils.SuccessResponse(c, http.MsgDeletedSuccess, nil)
 }
 
 // GetCompanyReviews godoc
@@ -235,7 +236,7 @@ func (h *CompanyReviewHandler) GetCompanyReviews(c *fiber.Ctx) error {
 
 	companyID, err := strconv.Atoi(c.Params("id"))
 	if err != nil || companyID <= 0 {
-		return utils.BadRequestResponse(c, ErrInvalidID)
+		return utils.BadRequestResponse(c, http.ErrInvalidID)
 	}
 	page := c.QueryInt("page", 1)
 	limit := c.QueryInt("limit", 10)
@@ -268,7 +269,7 @@ func (h *CompanyReviewHandler) GetCompanyReviews(c *fiber.Ctx) error {
 
 	reviews, total, err := h.companyService.GetCompanyReviews(ctx, int64(companyID), &filt)
 	if err != nil {
-		return utils.InternalServerErrorResponse(c, ErrFailedOperation)
+		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
 	}
 
 	resp := make([]response.CompanyReviewResponse, 0, len(reviews))
@@ -279,7 +280,7 @@ func (h *CompanyReviewHandler) GetCompanyReviews(c *fiber.Ctx) error {
 		}
 	}
 	meta := utils.GetPaginationMeta(page, limit, total)
-	return utils.SuccessResponseWithMeta(c, MsgFetchedSuccess, fiber.Map{"reviews": resp}, meta)
+	return utils.SuccessResponseWithMeta(c, http.MsgFetchedSuccess, fiber.Map{"reviews": resp}, meta)
 }
 
 // GetAverageRatings godoc
@@ -296,12 +297,12 @@ func (h *CompanyReviewHandler) GetAverageRatings(c *fiber.Ctx) error {
 
 	companyID, err := strconv.Atoi(c.Params("id"))
 	if err != nil || companyID <= 0 {
-		return utils.BadRequestResponse(c, ErrInvalidID)
+		return utils.BadRequestResponse(c, http.ErrInvalidID)
 	}
 
 	ratings, err := h.companyService.GetAverageRatings(ctx, int64(companyID))
 	if err != nil {
-		return utils.InternalServerErrorResponse(c, ErrFailedOperation)
+		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
 	}
-	return utils.SuccessResponse(c, MsgFetchedSuccess, ratings)
+	return utils.SuccessResponse(c, http.MsgFetchedSuccess, ratings)
 }

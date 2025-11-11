@@ -250,14 +250,10 @@ func SetupCompanyRoutes(api fiber.Router, deps *Dependencies, authMw *middleware
 		deps.CompanyInviteHandler.CancelInvitation,
 	)
 
-	// TODO: Implement RequestVerification handler
+	// Request company verification 
 	protected.Post("/:id/verify",
 		middleware.APIRateLimiter(), // Rate limit verification requests
-		permMw.RequireAdmin(),
-		func(c *fiber.Ctx) error {
-			return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{
-				"message": "Request company verification endpoint - Coming soon",
-			})
-		},
+		permMw.RequireAdmin(),	// Only company admin/owner can request 
+		deps.CompanyBasicHandler.RequestVerification,
 	)
 }

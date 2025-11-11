@@ -4,6 +4,7 @@ import (
 	"keerja-backend/internal/domain/admin"
 	"log"
 
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -69,5 +70,49 @@ func AdminRolesSeeder(db *gorm.DB) error {
 	}
 
 	log.Printf("Successfully seeded %d admin roles", len(roles))
+	return nil
+}
+
+// AdminUserSeeder seeds the initial super admin user
+func AdminUserSeeder(db *gorm.DB) error {
+	log.Println("Seeding admin_users table...")
+
+	// Find Super Admin role
+	var superAdminRole admin.AdminRole
+	if err := db.Where("role_name = ?", "Super Admin").First(&superAdminRole).Error; err != nil {
+		log.Printf("Super Admin role not found: %v", err)
+		return err
+	}
+
+	// Check if admin user already exists
+	adminEmail := "admin@keerja.com"
+	var existingAdmin admin.AdminUser
+	if err := db.Where("email = ?", adminEmail).First(&existingAdmin).Error; err == nil {
+		log.Println("Admin user already exists, skipping seeder.")
+		return nil
+	}
+
+	// Hash password
+	password := "Admin123!" // Change after first login
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		log.Printf("Failed to hash password: %v", err)
+		return err
+	}
+
+	admin := admin.AdminUser{
+		FullName:     "Super Admin",
+		Email:        adminEmail,
+		PasswordHash: string(hashedPassword),
+		RoleID:       &superAdminRole.ID,
+		Status:       "active",
+	}
+
+	if err := db.Create(&admin).Error; err != nil {
+		log.Printf("Failed to create admin user: %v", err)
+		return err
+	}
+
+	log.Println("Successfully seeded initial admin user.")
 	return nil
 }

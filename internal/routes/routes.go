@@ -4,6 +4,9 @@ import (
 	"keerja-backend/internal/config"
 	"keerja-backend/internal/domain/company"
 	"keerja-backend/internal/handler/http"
+	"keerja-backend/internal/handler/http/admin"
+	companyhandler "keerja-backend/internal/handler/http/company"
+	userhandler "keerja-backend/internal/handler/http/jobseeker"
 	"keerja-backend/internal/middleware"
 
 	"github.com/gofiber/fiber/v2"
@@ -11,20 +14,25 @@ import (
 
 // Dependencies holds all handler dependencies
 type Dependencies struct {
-	Config             *config.Config
-	AuthHandler        *http.AuthHandler
-	UserHandler        *http.UserHandler
-	JobHandler         *http.JobHandler         // Job management (9 endpoints)
-	ApplicationHandler *http.ApplicationHandler // Application management (21 endpoints)
-	AdminHandler       *http.AdminHandler       // Admin moderation & job approval
+	Config                 *config.Config
+	AuthHandler            *http.AuthHandler
+	UserHandler            *userhandler.UserHandler
+	JobHandler             *http.JobHandler              // Job management (9 endpoints)
+	ApplicationHandler     *http.ApplicationHandler      // Application management (21 endpoints)
+	AdminHandler           *http.AdminHandler            // Admin moderation & job approval
+	AdminMasterDataHandler *admin.AdminMasterDataHandler // Admin master data CRUD
+
+	// Admin handlers
+	AdminAuthHandler    *http.AdminAuthHandler          // Admin authentication
+	AdminCompanyHandler *admin.CompanyHandler           // Company moderation
+	AdminAuthMiddleware *middleware.AdminAuthMiddleware // Admin auth middleware
 
 	// Company handlers (split by domain for better organization)
-	CompanyBasicHandler   *http.CompanyBasicHandler   // CRUD operations (10 endpoints)
-	CompanyProfileHandler *http.CompanyProfileHandler // Profile & social features (8 endpoints)
-	CompanyReviewHandler  *http.CompanyReviewHandler  // Review system (5 endpoints)
-	CompanyStatsHandler   *http.CompanyStatsHandler   // Statistics & queries (3 endpoints)
-	CompanyInviteHandler  *http.CompanyInviteHandler  // Employee invitation (5 endpoints)
-
+	CompanyBasicHandler   *companyhandler.CompanyBasicHandler   // CRUD operations (10 endpoints)
+	CompanyProfileHandler *companyhandler.CompanyProfileHandler // Profile & social features (8 endpoints)
+	CompanyReviewHandler  *companyhandler.CompanyReviewHandler  // Review system (5 endpoints)
+	CompanyStatsHandler   *companyhandler.CompanyStatsHandler   // Statistics & queries (3 endpoints)
+	CompanyInviteHandler  *companyhandler.CompanyInviteHandler  // Employee invitation (5 endpoints)
 	// Master data handlers
 	SkillsMasterHandler *http.SkillsMasterHandler // Skills master data (8 endpoints)
 	MasterDataHandlers  *MasterDataHandlers       // Industry, company size, location (10 endpoints)
@@ -47,6 +55,9 @@ func SetupRoutes(app *fiber.App, deps *Dependencies) {
 	// Initialize permission middleware
 	permMw := middleware.NewPermissionMiddleware(deps.CompanyService)
 
+	// Get admin auth middleware from dependencies
+	adminAuthMw := deps.AdminAuthMiddleware
+
 	// API v1 group
 	api := app.Group("/api/v1")
 
@@ -64,7 +75,8 @@ func SetupRoutes(app *fiber.App, deps *Dependencies) {
 	SetupJobRoutes(api, deps, authMw)                // job_routes.go
 	SetupApplicationRoutes(api, deps, authMw)        // application_routes.go
 	SetupCompanyRoutes(api, deps, authMw, permMw)    // company_routes.go
-	SetupAdminRoutes(api, deps, authMw)              // admin_routes.go
+	SetupAdminAuthRoutes(api, deps, adminAuthMw)     // admin_auth_routes.go
+	SetupAdminRoutes(api, deps, adminAuthMw)         // admin_routes.go
 	SetupSkillsRoutes(api, deps.SkillsMasterHandler) // skills_routes.go
 
 	// Master data routes (industries, company sizes, locations)

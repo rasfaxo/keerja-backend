@@ -1,4 +1,4 @@
-package http
+package companyhandler
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 	"keerja-backend/internal/domain/email"
 	"keerja-backend/internal/domain/user"
 	"keerja-backend/internal/dto/request"
+	"keerja-backend/internal/handler/http"
 	"keerja-backend/internal/middleware"
 	"keerja-backend/internal/utils"
 
@@ -51,7 +52,7 @@ func (h *CompanyInviteHandler) InviteEmployee(c *fiber.Ctx) error {
 	// Get company ID from path parameter
 	companyID, err := c.ParamsInt("id")
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid company ID", err.Error())
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, http.ErrInvalidCompanyID, err.Error())
 	}
 
 	// Get authenticated user from context using middleware helper
@@ -63,13 +64,13 @@ func (h *CompanyInviteHandler) InviteEmployee(c *fiber.Ctx) error {
 	// Parse and validate request body
 	var req request.InviteEmployeeRequest
 	if err := c.BodyParser(&req); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body", err.Error())
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, http.ErrInvalidRequest, err.Error())
 	}
 
 	// Validate request
 	if err := utils.ValidateStruct(&req); err != nil {
 		errors := utils.FormatValidationErrors(err)
-		return utils.ValidationErrorResponse(c, "Validation failed", errors)
+		return utils.ValidationErrorResponse(c, http.ErrValidationFailed, errors)
 	}
 
 	// Sanitize input
@@ -81,7 +82,7 @@ func (h *CompanyInviteHandler) InviteEmployee(c *fiber.Ctx) error {
 	// Get company to verify ownership and existence
 	comp, err := h.companyService.GetCompany(ctx, int64(companyID))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusNotFound, "Company not found", err.Error())
+		return utils.ErrorResponse(c, fiber.StatusNotFound, http.ErrCompanyNotFound, err.Error())
 	}
 
 	// Check if user is authorized to invite employees (owner or admin)
@@ -103,13 +104,13 @@ func (h *CompanyInviteHandler) InviteEmployee(c *fiber.Ctx) error {
 
 	// Save invitation to database
 	if err := h.companyService.InviteEmployer(ctx, inviteReq); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to create invitation", err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, http.ErrFailedOperation, err.Error())
 	}
 
 	// Get invitation to get token for email
 	invitations, err := h.companyService.GetPendingInvitations(ctx, int64(companyID))
 	if err != nil || len(invitations) == 0 {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to retrieve invitation", "")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, http.ErrFailedOperation, "")
 	}
 
 	// Find the latest invitation for this email
@@ -122,7 +123,7 @@ func (h *CompanyInviteHandler) InviteEmployee(c *fiber.Ctx) error {
 	}
 
 	if invitation == nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to find invitation", "")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, http.ErrFailedOperation, "")
 	}
 
 	// Generate invitation URL
@@ -147,7 +148,7 @@ func (h *CompanyInviteHandler) InviteEmployee(c *fiber.Ctx) error {
 		inviteURL,
 		7, // 7 days expiry
 	); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to send invitation email", err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, http.ErrFailedOperation, err.Error())
 	}
 
 	return utils.SuccessResponse(c, "Invitation sent successfully", fiber.Map{
@@ -192,7 +193,7 @@ func (h *CompanyInviteHandler) AcceptInvitation(c *fiber.Ctx) error {
 
 	// Accept invitation
 	if err := h.companyService.AcceptInvitation(ctx, token, userID); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to accept invitation", err.Error())
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, http.ErrFailedOperation, err.Error())
 	}
 
 	return utils.SuccessResponse(c, "Invitation accepted successfully", fiber.Map{
@@ -222,7 +223,7 @@ func (h *CompanyInviteHandler) ResendInvitation(c *fiber.Ctx) error {
 	// Get company ID and invitation ID from path parameters
 	companyID, err := c.ParamsInt("id")
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid company ID", err.Error())
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, http.ErrInvalidCompanyID, err.Error())
 	}
 
 	invitationID, err := c.ParamsInt("invitationId")
@@ -244,7 +245,7 @@ func (h *CompanyInviteHandler) ResendInvitation(c *fiber.Ctx) error {
 
 	// Resend invitation
 	if err := h.companyService.ResendInvitation(ctx, int64(invitationID), userID); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to resend invitation", err.Error())
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, http.ErrFailedOperation, err.Error())
 	}
 
 	return utils.SuccessResponse(c, "Invitation resent successfully", nil)
@@ -283,7 +284,7 @@ func (h *CompanyInviteHandler) CancelInvitation(c *fiber.Ctx) error {
 
 	// Cancel invitation (permission check inside service)
 	if err := h.companyService.CancelInvitation(ctx, int64(invitationID), userID); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to cancel invitation", err.Error())
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, http.ErrFailedOperation, err.Error())
 	}
 
 	return utils.SuccessResponse(c, "Invitation canceled successfully", nil)
@@ -310,7 +311,7 @@ func (h *CompanyInviteHandler) GetPendingInvitations(c *fiber.Ctx) error {
 	// Get company ID from path parameter
 	companyID, err := c.ParamsInt("id")
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid company ID", err.Error())
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, http.ErrInvalidCompanyID, err.Error())
 	}
 
 	// Get authenticated user
@@ -328,7 +329,7 @@ func (h *CompanyInviteHandler) GetPendingInvitations(c *fiber.Ctx) error {
 	// Get invitations
 	invitations, err := h.companyService.GetPendingInvitations(ctx, int64(companyID))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get invitations", err.Error())
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, http.ErrFailedOperation, err.Error())
 	}
 
 	return utils.SuccessResponse(c, "Invitations retrieved successfully", fiber.Map{

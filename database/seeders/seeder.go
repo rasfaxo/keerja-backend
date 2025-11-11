@@ -40,9 +40,21 @@ func RunSeeders(db *gorm.DB) error {
 		return err
 	}
 
+	// Run admin user seeder
+	if err := AdminUserSeeder(db); err != nil {
+		log.Printf("Failed to run AdminUserSeeder: %v", err)
+		return err
+	}
+
 	// Run companies seeder
 	if err := CompaniesSeeder(db); err != nil {
 		log.Printf("Failed to run CompaniesSeeder: %v", err)
+		return err
+	}
+
+	// Run employer users seeder
+	if err := EmployerUsersSeeder(db); err != nil {
+		log.Printf("Failed to run EmployerUsersSeeder: %v", err)
 		return err
 	}
 

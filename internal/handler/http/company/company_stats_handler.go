@@ -1,4 +1,4 @@
-package http
+package companyhandler
 
 import (
 	"strconv"
@@ -7,7 +7,7 @@ import (
 	"keerja-backend/internal/dto/mapper"
 	"keerja-backend/internal/dto/response"
 	"keerja-backend/internal/utils"
-
+	"keerja-backend/internal/handler/http"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -40,7 +40,7 @@ func (h *CompanyStatsHandler) GetVerifiedCompanies(c *fiber.Ctx) error {
 
 	companies, total, err := h.companyService.GetVerifiedCompanies(ctx, page, limit)
 	if err != nil {
-		return utils.InternalServerErrorResponse(c, ErrFailedOperation)
+		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
 	}
 
 	respList := make([]response.CompanyResponse, 0, len(companies))
@@ -52,7 +52,7 @@ func (h *CompanyStatsHandler) GetVerifiedCompanies(c *fiber.Ctx) error {
 	}
 	meta := utils.GetPaginationMeta(page, limit, total)
 	payload := response.CompanyListResponse{Companies: respList}
-	return utils.SuccessResponseWithMeta(c, MsgFetchedSuccess, payload, meta)
+	return utils.SuccessResponseWithMeta(c, http.MsgFetchedSuccess, payload, meta)
 }
 
 // GetTopRatedCompanies godoc
@@ -73,7 +73,7 @@ func (h *CompanyStatsHandler) GetTopRatedCompanies(c *fiber.Ctx) error {
 
 	companies, err := h.companyService.GetTopRatedCompanies(ctx, limit)
 	if err != nil {
-		return utils.InternalServerErrorResponse(c, ErrFailedOperation)
+		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
 	}
 
 	respList := make([]response.CompanyResponse, 0, len(companies))
@@ -84,7 +84,7 @@ func (h *CompanyStatsHandler) GetTopRatedCompanies(c *fiber.Ctx) error {
 		}
 	}
 	payload := response.CompanyListResponse{Companies: respList}
-	return utils.SuccessResponse(c, MsgFetchedSuccess, payload)
+	return utils.SuccessResponse(c, http.MsgFetchedSuccess, payload)
 }
 
 // GetCompanyStats godoc
@@ -100,12 +100,12 @@ func (h *CompanyStatsHandler) GetCompanyStats(c *fiber.Ctx) error {
 	ctx := c.Context()
 	companyID, err := strconv.Atoi(c.Params("id"))
 	if err != nil || companyID <= 0 {
-		return utils.BadRequestResponse(c, ErrInvalidID)
+		return utils.BadRequestResponse(c, http.ErrInvalidID)
 	}
 
 	stats, err := h.companyService.GetCompanyStats(ctx, int64(companyID))
 	if err != nil {
-		return utils.InternalServerErrorResponse(c, ErrFailedOperation)
+		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
 	}
-	return utils.SuccessResponse(c, MsgFetchedSuccess, stats)
+	return utils.SuccessResponse(c, http.MsgFetchedSuccess, stats)
 }

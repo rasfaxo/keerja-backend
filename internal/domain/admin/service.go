@@ -5,6 +5,22 @@ import (
 	"time"
 )
 
+// AdminAuthService defines business logic for admin authentication
+type AdminAuthService interface {
+	// Authentication
+	Login(ctx context.Context, email, password string) (*AdminUser, string, string, error) // returns: user, accessToken, refreshToken, error
+	Logout(ctx context.Context, adminID int64) error
+	RefreshToken(ctx context.Context, refreshToken string) (string, string, error) // returns: newAccessToken, newRefreshToken, error
+
+	// Profile Management
+	GetCurrentProfile(ctx context.Context, adminID int64) (*AdminUser, error)
+	ChangePassword(ctx context.Context, adminID int64, currentPassword, newPassword string) error
+
+	// Session Management
+	ValidateSession(ctx context.Context, adminID int64) (bool, error)
+	InvalidateAllSessions(ctx context.Context, adminID int64) error
+}
+
 // AdminRoleService defines business logic for admin role management
 type AdminRoleService interface {
 	// Role Management
@@ -111,6 +127,32 @@ type AdminJobService interface {
 	GetPendingJobs(ctx context.Context, page, limit int) ([]interface{}, int64, error)
 	// GetJobsForReview retrieves jobs for review with specific status
 	GetJobsForReview(ctx context.Context, status string, page, limit int) ([]interface{}, int64, error)
+}
+
+// AdminCompanyService defines business logic for admin company management
+// This service is used by admins to moderate, manage, and oversee companies
+type AdminCompanyService interface {
+	// Company Moderation Queue
+	// Task 2.1: List companies with filters, search, and pagination
+	ListCompanies(ctx context.Context, req *AdminCompanyListRequest) (*AdminCompanyListResponse, error)
+
+	// Task 2.2: Get full company details for moderation
+	GetCompanyDetail(ctx context.Context, companyID int64) (*AdminCompanyDetailResponse, error)
+
+	// Task 2.3: Update company verification status (Approve/Reject/Suspend)
+	UpdateCompanyStatus(ctx context.Context, companyID int64, req *AdminCompanyStatusRequest, adminID int64) error
+
+	// Task 2.4: Edit company details (admin support)
+	UpdateCompany(ctx context.Context, companyID int64, req *AdminUpdateCompanyRequest, adminID int64) error
+
+	// Task 2.5: Delete company (with validation)
+	DeleteCompany(ctx context.Context, companyID int64, req *AdminDeleteCompanyRequest, adminID int64) error
+
+	// Additional operations
+	GetCompanyStats(ctx context.Context, companyID int64) (*AdminCompanyStatsResponse, error)
+	GetDashboardStats(ctx context.Context) (*AdminDashboardStatsResponse, error)
+	BulkUpdateStatus(ctx context.Context, companyIDs []int64, status string, adminID int64) (*BulkOperationResult, error)
+	GetAuditLogs(ctx context.Context, companyID int64, page, limit int) (*AuditLogListResponse, error)
 }
 
 // Request DTOs
@@ -324,4 +366,223 @@ type LoginRecord struct {
 	LoginTime time.Time `json:"login_time"`
 	IPAddress string    `json:"ip_address,omitempty"`
 	UserAgent string    `json:"user_agent,omitempty"`
+}
+
+// =============================================================================
+// Admin Company Management DTOs
+// =============================================================================
+
+// AdminCompanyListRequest represents request for listing companies (Task 2.1)
+type AdminCompanyListRequest struct {
+	Page               int
+	Limit              int
+	Search             string // Search by company name, email, legal name
+	Status             string // verification status filter
+	VerificationStatus string // From company_verifications table
+	IndustryID         *int64
+	CompanySizeID      *int64
+	ProvinceID         *int64
+	CityID             *int64
+	Verified           *bool
+	IsActive           *bool
+	CreatedFrom        string // Date filter
+	CreatedTo          string // Date filter
+	SortBy             string // company_name, created_at, verified_at, updated_at
+	SortOrder          string // asc, desc
+}
+
+// AdminCompanyListResponse represents paginated company list response
+type AdminCompanyListResponse struct {
+	Companies  []AdminCompanyListItem `json:"companies"`
+	Total      int64                  `json:"total"`
+	Page       int                    `json:"page"`
+	Limit      int                    `json:"limit"`
+	TotalPages int                    `json:"total_pages"`
+	HasNext    bool                   `json:"has_next"`
+	HasPrev    bool                   `json:"has_prev"`
+}
+
+// AdminCompanyListItem represents a company item in the list
+type AdminCompanyListItem struct {
+	ID                 int64      `json:"id"`
+	UUID               string     `json:"uuid"`
+	CompanyName        string     `json:"company_name"`
+	Slug               string     `json:"slug"`
+	LegalName          string     `json:"legal_name,omitempty"`
+	RegistrationNumber string     `json:"registration_number,omitempty"`
+	Industry           string     `json:"industry,omitempty"`
+	CompanySize        string     `json:"company_size,omitempty"`
+	Location           string     `json:"location,omitempty"`
+	Verified           bool       `json:"verified"`
+	VerifiedAt         *time.Time `json:"verified_at,omitempty"`
+	IsActive           bool       `json:"is_active"`
+	VerificationStatus string     `json:"verification_status"`
+	TotalJobs          int64      `json:"total_jobs"`
+	ActiveJobs         int64      `json:"active_jobs"`
+	TotalApplications  int64      `json:"total_applications"`
+	CreatedAt          time.Time  `json:"created_at"`
+	UpdatedAt          time.Time  `json:"updated_at"`
+}
+
+// AdminCompanyDetailResponse represents full company details (Task 2.2)
+type AdminCompanyDetailResponse struct {
+	ID                 int64      `json:"id"`
+	UUID               string     `json:"uuid"`
+	CompanyName        string     `json:"company_name"`
+	Slug               string     `json:"slug"`
+	LegalName          string     `json:"legal_name,omitempty"`
+	RegistrationNumber string     `json:"registration_number,omitempty"`
+	IndustryID         *int64     `json:"industry_id,omitempty"`
+	CompanySizeID      *int64     `json:"company_size_id,omitempty"`
+	WebsiteURL         string     `json:"website_url,omitempty"`
+	EmailDomain        string     `json:"email_domain,omitempty"`
+	Phone              string     `json:"phone,omitempty"`
+	FullAddress        string     `json:"full_address,omitempty"`
+	Description        string     `json:"description,omitempty"`
+	About              string     `json:"about,omitempty"`
+	Culture            string     `json:"culture,omitempty"`
+	Verified           bool       `json:"verified"`
+	VerifiedAt         *time.Time `json:"verified_at,omitempty"`
+	IsActive           bool       `json:"is_active"`
+	CreatedAt          time.Time  `json:"created_at"`
+	UpdatedAt          time.Time  `json:"updated_at"`
+
+	// Extended info
+	VerificationDetail *CompanyVerificationDetail `json:"verification_detail,omitempty"`
+	Documents          []CompanyDocumentDetail    `json:"documents,omitempty"`
+	OwnerInfo          *CompanyOwnerInfo          `json:"owner_info,omitempty"`
+	Stats              *AdminCompanyStatsResponse `json:"stats,omitempty"`
+}
+
+// CompanyVerificationDetail represents verification details
+type CompanyVerificationDetail struct {
+	ID                int64      `json:"id"`
+	Status            string     `json:"status"`
+	VerificationScore float64    `json:"verification_score"`
+	VerificationNotes string     `json:"verification_notes,omitempty"`
+	RejectionReason   string     `json:"rejection_reason,omitempty"`
+	ReviewedBy        *int64     `json:"reviewed_by,omitempty"`
+	ReviewedByName    string     `json:"reviewed_by_name,omitempty"`
+	ReviewedAt        *time.Time `json:"reviewed_at,omitempty"`
+	CreatedAt         time.Time  `json:"created_at"`
+}
+
+// CompanyDocumentDetail represents document details
+type CompanyDocumentDetail struct {
+	ID              int64      `json:"id"`
+	DocumentType    string     `json:"document_type"`
+	DocumentNumber  string     `json:"document_number,omitempty"`
+	FilePath        string     `json:"file_path"`
+	Status          string     `json:"status"`
+	VerifiedBy      *int64     `json:"verified_by,omitempty"`
+	VerifiedAt      *time.Time `json:"verified_at,omitempty"`
+	RejectionReason string     `json:"rejection_reason,omitempty"`
+}
+
+// CompanyOwnerInfo represents company owner information
+type CompanyOwnerInfo struct {
+	UserID   int64  `json:"user_id"`
+	FullName string `json:"full_name"`
+	Email    string `json:"email"`
+	Phone    string `json:"phone,omitempty"`
+	Role     string `json:"role"`
+}
+
+// AdminCompanyStatusRequest represents request to update company status (Task 2.3)
+type AdminCompanyStatusRequest struct {
+	Status          string  `json:"status" validate:"required,oneof=pending_verification verified rejected suspended blacklisted"`
+	RejectionReason *string `json:"rejection_reason" validate:"omitempty,max=1000"`
+	Notes           *string `json:"notes" validate:"omitempty,max=2000"`
+	GrantBadge      *bool   `json:"grant_badge"`
+}
+
+// AdminUpdateCompanyRequest represents admin request to update company (Task 2.4)
+type AdminUpdateCompanyRequest struct {
+	CompanyName        *string `json:"company_name" validate:"omitempty,min=2,max=200"`
+	LegalName          *string `json:"legal_name" validate:"omitempty,max=200"`
+	RegistrationNumber *string `json:"registration_number" validate:"omitempty,max=100"`
+	IndustryID         *int64  `json:"industry_id"`
+	CompanySizeID      *int64  `json:"company_size_id"`
+	DistrictID         *int64  `json:"district_id"`
+	FullAddress        *string `json:"full_address" validate:"omitempty,max=500"`
+	Description        *string `json:"description" validate:"omitempty,max=2000"`
+	WebsiteURL         *string `json:"website_url" validate:"omitempty,url"`
+	EmailDomain        *string `json:"email_domain" validate:"omitempty,max=100"`
+	Phone              *string `json:"phone" validate:"omitempty,min=10,max=30"`
+	About              *string `json:"about" validate:"omitempty,max=5000"`
+	Culture            *string `json:"culture" validate:"omitempty,max=5000"`
+	IsActive           *bool   `json:"is_active"`
+	Verified           *bool   `json:"verified"`
+}
+
+// AdminDeleteCompanyRequest represents request to delete company (Task 2.5)
+type AdminDeleteCompanyRequest struct {
+	Force  bool   `json:"force"` // Force delete even with active jobs
+	Reason string `json:"reason" validate:"required,min=10,max=500"`
+}
+
+// AdminCompanyStatsResponse represents company statistics
+type AdminCompanyStatsResponse struct {
+	TotalJobs           int64   `json:"total_jobs"`
+	ActiveJobs          int64   `json:"active_jobs"`
+	ClosedJobs          int64   `json:"closed_jobs"`
+	DraftJobs           int64   `json:"draft_jobs"`
+	TotalApplications   int64   `json:"total_applications"`
+	PendingApplications int64   `json:"pending_applications"`
+	TotalFollowers      int64   `json:"total_followers"`
+	TotalEmployees      int64   `json:"total_employees"`
+	TotalReviews        int64   `json:"total_reviews"`
+	AverageRating       float64 `json:"average_rating"`
+}
+
+// AdminDashboardStatsResponse represents overall dashboard statistics
+type AdminDashboardStatsResponse struct {
+	TotalCompanies        int64 `json:"total_companies"`
+	VerifiedCompanies     int64 `json:"verified_companies"`
+	PendingVerification   int64 `json:"pending_verification"`
+	RejectedCompanies     int64 `json:"rejected_companies"`
+	SuspendedCompanies    int64 `json:"suspended_companies"`
+	NewCompaniesThisMonth int64 `json:"new_companies_this_month"`
+	NewCompaniesToday     int64 `json:"new_companies_today"`
+	TotalJobs             int64 `json:"total_jobs"`
+	ActiveJobs            int64 `json:"active_jobs"`
+	TotalApplications     int64 `json:"total_applications"`
+}
+
+// BulkOperationResult represents result of bulk operations
+type BulkOperationResult struct {
+	SuccessCount int64       `json:"success_count"`
+	FailedCount  int64       `json:"failed_count"`
+	Errors       []BulkError `json:"errors,omitempty"`
+}
+
+// BulkError represents error in bulk operation
+type BulkError struct {
+	CompanyID int64  `json:"company_id"`
+	Error     string `json:"error"`
+}
+
+// AuditLogListResponse represents paginated audit log list
+type AuditLogListResponse struct {
+	Logs       []AuditLogEntry `json:"logs"`
+	Total      int64           `json:"total"`
+	Page       int             `json:"page"`
+	Limit      int             `json:"limit"`
+	TotalPages int             `json:"total_pages"`
+}
+
+// AuditLogEntry represents single audit log entry
+type AuditLogEntry struct {
+	ID          int64     `json:"id"`
+	CompanyID   int64     `json:"company_id"`
+	CompanyName string    `json:"company_name"`
+	AdminID     int64     `json:"admin_id"`
+	AdminName   string    `json:"admin_name"`
+	Action      string    `json:"action"` // created, updated, verified, rejected, suspended, deleted
+	Description string    `json:"description"`
+	OldValue    string    `json:"old_value,omitempty"`
+	NewValue    string    `json:"new_value,omitempty"`
+	IPAddress   string    `json:"ip_address,omitempty"`
+	UserAgent   string    `json:"user_agent,omitempty"`
+	CreatedAt   time.Time `json:"created_at"`
 }

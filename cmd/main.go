@@ -11,7 +11,10 @@ import (
 	"keerja-backend/internal/cache"
 	"keerja-backend/internal/config"
 	"keerja-backend/internal/handler/http"
+	"keerja-backend/internal/handler/http/admin"
 	"keerja-backend/internal/handler/http/master"
+	"keerja-backend/internal/handler/http/company"
+	"keerja-backend/internal/handler/http/jobseeker"
 	"keerja-backend/internal/jobs"
 	"keerja-backend/internal/middleware"
 	"keerja-backend/internal/repository/postgres"
@@ -61,6 +64,10 @@ func main() {
 	oauthRepo := postgres.NewOAuthRepository(db)
 	otpCodeRepo := postgres.NewOTPCodeRepository(db)
 	refreshTokenRepo := postgres.NewRefreshTokenRepository(db)
+
+	// Admin repositories
+	adminUserRepo := postgres.NewAdminUserRepository(db)
+	adminRoleRepo := postgres.NewAdminRoleRepository(db)
 
 	// FCM Notification repository
 	deviceTokenRepo := postgres.NewDeviceTokenRepository(db)
@@ -155,6 +162,12 @@ func main() {
 
 	userService := service.NewUserService(userRepo, uploadService, skillsMasterRepo)
 
+	// Admin services
+	appLogger.Info("Initializing admin services...")
+	adminAuthService := service.NewAdminAuthService(adminUserRepo, adminRoleRepo, cfg)
+	adminCompanyService := service.NewAdminCompanyService(companyRepo, jobRepo, emailService, cacheService)
+	appLogger.Info("✓ Admin services initialized")
+
 	// Master data services
 	appLogger.Info("Initializing master data services...")
 	industryService := service.NewIndustryService(industryRepo, cacheService)
@@ -198,11 +211,11 @@ func main() {
 	// Initialize handlers
 	appLogger.Info("Initializing handlers...")
 	authHandler := http.NewAuthHandler(authService, oauthService, registrationService, refreshTokenService, userRepo, companyRepo)
-	userHandler := http.NewUserHandler(userService)
+	userHandler := userhandler.NewUserHandler(userService)
 
 	// Initialize company handlers (split by domain)
 	appLogger.Info("Initializing company handlers...")
-	companyBasicHandler := http.NewCompanyBasicHandler(
+	companyBasicHandler := companyhandler.NewCompanyBasicHandler(
 		companyService,
 		industryRepo,
 		companySizeRepo,
@@ -210,10 +223,10 @@ func main() {
 		cityRepo,
 		districtRepo,
 	)
-	companyProfileHandler := http.NewCompanyProfileHandler(companyService)
-	companyReviewHandler := http.NewCompanyReviewHandler(companyService)
-	companyStatsHandler := http.NewCompanyStatsHandler(companyService)
-	companyInviteHandler := http.NewCompanyInviteHandler(companyService, emailService, userService)
+	companyProfileHandler := companyhandler.NewCompanyProfileHandler(companyService)
+	companyReviewHandler := companyhandler.NewCompanyReviewHandler(companyService)
+	companyStatsHandler := companyhandler.NewCompanyStatsHandler(companyService)
+	companyInviteHandler := companyhandler.NewCompanyInviteHandler(companyService, emailService, userService)
 
 	// Initialize job & application handlers
 	appLogger.Info("Initializing job & application handlers...")
@@ -223,6 +236,28 @@ func main() {
 	// Initialize admin handlers
 	appLogger.Info("Initializing admin handlers...")
 	adminHandler := http.NewAdminHandler(adminJobService)
+	adminAuthHandler := http.NewAdminAuthHandler(adminAuthService)
+	adminCompanyHandler := admin.NewCompanyHandler(adminCompanyService)
+
+	// Initialize admin master data services
+	appLogger.Info("Initializing admin master data services...")
+	adminIndustryService := service.NewAdminIndustryService(industryService, industryRepo, db, cacheService)
+	adminCompanySizeService := service.NewAdminCompanySizeService(companySizeService, companySizeRepo, db, cacheService)
+	adminProvinceService := service.NewAdminProvinceService(provinceService, provinceRepo, db, cacheService)
+	adminCityService := service.NewAdminCityService(cityService, cityRepo, db, cacheService)
+	adminDistrictService := service.NewAdminDistrictService(districtService, districtRepo, db, cacheService)
+	adminJobTypeService := service.NewAdminJobTypeService(jobOptionsService, jobOptionsRepo, db, cacheService)
+	appLogger.Info("✓ Admin master data services initialized")
+
+	// Initialize admin master data handler
+	adminMasterDataHandler := admin.NewAdminMasterDataHandler(
+		adminProvinceService,
+		adminCityService,
+		adminDistrictService,
+		adminIndustryService,
+		adminCompanySizeService,
+		adminJobTypeService,
+	)
 
 	// Initialize master data handlers
 	appLogger.Info("Initializing master data handlers...")
@@ -286,15 +321,22 @@ func main() {
 
 	// Setup routes
 	appLogger.Info("Setting up routes...")
+	adminAuthMw := middleware.NewAdminAuthMiddleware(cfg, adminUserRepo)
 	deps := &routes.Dependencies{
 		Config:      cfg,
 		AuthHandler: authHandler,
 		UserHandler: userHandler,
 
+		// Admin handlers
+		AdminAuthHandler:    adminAuthHandler,
+		AdminCompanyHandler: adminCompanyHandler,
+		AdminAuthMiddleware: adminAuthMw,
+
 		// Job & Application handlers
 		JobHandler:         jobHandler,
 		ApplicationHandler: applicationHandler,
 		AdminHandler:       adminHandler,
+		AdminMasterDataHandler: adminMasterDataHandler,
 
 		// Company handlers (split by domain)
 		CompanyBasicHandler:   companyBasicHandler,

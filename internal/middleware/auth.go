@@ -182,3 +182,29 @@ func GetClaims(c *fiber.Ctx) *utils.Claims {
 	}
 	return claims
 }
+
+// GetAdminID extracts admin ID from admin context
+func GetAdminID(c *fiber.Ctx) int64 {
+	// Try to get from admin claims first
+	adminClaims, ok := c.Locals("admin_claims").(*utils.AdminClaims)
+	if ok && adminClaims != nil {
+		return adminClaims.AdminID
+	}
+
+	// Fallback to regular user_id if admin middleware set it
+	adminID, ok := c.Locals("admin_id").(int64)
+	if ok {
+		return adminID
+	}
+
+	return 0
+}
+
+// GetAdminClaims extracts full admin claims from context
+func GetAdminClaims(c *fiber.Ctx) *utils.AdminClaims {
+	claims, ok := c.Locals("admin_claims").(*utils.AdminClaims)
+	if !ok {
+		return nil
+	}
+	return claims
+}
