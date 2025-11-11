@@ -253,9 +253,16 @@ func (s *adminCompanyService) UpdateCompanyStatus(ctx context.Context, companyID
 	s.cache.Delete(cache.GenerateCacheKey("company", "slug", comp.Slug))
 	s.cache.Delete(cache.GenerateCacheKey("company", "profile", companyID))
 	s.cache.Delete(cache.GenerateCacheKey("company", "stats", companyID))
+	s.cache.Delete(cache.GenerateCacheKey("company", "verification", companyID))
 	s.cache.DeletePattern("companies:list:*")
 	s.cache.DeletePattern("companies:verified:*")
 	s.cache.DeletePattern("companies:top-rated:*")
+
+	// Invalidate user companies cache for all employees/members of this company
+	employees, _ := s.companyRepo.GetEmployerUsersByCompanyID(ctx, companyID)
+	for _, emp := range employees {
+		s.cache.Delete(cache.GenerateCacheKey("user", "companies", emp.UserID))
+	}
 
 	// TODO: Create audit log entry
 	// TODO: Send email notification to company based on status
