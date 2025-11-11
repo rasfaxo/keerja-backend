@@ -24,12 +24,16 @@ type UserBasic struct {
 
 // CompanyBasic represents basic company info in auth response (for employer only)
 type CompanyBasic struct {
-	ID          int64  `json:"id"`
-	UUID        string `json:"uuid"`
-	CompanyName string `json:"company_name"`
-	Slug        string `json:"slug"`
-	LogoURL     string `json:"logo_url,omitempty"`
-	IsVerified  bool   `json:"is_verified"`
+	ID           int64  `json:"id"`
+	UUID         string `json:"uuid"`
+	CompanyName  string `json:"company_name"`
+	Slug         string `json:"slug"`
+	LogoURL      string `json:"logo_url,omitempty"`
+	IsVerified   bool   `json:"verified"`
+	Status       string `json:"status"`                
+	BadgeGranted bool   `json:"badge_granted"`         
+	NPWPNumber   string `json:"npwp_number,omitempty"` 
+	NIBNumber    string `json:"nib_number,omitempty"`  
 }
 
 // TokenResponse represents token-only response

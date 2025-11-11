@@ -35,6 +35,12 @@ func SetupCompanyRoutes(api fiber.Router, deps *Dependencies, authMw *middleware
 		deps.CompanyBasicHandler.GetMyAddresses,
 	)
 
+	// Get my company verification status (authenticated user's company)
+	companies.Get("/me/verification-status",
+		authMw.AuthRequired(),
+		deps.CompanyBasicHandler.GetMyCompanyVerificationStatus,
+	)
+
 	// Get user's followed companies
 	companies.Get("/followed",
 		authMw.AuthRequired(),
@@ -59,6 +65,11 @@ func SetupCompanyRoutes(api fiber.Router, deps *Dependencies, authMw *middleware
 	// Get company by slug (SEO-friendly)
 	companies.Get("/slug/:slug",
 		deps.CompanyBasicHandler.GetCompanyBySlug,
+	)
+
+	// Get company verification status
+	companies.Get("/:id/verification-status",
+		deps.CompanyBasicHandler.GetCompanyVerificationStatus,
 	)
 
 	// ==========================================
@@ -250,10 +261,10 @@ func SetupCompanyRoutes(api fiber.Router, deps *Dependencies, authMw *middleware
 		deps.CompanyInviteHandler.CancelInvitation,
 	)
 
-	// Request company verification 
+	// Request company verification
 	protected.Post("/:id/verify",
 		middleware.APIRateLimiter(), // Rate limit verification requests
-		permMw.RequireAdmin(),	// Only company admin/owner can request 
+		permMw.RequireAdmin(),       // Only company admin/owner can request
 		deps.CompanyBasicHandler.RequestVerification,
 	)
 }

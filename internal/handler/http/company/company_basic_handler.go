@@ -746,6 +746,124 @@ func (h *CompanyBasicHandler) UploadBanner(c *fiber.Ctx) error {
 	return utils.CreatedResponse(c, http.MsgUploadSuccess, fiber.Map{"banner_url": url})
 }
 
+// GetCompanyVerificationStatus godoc
+// @Summary Get company verification status
+// @Description Get company verification status (verified or pending)
+// @Tags companies
+// @Accept json
+// @Produce json
+// @Param id path int true "Company ID"
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.Response
+// @Failure 404 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /companies/{id}/verification-status [get]
+func (h *CompanyBasicHandler) GetCompanyVerificationStatus(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	companyID, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	if err != nil || companyID <= 0 {
+		return utils.BadRequestResponse(c, http.ErrInvalidID)
+	}
+
+	// Get company basic info
+	comp, err := h.companyService.GetCompany(ctx, companyID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusNotFound, http.ErrCompanyNotFound, err.Error())
+	}
+
+	// Get verification details
+	verification, err := h.companyService.GetVerificationStatus(ctx, companyID)
+
+	resp := fiber.Map{
+		"id":           comp.ID,
+		"company_name": comp.CompanyName,
+		"verified":  comp.Verified,
+		"verified_at":  comp.VerifiedAt,
+	}
+
+	// Add verification details if exists
+	if err == nil && verification != nil {
+		resp["status"] = verification.Status
+		resp["verification_score"] = verification.VerificationScore
+		resp["verification_notes"] = verification.VerificationNotes
+		resp["npwp_number"] = verification.NPWPNumber
+		resp["nib_number"] = verification.NIBNumber
+		resp["reviewed_at"] = verification.ReviewedAt
+		resp["verification_expiry"] = verification.VerificationExpiry
+		resp["badge_granted"] = verification.BadgeGranted
+		resp["rejection_reason"] = verification.RejectionReason
+	} else {
+		// No verification record yet
+		resp["status"] = "not_requested"
+	}
+
+	return utils.SuccessResponse(c, "Verification status retrieved successfully", resp)
+}
+
+// GetMyCompanyVerificationStatus godoc
+// @Summary Get my company verification status
+// @Description Get verification status of the authenticated user's company (automatic, no ID needed)
+// @Tags companies
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 404 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /companies/me/verification-status [get]
+func (h *CompanyBasicHandler) GetMyCompanyVerificationStatus(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	// Get authenticated user ID from JWT
+	userID := middleware.GetUserID(c)
+	if userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, http.ErrUnauthorized, "userID not found in context")
+	}
+
+	// Get user's companies
+	companies, err := h.companyService.GetUserCompanies(ctx, userID)
+	if err != nil {
+		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
+	}
+
+	if len(companies) == 0 {
+		return utils.ErrorResponse(c, fiber.StatusNotFound, http.ErrCompanyNotFound, "You don't have any company registered")
+	}
+
+	// Get first company (users can only have 1 company based on business rule)
+	comp := companies[0]
+
+	// Get verification details
+	verification, err := h.companyService.GetVerificationStatus(ctx, comp.ID)
+
+	resp := fiber.Map{
+		"id":           comp.ID,
+		"company_name": comp.CompanyName,
+		"verified":  comp.Verified,
+		"verified_at":  comp.VerifiedAt,
+	}
+
+	// Add verification details if exists
+	if err == nil && verification != nil {
+		resp["status"] = verification.Status
+		resp["verification_score"] = verification.VerificationScore
+		resp["verification_notes"] = verification.VerificationNotes
+		resp["npwp_number"] = verification.NPWPNumber
+		resp["nib_number"] = verification.NIBNumber
+		resp["reviewed_at"] = verification.ReviewedAt
+		resp["verification_expiry"] = verification.VerificationExpiry
+		resp["badge_granted"] = verification.BadgeGranted
+		resp["rejection_reason"] = verification.RejectionReason
+	} else {
+		// No verification record yet
+		resp["status"] = "not_requested"
+	}
+
+	return utils.SuccessResponse(c, "Verification status retrieved successfully", resp)
+}
+
 // DeleteLogo godoc
 // @Summary Delete company logo
 // @Tags companies

@@ -36,6 +36,15 @@ func ToCompanyResponse(c *company.Company) *response.CompanyResponse {
 		CreatedAt:    c.CreatedAt,
 	}
 
+	// Map Verification Status (if available)
+	if c.Verification != nil {
+		resp.Status = c.Verification.Status
+		resp.BadgeGranted = c.Verification.BadgeGranted
+	} else {
+		resp.Status = "not_requested"
+		resp.BadgeGranted = false
+	}
+
 	return resp
 }
 
@@ -90,6 +99,20 @@ func ToCompanyDetailResponse(c *company.Company) *response.CompanyDetailResponse
 		IsActive:   c.IsActive,
 		CreatedAt:  c.CreatedAt,
 		UpdatedAt:  c.UpdatedAt,
+	}
+
+	// Map Verification Status
+	if c.Verification != nil {
+		resp.Status = c.Verification.Status
+		resp.BadgeGranted = c.Verification.BadgeGranted
+		resp.NPWPNumber = c.Verification.NPWPNumber
+		if c.Verification.NIBNumber != nil {
+			resp.NIBNumber = *c.Verification.NIBNumber
+		}
+	} else {
+		// No verification record yet
+		resp.Status = "not_requested"
+		resp.BadgeGranted = false
 	}
 
 	// ALWAYS Map Master Data Relations (whether preloaded or not)

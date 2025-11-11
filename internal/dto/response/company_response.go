@@ -31,9 +31,14 @@ type CompanyResponse struct {
 	About      string     `json:"about,omitempty"`
 	Verified   bool       `json:"verified"`
 	VerifiedAt *time.Time `json:"verified_at,omitempty"`
-	IsActive   bool       `json:"is_active"`
-	CreatedAt  time.Time  `json:"created_at"`
-	UpdatedAt  time.Time  `json:"updated_at"`
+
+	// Verification Status Details
+	Status       string `json:"status,omitempty"`        // "verified", "pending", "under_review", "rejected", "not_requested"
+	BadgeGranted bool   `json:"badge_granted,omitempty"` // Whether company has verification badge
+
+	IsActive  bool      `json:"is_active"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 
 	// Stats
 	FollowersCount int64   `json:"followers_count"`
@@ -88,9 +93,16 @@ type CompanyDetailResponse struct {
 	Benefits   []string   `json:"benefits,omitempty"`
 	Verified   bool       `json:"verified"`
 	VerifiedAt *time.Time `json:"verified_at,omitempty"`
-	IsActive   bool       `json:"is_active"`
-	CreatedAt  time.Time  `json:"created_at"`
-	UpdatedAt  time.Time  `json:"updated_at"`
+
+	// Verification Status Details
+	Status       string `json:"status"`                // "verified", "pending", "under_review", "rejected", "not_requested"
+	BadgeGranted bool   `json:"badge_granted"`         // Whether company has verification badge
+	NPWPNumber   string `json:"npwp_number,omitempty"` // NPWP number if verified
+	NIBNumber    string `json:"nib_number,omitempty"`  // NIB number if provided
+
+	IsActive  bool      `json:"is_active"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 
 	// Relations
 	Profile    *CompanyProfileResponse   `json:"profile,omitempty"`
