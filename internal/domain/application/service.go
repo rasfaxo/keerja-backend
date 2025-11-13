@@ -13,7 +13,7 @@ type ApplicationService interface {
 	GetMyApplications(ctx context.Context, userID int64, filter ApplicationFilter, page, limit int) (*ApplicationListResponse, error)
 	GetApplicationDetail(ctx context.Context, applicationID, userID int64) (*ApplicationDetailResponse, error)
 	GetMyApplicationStats(ctx context.Context, userID int64) (*UserApplicationStats, error)
-	
+
 	// Application review and management (Employer)
 	GetJobApplications(ctx context.Context, jobID int64, filter ApplicationFilter, page, limit int) (*ApplicationListResponse, error)
 	GetCompanyApplications(ctx context.Context, companyID int64, filter ApplicationFilter, page, limit int) (*ApplicationListResponse, error)
@@ -21,7 +21,7 @@ type ApplicationService interface {
 	MarkAsViewed(ctx context.Context, applicationID, employerUserID int64) error
 	ToggleBookmark(ctx context.Context, applicationID, employerUserID int64) error
 	GetBookmarkedApplications(ctx context.Context, companyID int64, page, limit int) (*ApplicationListResponse, error)
-	
+
 	// Application status workflow (Employer)
 	MoveToScreening(ctx context.Context, applicationID, handledBy int64, notes string) error
 	MoveToShortlist(ctx context.Context, applicationID, handledBy int64, notes string) error
@@ -30,13 +30,13 @@ type ApplicationService interface {
 	MarkAsHired(ctx context.Context, applicationID, handledBy int64, notes string) error
 	RejectApplication(ctx context.Context, applicationID, handledBy int64, reason string) error
 	BulkUpdateStatus(ctx context.Context, applicationIDs []int64, status string, handledBy int64) error
-	
+
 	// Stage management
 	GetApplicationStages(ctx context.Context, applicationID int64) ([]JobApplicationStage, error)
 	GetCurrentStage(ctx context.Context, applicationID int64) (*JobApplicationStage, error)
 	GetStageHistory(ctx context.Context, applicationID int64) ([]JobApplicationStage, error)
 	CompleteStage(ctx context.Context, stageID, handledBy int64, notes string) error
-	
+
 	// Document management
 	UploadApplicationDocument(ctx context.Context, req *UploadDocumentRequest) (*ApplicationDocument, error)
 	UpdateDocument(ctx context.Context, documentID int64, req *UpdateDocumentRequest) (*ApplicationDocument, error)
@@ -45,7 +45,7 @@ type ApplicationService interface {
 	GetDocumentsByType(ctx context.Context, applicationID int64, docType string) ([]ApplicationDocument, error)
 	VerifyDocument(ctx context.Context, documentID, verifiedBy int64, notes string) error
 	GetUnverifiedDocuments(ctx context.Context, page, limit int) ([]ApplicationDocument, int64, error)
-	
+
 	// Notes management (Employer)
 	AddNote(ctx context.Context, req *AddNoteRequest) (*ApplicationNote, error)
 	UpdateNote(ctx context.Context, noteID int64, req *UpdateNoteRequest) (*ApplicationNote, error)
@@ -55,7 +55,7 @@ type ApplicationService interface {
 	PinNote(ctx context.Context, noteID, employerUserID int64) error
 	UnpinNote(ctx context.Context, noteID, employerUserID int64) error
 	GetPinnedNotes(ctx context.Context, applicationID int64) ([]ApplicationNote, error)
-	
+
 	// Interview scheduling and management
 	ScheduleInterview(ctx context.Context, req *ScheduleInterviewRequest) (*Interview, error)
 	RescheduleInterview(ctx context.Context, interviewID int64, req *RescheduleInterviewRequest) (*Interview, error)
@@ -67,12 +67,12 @@ type ApplicationService interface {
 	GetUpcomingInterviews(ctx context.Context, employerUserID int64, days int) ([]Interview, error)
 	GetInterviewsByDateRange(ctx context.Context, startDate, endDate time.Time) ([]Interview, error)
 	SendInterviewReminder(ctx context.Context, interviewID int64) error
-	
+
 	// Search and filtering
 	SearchApplications(ctx context.Context, filter ApplicationSearchFilter, page, limit int) (*ApplicationListResponse, error)
 	GetHighScoreApplications(ctx context.Context, companyID int64, minScore float64, limit int) ([]JobApplication, error)
 	GetRecentApplications(ctx context.Context, companyID int64, hours int, limit int) ([]JobApplication, error)
-	
+
 	// Analytics and reporting
 	GetApplicationAnalytics(ctx context.Context, applicationID int64) (*ApplicationAnalytics, error)
 	GetJobApplicationAnalytics(ctx context.Context, jobID int64, startDate, endDate time.Time) (*JobApplicationAnalytics, error)
@@ -82,19 +82,19 @@ type ApplicationService interface {
 	GetAverageTimePerStage(ctx context.Context, companyID int64) ([]StageTimeStats, error)
 	GetTopApplicants(ctx context.Context, jobID int64, limit int) ([]JobApplication, error)
 	GetApplicationSourceAnalytics(ctx context.Context, companyID int64) ([]SourceStats, error)
-	
+
 	// Notifications
 	NotifyApplicationReceived(ctx context.Context, applicationID int64) error
 	NotifyStatusUpdate(ctx context.Context, applicationID int64, newStatus string) error
 	NotifyInterviewScheduled(ctx context.Context, interviewID int64) error
 	NotifyInterviewReminder(ctx context.Context, interviewID int64) error
-	
+
 	// Validation and permissions
 	ValidateApplication(ctx context.Context, application *JobApplication) error
 	CheckApplicationOwnership(ctx context.Context, applicationID, userID int64) error
 	CheckEmployerAccess(ctx context.Context, applicationID, employerUserID int64) error
 	CanApplyForJob(ctx context.Context, jobID, userID int64) error
-	
+
 	// Bulk operations
 	BulkRejectApplications(ctx context.Context, applicationIDs []int64, rejectedBy int64, reason string) error
 	BulkMoveToStage(ctx context.Context, applicationIDs []int64, stage string, handledBy int64) error
@@ -105,12 +105,12 @@ type ApplicationService interface {
 
 // ApplyJobRequest represents request to apply for a job
 type ApplyJobRequest struct {
-	JobID      int64    `json:"job_id" validate:"required"`
-	UserID     int64    `json:"user_id" validate:"required"`
-	ResumeURL  string   `json:"resume_url,omitempty"`
-	CoverLetter string  `json:"cover_letter,omitempty"`
-	Source     string   `json:"source,omitempty"`
-	Documents  []UploadDocumentRequest `json:"documents,omitempty"`
+	JobID       int64                   `json:"job_id" validate:"required"`
+	UserID      int64                   `json:"user_id" validate:"required"`
+	ResumeURL   string                  `json:"resume_url,omitempty"`
+	CoverLetter string                  `json:"cover_letter,omitempty"`
+	Source      string                  `json:"source,omitempty"`
+	Documents   []UploadDocumentRequest `json:"documents,omitempty"`
 }
 
 // UploadDocumentRequest represents request to upload application document
@@ -165,10 +165,10 @@ type ScheduleInterviewRequest struct {
 
 // RescheduleInterviewRequest represents request to reschedule interview
 type RescheduleInterviewRequest struct {
-	ScheduledAt   time.Time `json:"scheduled_at" validate:"required"`
-	Reason        string    `json:"reason,omitempty"`
-	MeetingLink   string    `json:"meeting_link,omitempty"`
-	Location      string    `json:"location,omitempty"`
+	ScheduledAt time.Time `json:"scheduled_at" validate:"required"`
+	Reason      string    `json:"reason,omitempty"`
+	MeetingLink string    `json:"meeting_link,omitempty"`
+	Location    string    `json:"location,omitempty"`
 }
 
 // CompleteInterviewRequest represents request to complete interview with evaluation
@@ -213,14 +213,14 @@ type ApplicationSummary struct {
 
 // ApplicationDetailResponse represents detailed application information
 type ApplicationDetailResponse struct {
-	Application      JobApplication        `json:"application"`
-	Job              JobDetail             `json:"job"`
-	Applicant        ApplicantProfile      `json:"applicant"`
-	Stages           []JobApplicationStage `json:"stages"`
-	Documents        []ApplicationDocument `json:"documents"`
-	Notes            []ApplicationNote     `json:"notes"`
-	Interviews       []Interview           `json:"interviews"`
-	Stats            *ApplicationStats     `json:"stats,omitempty"`
+	Application JobApplication        `json:"application"`
+	Job         JobDetail             `json:"job"`
+	Applicant   ApplicantProfile      `json:"applicant"`
+	Stages      []JobApplicationStage `json:"stages"`
+	Documents   []ApplicationDocument `json:"documents"`
+	Notes       []ApplicationNote     `json:"notes"`
+	Interviews  []Interview           `json:"interviews"`
+	Stats       *ApplicationStats     `json:"stats,omitempty"`
 }
 
 // JobDetail represents job information in application context
@@ -250,22 +250,22 @@ type ApplicantProfile struct {
 
 // ListStats represents statistics for application list
 type ListStats struct {
-	TotalApplications   int64   `json:"total_applications"`
-	ViewedCount         int64   `json:"viewed_count"`
-	BookmarkedCount     int64   `json:"bookmarked_count"`
-	AverageMatchScore   float64 `json:"average_match_score"`
-	StatusBreakdown     map[string]int64 `json:"status_breakdown"`
+	TotalApplications int64            `json:"total_applications"`
+	ViewedCount       int64            `json:"viewed_count"`
+	BookmarkedCount   int64            `json:"bookmarked_count"`
+	AverageMatchScore float64          `json:"average_match_score"`
+	StatusBreakdown   map[string]int64 `json:"status_breakdown"`
 }
 
 // ApplicationAnalytics represents detailed application analytics
 type ApplicationAnalytics struct {
-	ApplicationID       int64                  `json:"application_id"`
-	Timeline            []TimelineEvent        `json:"timeline"`
-	StageProgress       []StageProgress        `json:"stage_progress"`
-	DocumentStats       DocumentStats          `json:"document_stats"`
-	InterviewStats      InterviewStats         `json:"interview_stats"`
-	MatchAnalysis       MatchAnalysis          `json:"match_analysis"`
-	ActivityLog         []ActivityLogEntry     `json:"activity_log"`
+	ApplicationID  int64              `json:"application_id"`
+	Timeline       []TimelineEvent    `json:"timeline"`
+	StageProgress  []StageProgress    `json:"stage_progress"`
+	DocumentStats  DocumentStats      `json:"document_stats"`
+	InterviewStats InterviewStats     `json:"interview_stats"`
+	MatchAnalysis  MatchAnalysis      `json:"match_analysis"`
+	ActivityLog    []ActivityLogEntry `json:"activity_log"`
 }
 
 // TimelineEvent represents timeline event
@@ -287,17 +287,17 @@ type StageProgress struct {
 
 // DocumentStats represents document statistics
 type DocumentStats struct {
-	TotalDocuments    int64              `json:"total_documents"`
-	VerifiedDocuments int64              `json:"verified_documents"`
-	DocumentTypes     map[string]int64   `json:"document_types"`
+	TotalDocuments    int64            `json:"total_documents"`
+	VerifiedDocuments int64            `json:"verified_documents"`
+	DocumentTypes     map[string]int64 `json:"document_types"`
 }
 
 // InterviewStats represents interview statistics
 type InterviewStats struct {
-	TotalInterviews      int64   `json:"total_interviews"`
-	CompletedInterviews  int64   `json:"completed_interviews"`
-	AverageScore         float64 `json:"average_score"`
-	HighestScore         float64 `json:"highest_score"`
+	TotalInterviews     int64   `json:"total_interviews"`
+	CompletedInterviews int64   `json:"completed_interviews"`
+	AverageScore        float64 `json:"average_score"`
+	HighestScore        float64 `json:"highest_score"`
 }
 
 // MatchAnalysis represents match analysis
@@ -320,31 +320,31 @@ type ActivityLogEntry struct {
 
 // JobApplicationAnalytics represents job application analytics
 type JobApplicationAnalytics struct {
-	JobID                int64              `json:"job_id"`
-	JobTitle             string             `json:"job_title"`
-	Period               string             `json:"period"`
-	TotalApplications    int64              `json:"total_applications"`
-	StatusBreakdown      map[string]int64   `json:"status_breakdown"`
-	AverageMatchScore    float64            `json:"average_match_score"`
-	ConversionFunnel     *ConversionFunnel  `json:"conversion_funnel"`
-	ApplicationsOverTime []TimeSeriesData   `json:"applications_over_time"`
-	TopSources           []SourceStats      `json:"top_sources"`
-	AverageTimeToHire    float64            `json:"average_time_to_hire"`
+	JobID                int64             `json:"job_id"`
+	JobTitle             string            `json:"job_title"`
+	Period               string            `json:"period"`
+	TotalApplications    int64             `json:"total_applications"`
+	StatusBreakdown      map[string]int64  `json:"status_breakdown"`
+	AverageMatchScore    float64           `json:"average_match_score"`
+	ConversionFunnel     *ConversionFunnel `json:"conversion_funnel"`
+	ApplicationsOverTime []TimeSeriesData  `json:"applications_over_time"`
+	TopSources           []SourceStats     `json:"top_sources"`
+	AverageTimeToHire    float64           `json:"average_time_to_hire"`
 }
 
 // CompanyApplicationAnalytics represents company application analytics
 type CompanyApplicationAnalytics struct {
-	CompanyID            int64              `json:"company_id"`
-	CompanyName          string             `json:"company_name"`
-	Period               string             `json:"period"`
-	TotalApplications    int64              `json:"total_applications"`
-	TotalHires           int64              `json:"total_hires"`
-	ConversionRate       float64            `json:"conversion_rate"`
-	AverageTimeToHire    float64            `json:"average_time_to_hire"`
-	ApplicationsByJob    []JobStats         `json:"applications_by_job"`
-	ApplicationsOverTime []TimeSeriesData   `json:"applications_over_time"`
-	SourceBreakdown      []SourceStats      `json:"source_breakdown"`
-	StageTimeAnalysis    []StageTimeStats   `json:"stage_time_analysis"`
+	CompanyID            int64            `json:"company_id"`
+	CompanyName          string           `json:"company_name"`
+	Period               string           `json:"period"`
+	TotalApplications    int64            `json:"total_applications"`
+	TotalHires           int64            `json:"total_hires"`
+	ConversionRate       float64          `json:"conversion_rate"`
+	AverageTimeToHire    float64          `json:"average_time_to_hire"`
+	ApplicationsByJob    []JobStats       `json:"applications_by_job"`
+	ApplicationsOverTime []TimeSeriesData `json:"applications_over_time"`
+	SourceBreakdown      []SourceStats    `json:"source_breakdown"`
+	StageTimeAnalysis    []StageTimeStats `json:"stage_time_analysis"`
 }
 
 // TimeSeriesData represents time-series data point
@@ -355,9 +355,9 @@ type TimeSeriesData struct {
 
 // JobStats represents job statistics
 type JobStats struct {
-	JobID             int64   `json:"job_id"`
-	JobTitle          string  `json:"job_title"`
-	ApplicationCount  int64   `json:"application_count"`
-	HiredCount        int64   `json:"hired_count"`
-	ConversionRate    float64 `json:"conversion_rate"`
+	JobID            int64   `json:"job_id"`
+	JobTitle         string  `json:"job_title"`
+	ApplicationCount int64   `json:"application_count"`
+	HiredCount       int64   `json:"hired_count"`
+	ConversionRate   float64 `json:"conversion_rate"`
 }

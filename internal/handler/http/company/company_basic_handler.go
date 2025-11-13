@@ -778,7 +778,7 @@ func (h *CompanyBasicHandler) GetCompanyVerificationStatus(c *fiber.Ctx) error {
 	resp := fiber.Map{
 		"id":           comp.ID,
 		"company_name": comp.CompanyName,
-		"verified":  comp.Verified,
+		"verified":     comp.Verified,
 		"verified_at":  comp.VerifiedAt,
 	}
 
@@ -841,7 +841,7 @@ func (h *CompanyBasicHandler) GetMyCompanyVerificationStatus(c *fiber.Ctx) error
 	resp := fiber.Map{
 		"id":           comp.ID,
 		"company_name": comp.CompanyName,
-		"verified":  comp.Verified,
+		"verified":     comp.Verified,
 		"verified_at":  comp.VerifiedAt,
 	}
 

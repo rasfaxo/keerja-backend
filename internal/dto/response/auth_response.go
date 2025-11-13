@@ -30,10 +30,10 @@ type CompanyBasic struct {
 	Slug         string `json:"slug"`
 	LogoURL      string `json:"logo_url,omitempty"`
 	IsVerified   bool   `json:"verified"`
-	Status       string `json:"status"`                
-	BadgeGranted bool   `json:"badge_granted"`         
-	NPWPNumber   string `json:"npwp_number,omitempty"` 
-	NIBNumber    string `json:"nib_number,omitempty"`  
+	Status       string `json:"status"`
+	BadgeGranted bool   `json:"badge_granted"`
+	NPWPNumber   string `json:"npwp_number,omitempty"`
+	NIBNumber    string `json:"nib_number,omitempty"`
 }
 
 // TokenResponse represents token-only response

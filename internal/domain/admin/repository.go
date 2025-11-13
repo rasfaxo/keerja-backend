@@ -99,62 +99,62 @@ type AdminRoleFilter struct {
 
 // AdminUserFilter defines filter options for admin user queries
 type AdminUserFilter struct {
-	Search           string
-	Status           string
-	RoleID           *int64
-	MinAccessLevel   *int16
-	Has2FA           *bool
-	CreatedBy        *int64
-	LastLoginAfter   *time.Time
-	LastLoginBefore  *time.Time
-	CreatedAfter     *time.Time
-	CreatedBefore    *time.Time
-	Page             int
-	PageSize         int
-	SortBy           string
-	SortOrder        string
+	Search          string
+	Status          string
+	RoleID          *int64
+	MinAccessLevel  *int16
+	Has2FA          *bool
+	CreatedBy       *int64
+	LastLoginAfter  *time.Time
+	LastLoginBefore *time.Time
+	CreatedAfter    *time.Time
+	CreatedBefore   *time.Time
+	Page            int
+	PageSize        int
+	SortBy          string
+	SortOrder       string
 }
 
 // AdminRoleStats contains statistics about admin roles
 type AdminRoleStats struct {
-	TotalRoles       int64
-	SystemRoles      int64
-	CustomRoles      int64
-	ByAccessLevel    map[int16]int64
-	MostUsedRole     *AdminRole
+	TotalRoles        int64
+	SystemRoles       int64
+	CustomRoles       int64
+	ByAccessLevel     map[int16]int64
+	MostUsedRole      *AdminRole
 	MostUsedRoleCount int64
 }
 
 // AdminUserStats contains statistics about admin users
 type AdminUserStats struct {
-	TotalUsers      int64
-	ActiveUsers     int64
-	InactiveUsers   int64
-	SuspendedUsers  int64
-	Users2FA        int64
-	ByRole          map[int64]int64
-	SuperAdmins     int64
-	Admins          int64
-	Moderators      int64
+	TotalUsers     int64
+	ActiveUsers    int64
+	InactiveUsers  int64
+	SuspendedUsers int64
+	Users2FA       int64
+	ByRole         map[int64]int64
+	SuperAdmins    int64
+	Admins         int64
+	Moderators     int64
 }
 
 // AdminActivityStats contains activity statistics for admin users
 type AdminActivityStats struct {
-	Period          string
-	TotalLogins     int64
-	UniqueUsers     int64
-	AverageLogins   float64
-	LoginsByDate    map[string]int64
-	LoginsByUser    map[int64]int64
-	TopActiveUsers  []AdminUser
+	Period         string
+	TotalLogins    int64
+	UniqueUsers    int64
+	AverageLogins  float64
+	LoginsByDate   map[string]int64
+	LoginsByUser   map[int64]int64
+	TopActiveUsers []AdminUser
 }
 
 // UserActivity contains activity information for a specific admin user
 type UserActivity struct {
-	UserID          int64
-	TotalLogins     int64
-	LastLogin       *time.Time
-	CreatedUsers    int64
-	CreatedRoles    int64
-	LoginHistory    []time.Time
+	UserID       int64
+	TotalLogins  int64
+	LastLogin    *time.Time
+	CreatedUsers int64
+	CreatedRoles int64
+	LoginHistory []time.Time
 }

@@ -208,16 +208,16 @@ func (s *uploadService) CalculateChecksum(file *multipart.FileHeader) (string, e
 
 // File type constants for validation
 var (
-	ImageTypes = []string{".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"}
+	ImageTypes    = []string{".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"}
 	DocumentTypes = []string{".pdf", ".doc", ".docx", ".txt", ".rtf"}
-	VideoTypes = []string{".mp4", ".avi", ".mov", ".wmv", ".flv", ".webm"}
+	VideoTypes    = []string{".mp4", ".avi", ".mov", ".wmv", ".flv", ".webm"}
 	AllMediaTypes = append(append(ImageTypes, DocumentTypes...), VideoTypes...)
 )
 
 // File size constants (in bytes)
 const (
-	MaxAvatarSize    = 5 * 1024 * 1024   // 5 MB
-	MaxCoverSize     = 10 * 1024 * 1024  // 10 MB
-	MaxDocumentSize  = 20 * 1024 * 1024  // 20 MB
-	MaxVideoSize     = 100 * 1024 * 1024 // 100 MB
+	MaxAvatarSize   = 5 * 1024 * 1024   // 5 MB
+	MaxCoverSize    = 10 * 1024 * 1024  // 10 MB
+	MaxDocumentSize = 20 * 1024 * 1024  // 20 MB
+	MaxVideoSize    = 100 * 1024 * 1024 // 100 MB
 )

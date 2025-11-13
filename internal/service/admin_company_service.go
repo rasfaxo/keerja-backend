@@ -216,6 +216,11 @@ func (s *adminCompanyService) UpdateCompanyStatus(ctx context.Context, companyID
 		// Set verification expiry to 1 year from now
 		expiry := now.AddDate(1, 0, 0)
 		verification.VerificationExpiry = &expiry
+
+		// Update all jobs for this company from 'in_review' to 'draft'
+		if err := s.jobRepo.UpdateStatusByCompany(ctx, companyID, "in_review", "draft"); err != nil {
+			return fmt.Errorf("failed to update jobs to draft: %w", err)
+		}
 	} else if req.Status == "rejected" {
 		// Keep verified as false, set rejection reason
 		comp.Verified = false

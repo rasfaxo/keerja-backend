@@ -190,6 +190,7 @@ func main() {
 		industryService,
 		companySizeService,
 		districtService,
+		jobRepo,
 	)
 
 	jobService := service.NewJobService(

@@ -69,6 +69,12 @@ func SetupJobRoutes(api fiber.Router, deps *Dependencies, authMw *middleware.Aut
 		deps.JobHandler.GetMyJobs,
 	)
 
+	// GET /api/v1/jobs/grouped-by-status - Get jobs grouped by status for mobile tab UI
+	protected.Get("/grouped-by-status",
+		middleware.SearchRateLimiter(),
+		deps.JobHandler.GetJobsGroupedByStatus,
+	)
+
 	// POST /api/v1/jobs/draft - Save job draft (Phase 6)
 	protected.Post("/draft",
 		middleware.ApplicationRateLimiter(),

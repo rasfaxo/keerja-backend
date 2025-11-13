@@ -19,23 +19,23 @@ func NewApplicationFactory() *ApplicationFactory {
 
 // ApplicationBuilder provides a fluent interface for building applications
 type ApplicationBuilder struct {
-	ID           int64
-	JobID        int64
-	UserID       int64
-	Status       string
-	CoverLetter  string
-	ResumeURL    *string
-	PortfolioURL *string
-	LinkedInURL  *string
-	GitHubURL    *string
-	AppliedAt    time.Time
-	ReviewedAt   *time.Time
-	ReviewedBy   *int64
-	Notes        string
-	Rating       *int
+	ID            int64
+	JobID         int64
+	UserID        int64
+	Status        string
+	CoverLetter   string
+	ResumeURL     *string
+	PortfolioURL  *string
+	LinkedInURL   *string
+	GitHubURL     *string
+	AppliedAt     time.Time
+	ReviewedAt    *time.Time
+	ReviewedBy    *int64
+	Notes         string
+	Rating        *int
 	IsShortlisted bool
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
 }
 
 // Build builds the application

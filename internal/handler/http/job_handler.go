@@ -29,6 +29,48 @@ type JobHandler struct {
 	skillsService     master.SkillsMasterService
 }
 
+// GetJobsGroupedByStatus handles GET /api/v1/jobs/grouped-by-status
+// @Summary Get jobs grouped by status for mobile tab UI
+// @Description Returns jobs grouped by status (active, inactive, draft, in_review)
+// @Tags Jobs
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /api/v1/jobs/grouped-by-status [get]
+func (h *JobHandler) GetJobsGroupedByStatus(c *fiber.Ctx) error {
+	ctx := c.UserContext()
+	userID := middleware.GetUserID(c)
+	if userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Authentication required", "User ID not found in context")
+	}
+	groupedJobs, err := h.companyService.GetJobsGroupedByStatus(ctx, userID)
+	if err != nil {
+		return utils.InternalServerErrorResponse(c, "Failed to retrieve jobs grouped by status")
+	}
+
+	// Map domain jobs to response DTOs using mapper
+	groupedResp := map[string][]response.JobResponse{
+		"active":    {},
+		"inactive":  {},
+		"draft":     {},
+		"in_review": {},
+	}
+	for status, jobs := range groupedJobs {
+		for _, j := range jobs {
+			jr := mapper.ToJobResponse(&j)
+			if jr != nil {
+				groupedResp[status] = append(groupedResp[status], *jr)
+			}
+		}
+	}
+
+	return utils.SuccessResponse(c, "Jobs grouped by status retrieved successfully", groupedResp)
+
+}
+
 func NewJobHandler(jobService job.JobService, companyService company.CompanyService, jobOptionsService master.JobOptionsService, skillService master.SkillsMasterService) *JobHandler {
 	return &JobHandler{
 		jobService:        jobService,
@@ -256,7 +298,7 @@ func (h *JobHandler) GetJobRequirements(c *fiber.Ctx) error {
 func (h *JobHandler) ListJobs(c *fiber.Ctx) error {
 	ctx := c.Context()
 
-	var q request.JobSearchRequest
+	var q request.JobFilterRequest
 	if err := c.QueryParser(&q); err != nil {
 		return utils.BadRequestResponse(c, ErrInvalidQueryParams)
 	}
@@ -266,8 +308,21 @@ func (h *JobHandler) ListJobs(c *fiber.Ctx) error {
 	}
 	q.Page, q.Limit = utils.ValidatePagination(q.Page, q.Limit, 100)
 
-	// Build domain filter using helper
-	f := helpers.BuildJobFilter(q)
+	// Build domain filter
+	f := job.JobFilter{
+		Status:     q.Status,
+		CompanyID:  0,
+		CategoryID: 0,
+		City:       "",
+		Province:   "",
+		SortBy:     q.SortBy,
+	}
+	if q.CompanyID != nil {
+		f.CompanyID = *q.CompanyID
+	}
+	if q.CategoryID != nil {
+		f.CategoryID = *q.CategoryID
+	}
 
 	jobs, total, err := h.jobService.ListJobs(ctx, f, q.Page, q.Limit)
 	if err != nil {
@@ -284,6 +339,7 @@ func (h *JobHandler) ListJobs(c *fiber.Ctx) error {
 
 	meta := utils.GetPaginationMeta(q.Page, q.Limit, total)
 	payload := response.JobListResponse{Jobs: respJobs}
+	// Document: /jobs?status=in_review, /jobs?status=draft, /jobs?status=published, /jobs?status=closed, /jobs?status=expired
 	return utils.SuccessResponseWithMeta(c, MsgFetchedSuccess, payload, meta)
 }
 

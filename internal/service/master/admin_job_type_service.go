@@ -190,4 +190,3 @@ func (s *adminJobTypeServiceImpl) invalidateCache() {
 	// Job types are cached in job options cache
 	s.cache.Delete("job_options:all")
 }
-

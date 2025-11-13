@@ -12,12 +12,12 @@ import (
 
 // AdminMasterDataHandler handles admin CRUD operations for master data
 type AdminMasterDataHandler struct {
-	provinceService     master.AdminProvinceService
-	cityService         master.AdminCityService
-	districtService     master.AdminDistrictService
-	industryService     master.AdminIndustryService
-	companySizeService  master.AdminCompanySizeService
-	jobTypeService      master.AdminJobTypeService
+	provinceService    master.AdminProvinceService
+	cityService        master.AdminCityService
+	districtService    master.AdminDistrictService
+	industryService    master.AdminIndustryService
+	companySizeService master.AdminCompanySizeService
+	jobTypeService     master.AdminJobTypeService
 }
 
 // NewAdminMasterDataHandler creates a new admin master data handler
@@ -172,7 +172,7 @@ func (h *AdminMasterDataHandler) DeleteProvince(c *fiber.Ctx) error {
 	}
 
 	if cities > 0 || companies > 0 {
-		return utils.ConflictResponse(c, 
+		return utils.ConflictResponse(c,
 			"Cannot delete province: it is still referenced by cities or companies")
 	}
 
@@ -341,7 +341,7 @@ func (h *AdminMasterDataHandler) DeleteCity(c *fiber.Ctx) error {
 	}
 
 	if districts > 0 || companies > 0 {
-		return utils.ConflictResponse(c, 
+		return utils.ConflictResponse(c,
 			"Cannot delete city: it is still referenced by districts or companies")
 	}
 
@@ -510,7 +510,7 @@ func (h *AdminMasterDataHandler) DeleteDistrict(c *fiber.Ctx) error {
 	}
 
 	if companies > 0 {
-		return utils.ConflictResponse(c, 
+		return utils.ConflictResponse(c,
 			"Cannot delete district: it is still referenced by companies")
 	}
 
@@ -658,7 +658,7 @@ func (h *AdminMasterDataHandler) DeleteIndustry(c *fiber.Ctx) error {
 	}
 
 	if companies > 0 {
-		return utils.ConflictResponse(c, 
+		return utils.ConflictResponse(c,
 			"Cannot delete industry: it is still referenced by companies")
 	}
 
@@ -814,7 +814,7 @@ func (h *AdminMasterDataHandler) DeleteJobType(c *fiber.Ctx) error {
 	}
 
 	if jobs > 0 {
-		return utils.ConflictResponse(c, 
+		return utils.ConflictResponse(c,
 			"Cannot delete job type: it is still referenced by jobs")
 	}
 
@@ -961,7 +961,7 @@ func (h *AdminMasterDataHandler) DeleteCompanySize(c *fiber.Ctx) error {
 	}
 
 	if companies > 0 {
-		return utils.ConflictResponse(c, 
+		return utils.ConflictResponse(c,
 			"Cannot delete company size: it is still referenced by companies")
 	}
 

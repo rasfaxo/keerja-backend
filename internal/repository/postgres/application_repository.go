@@ -44,7 +44,7 @@ func (r *applicationRepository) FindByID(ctx context.Context, id int64) (*applic
 			return db.Order("scheduled_at DESC")
 		}).
 		First(&app, id).Error
-	
+
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func (r *applicationRepository) FindByJobAndUser(ctx context.Context, jobID, use
 			return db.Order("scheduled_at DESC")
 		}).
 		First(&app).Error
-	
+
 	if err != nil {
 		return nil, err
 	}
@@ -277,7 +277,7 @@ func (r *applicationRepository) GetApplicationsWithHighScore(ctx context.Context
 		Order("match_score DESC").
 		Limit(limit).
 		Find(&apps).Error
-	
+
 	return apps, err
 }
 
@@ -627,7 +627,7 @@ func (r *applicationRepository) FindStageByID(ctx context.Context, id int64) (*a
 		Preload("StageNotes").
 		Preload("Interviews").
 		First(&stage, id).Error
-	
+
 	if err != nil {
 		return nil, err
 	}
@@ -658,7 +658,7 @@ func (r *applicationRepository) ListStagesByApplication(ctx context.Context, app
 		Where("application_id = ?", applicationID).
 		Order("started_at ASC").
 		Find(&stages).Error
-	
+
 	return stages, err
 }
 
@@ -669,7 +669,7 @@ func (r *applicationRepository) GetCurrentStage(ctx context.Context, application
 		Where("application_id = ? AND completed_at IS NULL", applicationID).
 		Order("started_at DESC").
 		First(&stage).Error
-	
+
 	if err != nil {
 		return nil, err
 	}
@@ -683,7 +683,7 @@ func (r *applicationRepository) GetStageHistory(ctx context.Context, application
 		Where("application_id = ? AND completed_at IS NOT NULL", applicationID).
 		Order("completed_at DESC").
 		Find(&stages).Error
-	
+
 	return stages, err
 }
 
@@ -702,7 +702,7 @@ func (r *applicationRepository) FindDocumentByID(ctx context.Context, id int64) 
 	err := r.db.WithContext(ctx).
 		Preload("Application").
 		First(&document, id).Error
-	
+
 	if err != nil {
 		return nil, err
 	}
@@ -726,7 +726,7 @@ func (r *applicationRepository) ListDocumentsByApplication(ctx context.Context, 
 		Where("application_id = ?", applicationID).
 		Order("uploaded_at DESC").
 		Find(&documents).Error
-	
+
 	return documents, err
 }
 
@@ -734,11 +734,11 @@ func (r *applicationRepository) ListDocumentsByApplication(ctx context.Context, 
 func (r *applicationRepository) ListDocumentsByUser(ctx context.Context, userID int64, docType string) ([]application.ApplicationDocument, error) {
 	var documents []application.ApplicationDocument
 	query := r.db.WithContext(ctx).Where("user_id = ?", userID)
-	
+
 	if docType != "" {
 		query = query.Where("document_type = ?", docType)
 	}
-	
+
 	err := query.Order("uploaded_at DESC").Find(&documents).Error
 	return documents, err
 }
@@ -750,7 +750,7 @@ func (r *applicationRepository) GetDocumentsByType(ctx context.Context, applicat
 		Where("application_id = ? AND document_type = ?", applicationID, docType).
 		Order("uploaded_at DESC").
 		Find(&documents).Error
-	
+
 	return documents, err
 }
 
@@ -809,7 +809,7 @@ func (r *applicationRepository) FindNoteByID(ctx context.Context, id int64) (*ap
 		Preload("Application").
 		Preload("Stage").
 		First(&note, id).Error
-	
+
 	if err != nil {
 		return nil, err
 	}
@@ -833,7 +833,7 @@ func (r *applicationRepository) ListNotesByApplication(ctx context.Context, appl
 		Where("application_id = ?", applicationID).
 		Order("is_pinned DESC, created_at DESC").
 		Find(&notes).Error
-	
+
 	return notes, err
 }
 
@@ -844,7 +844,7 @@ func (r *applicationRepository) ListNotesByStage(ctx context.Context, stageID in
 		Where("stage_id = ?", stageID).
 		Order("created_at DESC").
 		Find(&notes).Error
-	
+
 	return notes, err
 }
 
@@ -881,7 +881,7 @@ func (r *applicationRepository) GetPinnedNotes(ctx context.Context, applicationI
 		Where("application_id = ? AND is_pinned = ?", applicationID, true).
 		Order("created_at DESC").
 		Find(&notes).Error
-	
+
 	return notes, err
 }
 
@@ -917,7 +917,7 @@ func (r *applicationRepository) FindInterviewByID(ctx context.Context, id int64)
 		Preload("Application").
 		Preload("Stage").
 		First(&interview, id).Error
-	
+
 	if err != nil {
 		return nil, err
 	}
@@ -941,7 +941,7 @@ func (r *applicationRepository) ListInterviewsByApplication(ctx context.Context,
 		Where("application_id = ?", applicationID).
 		Order("scheduled_at DESC").
 		Find(&interviews).Error
-	
+
 	return interviews, err
 }
 
@@ -983,7 +983,7 @@ func (r *applicationRepository) GetUpcomingInterviews(ctx context.Context, date 
 		Order("scheduled_at ASC").
 		Limit(limit).
 		Find(&interviews).Error
-	
+
 	return interviews, err
 }
 
@@ -994,7 +994,7 @@ func (r *applicationRepository) GetInterviewsByDateRange(ctx context.Context, st
 		Where("scheduled_at BETWEEN ? AND ?", startDate, endDate).
 		Order("scheduled_at ASC").
 		Find(&interviews).Error
-	
+
 	return interviews, err
 }
 
@@ -1010,8 +1010,8 @@ func (r *applicationRepository) UpdateInterviewStatus(ctx context.Context, id in
 func (r *applicationRepository) CompleteInterview(ctx context.Context, id int64, scores application.InterviewScores, feedback string) error {
 	now := time.Now()
 	updates := map[string]interface{}{
-		"status":         "completed",
-		"ended_at":       now,
+		"status":           "completed",
+		"ended_at":         now,
 		"feedback_summary": feedback,
 	}
 
@@ -1060,7 +1060,7 @@ func (r *applicationRepository) CancelInterview(ctx context.Context, id int64) e
 // GetApplicationTrends gets application trends over time
 func (r *applicationRepository) GetApplicationTrends(ctx context.Context, startDate, endDate time.Time) ([]application.ApplicationTrend, error) {
 	var trends []application.ApplicationTrend
-	
+
 	err := r.db.WithContext(ctx).
 		Table("job_applications").
 		Select(`
@@ -1074,7 +1074,7 @@ func (r *applicationRepository) GetApplicationTrends(ctx context.Context, startD
 		Group("DATE(applied_at)").
 		Order("date DESC").
 		Scan(&trends).Error
-	
+
 	return trends, err
 }
 
@@ -1114,7 +1114,7 @@ func (r *applicationRepository) GetConversionFunnel(ctx context.Context, jobID i
 
 	// Calculate conversion rates
 	funnel.ConversionRates = make(map[string]float64)
-	
+
 	if funnel.AppliedCount > 0 {
 		funnel.ConversionRates["screening"] = float64(funnel.ScreeningCount) / float64(funnel.AppliedCount) * 100
 		funnel.ConversionRates["shortlisted"] = float64(funnel.ShortlistedCount) / float64(funnel.AppliedCount) * 100
@@ -1129,7 +1129,7 @@ func (r *applicationRepository) GetConversionFunnel(ctx context.Context, jobID i
 // GetAverageTimePerStage gets average time spent in each stage
 func (r *applicationRepository) GetAverageTimePerStage(ctx context.Context, companyID int64) ([]application.StageTimeStats, error) {
 	var stats []application.StageTimeStats
-	
+
 	err := r.db.WithContext(ctx).
 		Table("job_application_stages").
 		Select(`
@@ -1144,7 +1144,7 @@ func (r *applicationRepository) GetAverageTimePerStage(ctx context.Context, comp
 		Group("stage_name").
 		Order("stage_name ASC").
 		Scan(&stats).Error
-	
+
 	return stats, err
 }
 
@@ -1156,14 +1156,14 @@ func (r *applicationRepository) GetTopApplicants(ctx context.Context, jobID int6
 		Order("match_score DESC").
 		Limit(limit).
 		Find(&apps).Error
-	
+
 	return apps, err
 }
 
 // GetApplicationSourceStats gets statistics by application source
 func (r *applicationRepository) GetApplicationSourceStats(ctx context.Context, companyID int64) ([]application.SourceStats, error) {
 	var stats []application.SourceStats
-	
+
 	err := r.db.WithContext(ctx).
 		Table("job_applications").
 		Select(`
@@ -1177,7 +1177,7 @@ func (r *applicationRepository) GetApplicationSourceStats(ctx context.Context, c
 		Group("source").
 		Order("count DESC").
 		Scan(&stats).Error
-	
+
 	return stats, err
 }
 

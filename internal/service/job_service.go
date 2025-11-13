@@ -100,6 +100,10 @@ func (s *jobService) CreateJob(ctx context.Context, req *job.CreateJobRequest) (
 	})
 
 	// Create job entity - master data only
+	jobStatus := "draft"
+	if !company.Verified {
+		jobStatus = "in_review"
+	}
 	newJob := &job.Job{
 		CompanyID:      req.CompanyID,
 		EmployerUserID: &employerUserID, // Use resolved employer_user ID (not user_id)
@@ -123,7 +127,7 @@ func (s *jobService) CreateJob(ctx context.Context, req *job.CreateJobRequest) (
 		CompanyAddressID: req.CompanyAddressID,
 		Currency:         "IDR", // Default currency
 		TotalHires:       1,     // Default total hires
-		Status:           "draft",
+		Status:           jobStatus,
 	}
 
 	// Validate job before creation
@@ -1867,6 +1871,33 @@ func (s *jobService) CheckJobStatus(ctx context.Context, jobID int64) (string, e
 	}
 
 	return j.Status, nil
+}
+
+// GetJobsGroupedByStatus returns jobs grouped by status for a user (for mobile tab UI)
+func (s *jobService) GetJobsGroupedByStatus(ctx context.Context, userID int64) (map[string][]job.Job, error) {
+	jobs, _, err := s.jobRepo.ListByEmployer(ctx, userID, job.JobFilter{}, 1, 1000) // adjust limit as needed
+	if err != nil {
+		return nil, err
+	}
+	grouped := map[string][]job.Job{
+		"active":    {},
+		"inactive":  {},
+		"draft":     {},
+		"in_review": {},
+	}
+	for _, j := range jobs {
+		switch j.Status {
+		case "active":
+			grouped["active"] = append(grouped["active"], j)
+		case "inactive":
+			grouped["inactive"] = append(grouped["inactive"], j)
+		case "draft":
+			grouped["draft"] = append(grouped["draft"], j)
+		case "in_review":
+			grouped["in_review"] = append(grouped["in_review"], j)
+		}
+	}
+	return grouped, nil
 }
 
 // ===========================================

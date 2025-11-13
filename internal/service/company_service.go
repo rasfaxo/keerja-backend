@@ -8,6 +8,7 @@ import (
 
 	"keerja-backend/internal/cache"
 	"keerja-backend/internal/domain/company"
+	"keerja-backend/internal/domain/job"
 	"keerja-backend/internal/domain/master"
 	"keerja-backend/internal/utils"
 
@@ -35,6 +36,13 @@ type companyService struct {
 	industryService    master.IndustryService
 	companySizeService master.CompanySizeService
 	districtService    master.DistrictService
+	jobRepo            job.JobRepository
+}
+
+// GetJobsGroupedByStatus implements CompanyService interface for job status grouping
+func (s *companyService) GetJobsGroupedByStatus(ctx context.Context, userID int64) (map[string][]job.Job, error) {
+	// Delegate to jobRepo for real data
+	return s.jobRepo.GetJobsGroupedByStatus(ctx, userID)
 }
 
 // NewCompanyService creates a new company service instance
@@ -46,6 +54,7 @@ func NewCompanyService(
 	industryService master.IndustryService,
 	companySizeService master.CompanySizeService,
 	districtService master.DistrictService,
+	jobRepo job.JobRepository,
 ) company.CompanyService {
 	return &companyService{
 		companyRepo:        companyRepo,
@@ -55,6 +64,7 @@ func NewCompanyService(
 		industryService:    industryService,
 		companySizeService: companySizeService,
 		districtService:    districtService,
+		jobRepo:            jobRepo,
 	}
 }
 
@@ -328,6 +338,24 @@ func (s *companyService) UpdateCompany(ctx context.Context, companyID int64, req
 	// CompanyCulture mapped to Culture field
 	if req.CompanyCulture != nil {
 		comp.Culture = req.CompanyCulture
+	}
+
+	// Automatically update jobs if company verification status changes from false to true
+	wasVerified := comp.Verified
+	newVerified := wasVerified
+	if req.Verified != nil {
+		newVerified = *req.Verified
+	}
+
+	if !wasVerified && newVerified {
+		// Update all jobs for this company from 'in_review' to 'draft'
+		if err := s.db.Model(&job.Job{}).
+			Where("company_id = ? AND status = ?", companyID, "in_review").
+			Update("status", "draft").Error; err != nil {
+			return fmt.Errorf("failed to update jobs to draft: %w", err)
+		}
+		comp.Verified = true
+		comp.VerifiedAt = utils.TimePtr(time.Now())
 	}
 
 	// Update company in database

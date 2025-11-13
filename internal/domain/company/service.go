@@ -2,6 +2,7 @@ package company
 
 import (
 	"context"
+	"keerja-backend/internal/domain/job"
 	"mime/multipart"
 )
 
@@ -108,6 +109,9 @@ type CompanyService interface {
 	GetTopRatedCompanies(ctx context.Context, limit int) ([]Company, error)
 	GetVerifiedCompanies(ctx context.Context, page, limit int) ([]Company, int64, error)
 	GetCompanyEngagement(ctx context.Context, companyID int64) (*EngagementStats, error)
+
+	// Job grouping by status
+	GetJobsGroupedByStatus(ctx context.Context, userID int64) (map[string][]job.Job, error)
 }
 
 // Request DTOs
@@ -162,6 +166,9 @@ type UpdateCompanyRequest struct {
 	// Rich Text Descriptions
 	CompanyDescription *string // Deskripsi Perusahaan (required)
 	CompanyCulture     *string // Budaya Perusahaan (optional)
+
+	// Verification status (optional)
+	Verified *bool // Set to true to verify company
 }
 
 type CreateProfileRequest struct {

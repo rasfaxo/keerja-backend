@@ -7,6 +7,7 @@ import (
 
 // JobRepository defines the interface for job data access
 type JobRepository interface {
+	UpdateStatusByCompany(ctx context.Context, companyID int64, fromStatus, toStatus string) error
 	// Job CRUD operations
 	Create(ctx context.Context, job *Job) error
 	FindByID(ctx context.Context, id int64) (*Job, error)
@@ -56,6 +57,9 @@ type JobRepository interface {
 	ListCategories(ctx context.Context, filter CategoryFilter, page, limit int) ([]JobCategory, int64, error)
 	GetCategoryTree(ctx context.Context) ([]JobCategory, error)
 	GetActiveCategories(ctx context.Context) ([]JobCategory, error)
+
+	// Group jobs by status
+	GetJobsGroupedByStatus(ctx context.Context, userID int64) (map[string][]Job, error)
 
 	// JobSubcategory CRUD
 	CreateSubcategory(ctx context.Context, subcategory *JobSubcategory) error

@@ -51,7 +51,7 @@ type Job struct {
 	// Company Address (Optional - for work location)
 	CompanyAddressID *int64 `gorm:"column:company_address_id" json:"company_address_id,omitempty"`
 
-	Status            string     `gorm:"column:status;type:varchar(20);default:'draft';index" json:"status" validate:"omitempty,oneof='draft' 'pending_review' 'published' 'closed' 'expired' 'suspended' 'rejected'"`
+	Status            string     `gorm:"column:status;type:varchar(20);check:status IN ('in_review','draft','pending_review','published','closed','expired','suspended','rejected');default:'draft';index" json:"status" validate:"omitempty,oneof='in_review' 'draft' 'pending_review' 'published' 'closed' 'expired' 'suspended' 'rejected'"`
 	ViewsCount        int64      `gorm:"column:views_count;default:0" json:"views_count"`
 	ApplicationsCount int64      `gorm:"column:applications_count;default:0" json:"applications_count"`
 	PublishedAt       *time.Time `gorm:"column:published_at" json:"published_at,omitempty"`
