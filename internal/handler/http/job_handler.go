@@ -589,7 +589,7 @@ func (h *JobHandler) DeleteJob(c *fiber.Ctx) error {
 // GET /jobs/my-jobs
 func (h *JobHandler) GetMyJobs(c *fiber.Ctx) error {
 	ctx := c.Context()
-	employerID := middleware.GetUserID(c)
+	userID := middleware.GetUserID(c)
 
 	var f request.JobFilterRequest
 	if err := c.QueryParser(&f); err != nil {
@@ -618,20 +618,50 @@ func (h *JobHandler) GetMyJobs(c *fiber.Ctx) error {
 		// translate IsExpired -> Status or PublishedAfter/IsActive if needed; here we rely on repository to interpret
 	}
 
+	// Resolve employer_user_id from user_id and company_id
+	var employerID int64
+	if f.CompanyID != nil {
+		resolvedID, err := h.companyService.GetEmployerUserID(ctx, userID, *f.CompanyID)
+		if err != nil {
+			return utils.ErrorResponse(c, fiber.StatusForbidden, "Failed to resolve employer user ID", err.Error())
+		}
+		employerID = resolvedID
+	} else {
+		// If no company_id filter, get all companies for user and use the first
+		companies, err := h.companyService.GetUserCompanies(ctx, userID)
+		if err != nil || len(companies) == 0 {
+			return utils.ErrorResponse(c, fiber.StatusForbidden, "No companies found for user", "No companies found")
+		}
+		resolvedID, err := h.companyService.GetEmployerUserID(ctx, userID, companies[0].ID)
+		if err != nil {
+			return utils.ErrorResponse(c, fiber.StatusForbidden, "Failed to resolve employer user ID", err.Error())
+		}
+		employerID = resolvedID
+	}
+
 	jobs, total, err := h.jobService.GetMyJobs(ctx, employerID, df, f.Page, f.Limit)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get my jobs", err.Error())
 	}
 
-	respJobs := make([]response.JobResponse, 0, len(jobs))
+	respJobs := make([]response.JobDetailResponse, 0, len(jobs))
 	for _, j := range jobs {
-		jr := mapper.ToJobResponse(&j)
+		jr := mapper.ToJobDetailResponse(&j)
 		if jr != nil {
+			// Fetch company info for each job to fill company_name
+			company, err := h.companyService.GetCompany(ctx, j.CompanyID)
+			if err == nil && company != nil {
+				jr.CompanyName = company.CompanyName
+				jr.CompanySlug = company.Slug
+				jr.CompanyVerified = company.IsVerified()
+			}
 			respJobs = append(respJobs, *jr)
 		}
 	}
 	meta := utils.GetPaginationMeta(f.Page, f.Limit, total)
-	payload := response.JobListResponse{Jobs: respJobs}
+	payload := struct {
+		Jobs []response.JobDetailResponse `json:"jobs"`
+	}{Jobs: respJobs}
 	return utils.SuccessResponseWithMeta(c, MsgFetchedSuccess, payload, meta)
 }
 

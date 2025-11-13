@@ -48,25 +48,9 @@ func SetupJobRoutes(api fiber.Router, deps *Dependencies, authMw *middleware.Aut
 	)
 
 	// GET /api/v1/jobs - List all jobs
-	// Query params: page, limit, company_id, location, type, level, etc.
-	// Rate limit: 30 requests/minute (search rate)
 	jobs.Get("/",
 		middleware.SearchRateLimiter(),
 		deps.JobHandler.ListJobs,
-	)
-
-	// GET /api/v1/jobs/:id - Get job details
-	// Returns: Job details with company info
-	jobs.Get("/:id",
-		deps.JobHandler.GetJob,
-	)
-
-	// POST /api/v1/jobs/search - Advanced job search
-	// Body: { query, location, filters, pagination }
-	// Rate limit: 30 requests/minute
-	jobs.Post("/search",
-		middleware.SearchRateLimiter(),
-		deps.JobHandler.SearchJobs,
 	)
 
 	// ============================================
@@ -75,23 +59,6 @@ func SetupJobRoutes(api fiber.Router, deps *Dependencies, authMw *middleware.Aut
 	protected := jobs.Group("")
 	protected.Use(authMw.AuthRequired())
 	protected.Use(authMw.EmployerOnly())
-
-	// POST /api/v1/jobs/draft - Save job draft (Phase 6)
-	// Body: SaveJobDraftRequest with all job posting data
-	// Rate limit: 100 requests/minute
-	// Response: 201 Created (new draft) or 200 OK (update)
-	protected.Post("/draft",
-		middleware.ApplicationRateLimiter(),
-		deps.JobHandler.SaveJobDraft,
-	)
-
-	// POST /api/v1/jobs - Create new job posting
-	// Body: { title, description, requirements, company_id, ... }
-	// Rate limit: 100 requests/minute (default)
-	protected.Post("/",
-		middleware.ApplicationRateLimiter(),
-		deps.JobHandler.CreateJob,
-	)
 
 	// GET /api/v1/jobs/my-jobs - List employer's jobs
 	// Query params: page, limit, status
@@ -102,31 +69,47 @@ func SetupJobRoutes(api fiber.Router, deps *Dependencies, authMw *middleware.Aut
 		deps.JobHandler.GetMyJobs,
 	)
 
+	// POST /api/v1/jobs/draft - Save job draft (Phase 6)
+	protected.Post("/draft",
+		middleware.ApplicationRateLimiter(),
+		deps.JobHandler.SaveJobDraft,
+	)
+
+	// POST /api/v1/jobs - Create new job posting
+	protected.Post("/",
+		middleware.ApplicationRateLimiter(),
+		deps.JobHandler.CreateJob,
+	)
+
 	// PUT /api/v1/jobs/:id - Update job posting
-	// Body: { title, description, requirements, ... }
-	// Rate limit: 100 requests/minute
 	protected.Put("/:id",
 		middleware.ApplicationRateLimiter(),
 		deps.JobHandler.UpdateJob,
 	)
 
 	// DELETE /api/v1/jobs/:id - Delete job posting
-	// Only owner can delete
 	protected.Delete("/:id",
 		deps.JobHandler.DeleteJob,
 	)
 
 	// PATCH /api/v1/jobs/:id/publish - Publish draft job (Phase 7)
-	// Changes status from draft to pending_review
-	// Requires company to be verified
-	// Triggers admin notification for review
 	protected.Patch("/:id/publish",
 		deps.JobHandler.PublishJob,
 	)
 
 	// PATCH /api/v1/jobs/:id/close - Close active job
-	// Changes status from published to closed
 	protected.Patch("/:id/close",
 		deps.JobHandler.CloseJob,
+	)
+
+	// GET /api/v1/jobs/:id - Get job details
+	jobs.Get("/:id",
+		deps.JobHandler.GetJob,
+	)
+
+	// POST /api/v1/jobs/search - Advanced job search
+	jobs.Post("/search",
+		middleware.SearchRateLimiter(),
+		deps.JobHandler.SearchJobs,
 	)
 }
