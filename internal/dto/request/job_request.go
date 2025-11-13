@@ -16,8 +16,16 @@ type CreateJobRequest struct {
 	GenderPreferenceID int64 `json:"gender_preference_id" validate:"required,min=1"`
 
 	// Salary Range (Required)
-	SalaryMin *float64 `json:"salary_min" validate:"required,min=0"`
-	SalaryMax *float64 `json:"salary_max" validate:"required,min=0,gtefield=SalaryMin"`
+	SalaryMin     *float64 `json:"salary_min" validate:"required,min=0"`
+	SalaryMax     *float64 `json:"salary_max" validate:"required,min=0,gtefield=SalaryMin"`
+	SalaryDisplay string   `json:"salary_display" validate:"required,oneof='range' 'min_only' 'max_only' 'negotiable' 'competitive' 'hidden'"`
+
+	// Age Requirements (Optional)
+	MinAge *int `json:"min_age" validate:"omitempty,min=17,max=65"`
+	MaxAge *int `json:"max_age" validate:"omitempty,min=17,max=65,gtefield=MinAge"`
+
+	// Company Address (Optional - for work location)
+	CompanyAddressID *int64 `json:"company_address_id" validate:"omitempty,min=1"`
 
 	// Skills (Required)
 	Skills []AddSkillRequest `json:"skills" validate:"required,min=1"`
@@ -76,9 +84,13 @@ type UpdateJobRequest struct {
 	GenderPreferenceID *int64 `json:"gender_preference_id" validate:"omitempty,min=1"`
 
 	// Other Fields (Optional)
-	Description *string  `json:"description" validate:"omitempty,min=50"`
-	SalaryMin   *float64 `json:"salary_min" validate:"omitempty,min=0"`
-	SalaryMax   *float64 `json:"salary_max" validate:"omitempty,min=0"`
+	Description      *string  `json:"description" validate:"omitempty,min=50"`
+	SalaryMin        *float64 `json:"salary_min" validate:"omitempty,min=0"`
+	SalaryMax        *float64 `json:"salary_max" validate:"omitempty,min=0"`
+	SalaryDisplay    *string  `json:"salary_display" validate:"omitempty,oneof='range' 'min_only' 'max_only' 'negotiable' 'competitive' 'hidden'"`
+	MinAge           *int     `json:"min_age" validate:"omitempty,min=17,max=65"`
+	MaxAge           *int     `json:"max_age" validate:"omitempty,min=17,max=65,gtefield=MinAge"`
+	CompanyAddressID *int64   `json:"company_address_id" validate:"omitempty,min=1"`
 	// NOTE: Status should NOT be updated by users - it's controlled by workflow
 	// - draft: initial state (automatic)
 	// - pending_approval: submitted for review (automatic when published)

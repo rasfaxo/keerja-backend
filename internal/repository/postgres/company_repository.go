@@ -894,7 +894,11 @@ func (r *companyRepository) CreateVerification(ctx context.Context, verification
 
 // UpdateVerification updates a verification record
 func (r *companyRepository) UpdateVerification(ctx context.Context, verification *company.CompanyVerification) error {
-	return r.db.WithContext(ctx).Save(verification).Error
+	return r.db.WithContext(ctx).
+		Model(&company.CompanyVerification{}).
+		Where("id = ?", verification.ID).
+		Select("*").
+		Updates(verification).Error
 }
 
 // FindVerificationByCompanyID finds verification by company ID

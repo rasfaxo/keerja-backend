@@ -28,8 +28,24 @@ func SetupJobRoutes(api fiber.Router, deps *Dependencies, authMw *middleware.Aut
 	jobs := api.Group("/jobs")
 
 	// ============================================
-	// PUBLIC ROUTES (3 endpoints)
+	// PUBLIC ROUTES (5 endpoints)
 	// ============================================
+
+	// GET /api/v1/jobs/job-types - Get job types options for mobile
+	// Returns: job_types, work_policies, work_addresses, salary_ranges
+	// Auth required to get user's company addresses
+	jobs.Get("/job-types",
+		authMw.AuthRequired(),
+		deps.JobHandler.GetJobTypesOptions,
+	)
+
+	// GET /api/v1/jobs/job-requirements - Get job requirements options for mobile
+	// Returns: genders, age_ranges, skills_info, education_levels, experience_levels
+	// Auth required
+	jobs.Get("/job-requirements",
+		authMw.AuthRequired(),
+		deps.JobHandler.GetJobRequirements,
+	)
 
 	// GET /api/v1/jobs - List all jobs
 	// Query params: page, limit, company_id, location, type, level, etc.
@@ -77,6 +93,15 @@ func SetupJobRoutes(api fiber.Router, deps *Dependencies, authMw *middleware.Aut
 		deps.JobHandler.CreateJob,
 	)
 
+	// GET /api/v1/jobs/my-jobs - List employer's jobs
+	// Query params: page, limit, status
+	// Rate limit: 30 requests/minute
+	// IMPORTANT: This must be defined BEFORE /:id routes to avoid conflicts
+	protected.Get("/my-jobs",
+		middleware.SearchRateLimiter(),
+		deps.JobHandler.GetMyJobs,
+	)
+
 	// PUT /api/v1/jobs/:id - Update job posting
 	// Body: { title, description, requirements, ... }
 	// Rate limit: 100 requests/minute
@@ -89,14 +114,6 @@ func SetupJobRoutes(api fiber.Router, deps *Dependencies, authMw *middleware.Aut
 	// Only owner can delete
 	protected.Delete("/:id",
 		deps.JobHandler.DeleteJob,
-	)
-
-	// GET /api/v1/jobs/my-jobs - List employer's jobs
-	// Query params: page, limit, status
-	// Rate limit: 30 requests/minute
-	protected.Get("/my-jobs",
-		middleware.SearchRateLimiter(),
-		deps.JobHandler.GetMyJobs,
 	)
 
 	// PATCH /api/v1/jobs/:id/publish - Publish draft job (Phase 7)

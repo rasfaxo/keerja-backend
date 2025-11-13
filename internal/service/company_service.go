@@ -1818,6 +1818,19 @@ func (s *companyService) RequestVerification(ctx context.Context, companyID, req
 
 	// Invalidate cache
 	s.cache.Delete(cache.GenerateCacheKey("company", "verification", companyID))
+	s.cache.Delete(cache.GenerateCacheKey("company", "detail", companyID))
+
+	// Get company to invalidate slug-based cache
+	comp, err := s.companyRepo.FindByID(ctx, companyID)
+	if err == nil && comp != nil {
+		s.cache.Delete(cache.GenerateCacheKey("company", "slug", comp.Slug))
+	}
+
+	// Invalidate user companies cache for all members of this company
+	employees, _ := s.companyRepo.GetEmployerUsersByCompanyID(ctx, companyID)
+	for _, emp := range employees {
+		s.cache.Delete(cache.GenerateCacheKey("user", "companies", emp.UserID))
+	}
 
 	return nil
 }

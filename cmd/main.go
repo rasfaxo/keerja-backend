@@ -12,9 +12,9 @@ import (
 	"keerja-backend/internal/config"
 	"keerja-backend/internal/handler/http"
 	"keerja-backend/internal/handler/http/admin"
+	companyhandler "keerja-backend/internal/handler/http/company"
+	userhandler "keerja-backend/internal/handler/http/jobseeker"
 	"keerja-backend/internal/handler/http/master"
-	"keerja-backend/internal/handler/http/company"
-	"keerja-backend/internal/handler/http/jobseeker"
 	"keerja-backend/internal/jobs"
 	"keerja-backend/internal/middleware"
 	"keerja-backend/internal/repository/postgres"
@@ -230,7 +230,7 @@ func main() {
 
 	// Initialize job & application handlers
 	appLogger.Info("Initializing job & application handlers...")
-	jobHandler := http.NewJobHandler(jobService, companyService)
+	jobHandler := http.NewJobHandler(jobService, companyService, jobOptionsService, skillsMasterService)
 	applicationHandler := http.NewApplicationHandler(applicationService)
 
 	// Initialize admin handlers
@@ -333,9 +333,9 @@ func main() {
 		AdminAuthMiddleware: adminAuthMw,
 
 		// Job & Application handlers
-		JobHandler:         jobHandler,
-		ApplicationHandler: applicationHandler,
-		AdminHandler:       adminHandler,
+		JobHandler:             jobHandler,
+		ApplicationHandler:     applicationHandler,
+		AdminHandler:           adminHandler,
 		AdminMasterDataHandler: adminMasterDataHandler,
 
 		// Company handlers (split by domain)

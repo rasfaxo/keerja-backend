@@ -1507,7 +1507,12 @@ func (s *applicationService) buildApplicationDetailResponse(ctx context.Context,
 		jobDetail.Title = j.Title
 		jobDetail.CompanyID = j.CompanyID
 		jobDetail.Location = j.Location
-		jobDetail.JobLevel = j.JobLevel
+		// Use ExperienceLevel master data instead of deprecated JobLevel
+		if j.ExperienceLevelM != nil {
+			jobDetail.JobLevel = j.ExperienceLevelM.Name
+		} else {
+			jobDetail.JobLevel = ""
+		}
 		jobDetail.Status = j.Status
 
 		// Get company name

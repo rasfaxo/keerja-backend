@@ -59,7 +59,7 @@ func (h *MasterDataHandler) GetJobTitles(c *fiber.Ctx) error {
 }
 
 // GetJobOptions handles GET /api/v1/master/job-options
-// @Summary Get all job posting options
+// @Summary Get all job posting options (DEPRECATED - use /job-types instead)
 // @Description Get job types, work policies, education levels, experience levels, and gender preferences
 // @Tags Master Data
 // @Accept json
@@ -68,6 +68,7 @@ func (h *MasterDataHandler) GetJobTitles(c *fiber.Ctx) error {
 // @Failure 429 {object} utils.Response
 // @Failure 500 {object} utils.Response
 // @Router /api/v1/master/job-options [get]
+// // @Deprecated
 func (h *MasterDataHandler) GetJobOptions(c *fiber.Ctx) error {
 	// Get all job options (heavily cached)
 	options, err := h.jobOptionsService.GetJobOptions(c.Context())
@@ -76,6 +77,65 @@ func (h *MasterDataHandler) GetJobOptions(c *fiber.Ctx) error {
 	}
 
 	return utils.SuccessResponse(c, "Job options retrieved successfully", options)
+}
+
+// GetJobTypes handles GET /api/v1/master/job-types-options
+// @Summary Get job types and work policies for mobile
+// @Description Get job types, work policies, company addresses, and salary ranges for job posting
+// @Tags Master Data
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /api/v1/master/job-types-options [get]
+func (h *MasterDataHandler) GetJobTypesOptions(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	// Get job types
+	jobTypes, err := h.jobOptionsService.GetJobTypes(ctx)
+	if err != nil {
+		return utils.InternalServerErrorResponse(c, "Failed to retrieve job types")
+	}
+
+	// Get work policies
+	workPolicies, err := h.jobOptionsService.GetWorkPolicies(ctx)
+	if err != nil {
+		return utils.InternalServerErrorResponse(c, "Failed to retrieve work policies")
+	}
+
+	// Prepare salary ranges (in millions IDR)
+	salaryRanges := []map[string]interface{}{
+		{"label": "< 1 jt", "min": 0, "max": 1000000},
+		{"label": "1 jt", "min": 1000000, "max": 1000000},
+		{"label": "2 jt", "min": 2000000, "max": 2000000},
+		{"label": "3 jt", "min": 3000000, "max": 3000000},
+		{"label": "4 jt", "min": 4000000, "max": 4000000},
+		{"label": "5 jt", "min": 5000000, "max": 5000000},
+		{"label": "6 jt", "min": 6000000, "max": 6000000},
+		{"label": "7 jt", "min": 7000000, "max": 7000000},
+		{"label": "8 jt", "min": 8000000, "max": 8000000},
+		{"label": "9 jt", "min": 9000000, "max": 9000000},
+		{"label": "10 jt", "min": 10000000, "max": 10000000},
+		{"label": "15 jt", "min": 15000000, "max": 15000000},
+		{"label": "20 jt", "min": 20000000, "max": 20000000},
+		{"label": "25 jt", "min": 25000000, "max": 25000000},
+		{"label": "30 jt", "min": 30000000, "max": 30000000},
+		{"label": "40 jt", "min": 40000000, "max": 40000000},
+		{"label": "50 jt", "min": 50000000, "max": 50000000},
+		{"label": "> 50 jt", "min": 50000000, "max": 0},
+	}
+
+	response := fiber.Map{
+		"job_types":     jobTypes,
+		"work_policies": workPolicies,
+		"salary_ranges": salaryRanges,
+		"salary_units":  []string{"Rp/bulan", "Rp/hari", "Rp/jam", "Rp/proyek"},
+		"salary_info":   "Pilih rentang gaji dari 'Mulai Dari' hingga 'Sampai'. Kosongkan jika tidak ingin menampilkan gaji.",
+	}
+
+	return utils.SuccessResponse(c, "Job types options retrieved successfully", response)
 }
 
 // Admin-only endpoints for managing job titles

@@ -114,12 +114,16 @@ func (s *jobService) CreateJob(ctx context.Context, req *job.CreateJobRequest) (
 		ExperienceLevelID:  &req.ExperienceLevelID,
 		GenderPreferenceID: &req.GenderPreferenceID,
 
-		Description: req.Description,
-		SalaryMin:   req.SalaryMin,
-		SalaryMax:   req.SalaryMax,
-		Currency:    "IDR", // Default currency
-		TotalHires:  1,     // Default total hires
-		Status:      "draft",
+		Description:      req.Description,
+		SalaryMin:        req.SalaryMin,
+		SalaryMax:        req.SalaryMax,
+		SalaryDisplay:    req.SalaryDisplay,
+		MinAge:           req.MinAge,
+		MaxAge:           req.MaxAge,
+		CompanyAddressID: req.CompanyAddressID,
+		Currency:         "IDR", // Default currency
+		TotalHires:       1,     // Default total hires
+		Status:           "draft",
 	}
 
 	// Validate job before creation
@@ -214,6 +218,18 @@ func (s *jobService) UpdateJob(ctx context.Context, jobID int64, req *job.Update
 	if req.SalaryMax != nil {
 		existingJob.SalaryMax = req.SalaryMax
 	}
+	if req.SalaryDisplay != nil {
+		existingJob.SalaryDisplay = *req.SalaryDisplay
+	}
+	if req.MinAge != nil {
+		existingJob.MinAge = req.MinAge
+	}
+	if req.MaxAge != nil {
+		existingJob.MaxAge = req.MaxAge
+	}
+	if req.CompanyAddressID != nil {
+		existingJob.CompanyAddressID = req.CompanyAddressID
+	}
 	// Use dedicated endpoints for status changes
 
 	// Validate updated job
@@ -298,7 +314,7 @@ func (s *jobService) SaveJobDraft(ctx context.Context, companyID int64, req *job
 	jobDraft.Title = fmt.Sprintf("Draft Job %d", time.Now().Unix()) // Temporary, should fetch from JobTitle master data
 	jobDraft.CategoryID = &req.JobCategoryID
 	jobDraft.Description = sanitizedDesc
-	jobDraft.EmploymentType = fmt.Sprintf("Type%d", req.JobTypeID) // Temporary, should map from JobType master data
+	jobDraft.JobTypeID = &req.JobTypeID
 
 	// Map salary
 	salaryMin := float64(req.GajiMin)
@@ -307,18 +323,16 @@ func (s *jobService) SaveJobDraft(ctx context.Context, companyID int64, req *job
 	jobDraft.SalaryMax = &salaryMax
 	jobDraft.Currency = "IDR"
 
-	// Map age range to job requirements if provided
+	// Map age range to new MinAge/MaxAge fields
 	if req.UmurMin != nil {
-		ageMin := int16(*req.UmurMin)
-		jobDraft.ExperienceMin = &ageMin // Note: Using ExperienceMin temporarily for age
+		jobDraft.MinAge = req.UmurMin
 	}
 	if req.UmurMaks != nil {
-		ageMax := int16(*req.UmurMaks)
-		jobDraft.ExperienceMax = &ageMax // Note: Using ExperienceMax temporarily for age
+		jobDraft.MaxAge = req.UmurMaks
 	}
 
-	// Map education level (PendidikanID) - temporary mapping
-	jobDraft.EducationLevel = fmt.Sprintf("Level%d", req.PendidikanID)
+	// Set EducationLevelID FK instead of deprecated EducationLevel
+	jobDraft.EducationLevelID = &req.PendidikanID
 
 	// Map work policy (onsite/remote/hybrid) to RemoteOption
 	if req.WorkPolicyID == 2 { // Assuming 2 = remote
@@ -818,20 +832,20 @@ func (s *jobService) calculateExperienceScore(j *job.Job, userProfile *user.User
 // calculateEducationScore calculates education match score
 func (s *jobService) calculateEducationScore(j *job.Job, userProfile *user.User) float64 {
 	// If no education requirement, perfect match
-	if j.EducationLevel == "" {
+	if j.EducationLevelID == nil || j.EducationLevelM == nil {
 		return 1.0
 	}
 
-	// Education level hierarchy
-	educationLevels := map[string]int{
-		"High School": 1,
-		"Associate":   2,
-		"Bachelor":    3,
-		"Master":      4,
-		"Doctorate":   5,
+	// Education level hierarchy mapping by ID
+	educationLevelHierarchy := map[int64]int{
+		1: 1, // SMA/High School
+		2: 2, // D1/D2/D3 Associate
+		3: 3, // S1 Bachelor
+		4: 4, // S2 Master
+		5: 5, // S3 Doctorate
 	}
 
-	requiredLevel := educationLevels[j.EducationLevel]
+	requiredLevel := educationLevelHierarchy[*j.EducationLevelID]
 
 	// Find user's highest education level
 	highestLevel := 0
@@ -853,7 +867,16 @@ func (s *jobService) calculateEducationScore(j *job.Job, userProfile *user.User)
 			}
 		}
 
-		if level, ok := educationLevels[degreeLevel]; ok {
+		// Map degree level to hierarchy number
+		levelMapping := map[string]int{
+			"High School": 1,
+			"Associate":   2,
+			"Bachelor":    3,
+			"Master":      4,
+			"Doctorate":   5,
+		}
+
+		if level, ok := levelMapping[degreeLevel]; ok {
 			if level > highestLevel {
 				highestLevel = level
 			}
