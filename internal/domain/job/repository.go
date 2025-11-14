@@ -25,6 +25,7 @@ type JobRepository interface {
 
 	// Job status operations
 	UpdateStatus(ctx context.Context, id int64, status string) error
+	UpdateStatusWithExpiry(ctx context.Context, id int64, status string, publishedAt *time.Time, expiredAt *time.Time) error
 	PublishJob(ctx context.Context, id int64) error
 	CloseJob(ctx context.Context, id int64) error
 	ExpireJob(ctx context.Context, id int64) error

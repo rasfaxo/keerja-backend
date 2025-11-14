@@ -432,7 +432,7 @@ func (s *jobService) GetCompanyJobs(ctx context.Context, companyID int64, filter
 // ===== Job Status Management =====
 
 // PublishJob publishes a job (Phase 7: changes status from draft to pending_review)
-func (s *jobService) PublishJob(ctx context.Context, jobID int64, employerUserID int64) error {
+func (s *jobService) PublishJob(ctx context.Context, jobID int64, employerUserID int64, expiredAt *time.Time) error {
 	// Check ownership
 	if err := s.CheckJobOwnership(ctx, jobID, employerUserID); err != nil {
 		return err
@@ -455,14 +455,10 @@ func (s *jobService) PublishJob(ctx context.Context, jobID int64, employerUserID
 		return fmt.Errorf("cannot publish job with status: %s", j.Status)
 	}
 
-	// Phase 7: Check if company is verified
+	// Determine publish flow based on company verification and job status
 	company, err := s.companyRepo.FindByID(ctx, j.CompanyID)
 	if err != nil {
 		return fmt.Errorf("company not found: %w", err)
-	}
-
-	if !company.Verified {
-		return errors.New("company is not verified yet")
 	}
 
 	// Validate job before publishing
@@ -470,10 +466,21 @@ func (s *jobService) PublishJob(ctx context.Context, jobID int64, employerUserID
 		return fmt.Errorf("cannot publish job: %w", err)
 	}
 
-	// Phase 7: Change status from draft to pending_review (not directly to published)
-	if err := s.jobRepo.UpdateStatus(ctx, jobID, "pending_review"); err != nil {
-		return fmt.Errorf("failed to update job status: %w", err)
+	// If the job is a draft OR the company is verified, publish immediately.
+	// Otherwise, move the job to pending_review so admins can approve.
+	if company.Verified || j.Status == "draft" {
+		now := time.Now()
+		if err := s.jobRepo.UpdateStatusWithExpiry(ctx, jobID, "published", &now, expiredAt); err != nil {
+			return fmt.Errorf("failed to publish job: %w", err)
+		}
+		return nil
 	}
+
+	// Company not verified and job not draft -> submit for admin review
+	if err := s.jobRepo.UpdateStatus(ctx, jobID, "pending_review"); err != nil {
+		return fmt.Errorf("failed to update job status to pending_review: %w", err)
+	}
+	return nil
 
 	// TODO Phase 7: Trigger admin notification
 	// This should trigger an event/notification to admin system
@@ -492,6 +499,17 @@ func (s *jobService) UnpublishJob(ctx context.Context, jobID int64, employerUser
 
 	// Update status to draft
 	return s.jobRepo.UpdateStatus(ctx, jobID, "draft")
+}
+
+// InactivateJob marks a job as inactive (hidden from job seekers but not deleted)
+func (s *jobService) InactivateJob(ctx context.Context, jobID int64, employerUserID int64) error {
+	// Check ownership
+	if err := s.CheckJobOwnership(ctx, jobID, employerUserID); err != nil {
+		return err
+	}
+
+	// Update status to inactive
+	return s.jobRepo.UpdateStatus(ctx, jobID, "inactive")
 }
 
 // CloseJob closes a job (no longer accepting applications)

@@ -361,13 +361,15 @@ func (r *jobRepository) GetJobsGroupedByStatus(ctx context.Context, userID int64
 	}
 	for _, j := range jobs {
 		switch j.Status {
-		case "active":
+		case "published":
+			// published jobs are considered 'active' in the mobile UI
 			grouped["active"] = append(grouped["active"], j)
 		case "inactive":
 			grouped["inactive"] = append(grouped["inactive"], j)
 		case "draft":
 			grouped["draft"] = append(grouped["draft"], j)
-		case "in_review":
+		case "in_review", "pending_review":
+			// both in_review and pending_review map to the in_review tab
 			grouped["in_review"] = append(grouped["in_review"], j)
 		}
 	}
@@ -392,6 +394,23 @@ func (r *jobRepository) UpdateStatus(ctx context.Context, id int64, status strin
 		Model(&job.Job{}).
 		Where("id = ?", id).
 		Update("status", status).Error
+}
+
+// UpdateStatusWithExpiry updates job status and optionally sets published_at and expired_at
+func (r *jobRepository) UpdateStatusWithExpiry(ctx context.Context, id int64, status string, publishedAt *time.Time, expiredAt *time.Time) error {
+	updates := map[string]interface{}{}
+	updates["status"] = status
+	if publishedAt != nil {
+		updates["published_at"] = *publishedAt
+	}
+	if expiredAt != nil {
+		updates["expired_at"] = *expiredAt
+	}
+
+	return r.db.WithContext(ctx).
+		Model(&job.Job{}).
+		Where("id = ?", id).
+		Updates(updates).Error
 }
 
 // PublishJob publishes a job

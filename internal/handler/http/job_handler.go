@@ -2,6 +2,8 @@ package http
 
 import (
 	"strconv"
+	"strings"
+	"time"
 
 	"keerja-backend/internal/domain/company"
 	"keerja-backend/internal/domain/job"
@@ -754,6 +756,7 @@ func (h *JobHandler) PublishJob(c *fiber.Ctx) error {
 	}
 
 	// If ExpiredAt provided, parse and validate using datetime helper
+	var expiredAtPtr *time.Time
 	if req.ExpiredAt != nil && *req.ExpiredAt != "" {
 		expiredAt, err := utils.ParseOptionalDateTime(req.ExpiredAt)
 		if err != nil {
@@ -763,13 +766,11 @@ func (h *JobHandler) PublishJob(c *fiber.Ctx) error {
 			if err := utils.MustBeFutureTime(*expiredAt); err != nil {
 				return utils.BadRequestResponse(c, ErrFutureDateRequired)
 			}
-			if err := h.jobService.SetJobExpiry(ctx, id, *expiredAt); err != nil {
-				return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to set job expiry", err.Error())
-			}
+			expiredAtPtr = expiredAt
 		}
 	}
 
-	if err := h.jobService.PublishJob(ctx, id, employerID); err != nil {
+	if err := h.jobService.PublishJob(ctx, id, employerID, expiredAtPtr); err != nil {
 		// Phase 7: Handle specific error cases
 		errMsg := err.Error()
 
@@ -792,11 +793,27 @@ func (h *JobHandler) PublishJob(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to publish job", err.Error())
 	}
 
-	// Phase 7: Return 200 OK with status pending_review
-	return utils.SuccessResponse(c, "Job submitted for review successfully", fiber.Map{
-		"status":  "pending_review",
-		"message": "Your job has been submitted and is waiting for admin approval",
-	})
+	// Fetch job to determine actual status and return accurate message
+	jobObj, err := h.jobService.GetJob(ctx, id)
+	if err != nil {
+		// fallback to generic success if we cannot load the job
+		return utils.SuccessResponse(c, "Job publish initiated", fiber.Map{"status": "unknown"})
+	}
+
+	switch jobObj.Status {
+	case "published":
+		return utils.SuccessResponse(c, "Job published successfully", fiber.Map{
+			"status":  "published",
+			"message": "Your job is now live",
+		})
+	case "pending_review", "in_review":
+		return utils.SuccessResponse(c, "Job submitted for review successfully", fiber.Map{
+			"status":  "pending_review",
+			"message": "Your job has been submitted and is waiting for admin approval",
+		})
+	default:
+		return utils.SuccessResponse(c, "Job status updated", fiber.Map{"status": jobObj.Status})
+	}
 }
 
 // POST /jobs/:id/close
@@ -820,4 +837,45 @@ func (h *JobHandler) CloseJob(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to close job", err.Error())
 	}
 	return utils.SuccessResponse(c, MsgUpdatedSuccess, fiber.Map{"closed": true})
+}
+
+// PATCH /jobs/:id/inactivate - Inactivate job (hide from job seekers)
+// @Summary Inactivate job (employer)
+// @Description Mark a job as inactive. Requires employer ownership.
+// @Tags Jobs
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Job ID"
+// @Success 200 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 404 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /jobs/{id}/inactivate [patch]
+func (h *JobHandler) InactivateJob(c *fiber.Ctx) error {
+	ctx := c.Context()
+	employerID := middleware.GetUserID(c)
+
+	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	if err != nil || id <= 0 {
+		return utils.BadRequestResponse(c, ErrInvalidID)
+	}
+
+	if employerID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "User not authenticated", "userID not found in context")
+	}
+
+	if err := h.jobService.InactivateJob(ctx, id, employerID); err != nil {
+		// Ownership or not found errors bubble up as not authorized/not found from service
+		if err.Error() == "you do not have permission to modify this job" {
+			return utils.ForbiddenResponse(c, ErrNotJobOwner)
+		}
+		if strings.Contains(err.Error(), "job not found") {
+			return utils.NotFoundResponse(c, ErrJobNotFound)
+		}
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to inactivate job", err.Error())
+	}
+
+	return utils.SuccessResponse(c, "Job inactivated successfully", fiber.Map{"id": id})
 }

@@ -21,8 +21,9 @@ type JobService interface {
 	SaveJobDraft(ctx context.Context, companyID int64, req *SaveJobDraftRequest) (*Job, error)
 
 	// Job status management
-	PublishJob(ctx context.Context, jobID int64, employerUserID int64) error
+	PublishJob(ctx context.Context, jobID int64, employerUserID int64, expiredAt *time.Time) error
 	UnpublishJob(ctx context.Context, jobID int64, employerUserID int64) error
+	InactivateJob(ctx context.Context, jobID int64, employerUserID int64) error
 	CloseJob(ctx context.Context, jobID int64, employerUserID int64) error
 	ReopenJob(ctx context.Context, jobID int64, employerUserID int64) error
 	SuspendJob(ctx context.Context, jobID int64, employerUserID int64, reason string) error

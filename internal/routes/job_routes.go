@@ -103,6 +103,11 @@ func SetupJobRoutes(api fiber.Router, deps *Dependencies, authMw *middleware.Aut
 		deps.JobHandler.PublishJob,
 	)
 
+	// PATCH /api/v1/jobs/:id/inactivate - Inactivate job (hide from job seekers)
+	protected.Patch("/:id/inactivate",
+		deps.JobHandler.InactivateJob,
+	)
+
 	// PATCH /api/v1/jobs/:id/close - Close active job
 	protected.Patch("/:id/close",
 		deps.JobHandler.CloseJob,
