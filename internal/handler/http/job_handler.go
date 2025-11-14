@@ -442,6 +442,8 @@ func (h *JobHandler) CreateJob(c *fiber.Ctx) error {
 		EmployerUserID:     userID, // This is user ID, service will look up employer_user ID
 		Description:        req.Description,
 		JobTitleID:         req.JobTitleID,
+		JobCategoryID:      req.JobCategoryID,
+		JobSubcategoryID:   req.JobSubcategoryID,
 		JobTypeID:          req.JobTypeID,
 		WorkPolicyID:       req.WorkPolicyID,
 		EducationLevelID:   req.EducationLevelID,
@@ -513,6 +515,7 @@ func (h *JobHandler) SaveJobDraft(c *fiber.Ctx) error {
 		DraftID:          req.DraftID,
 		JobTitleID:       req.JobTitleID,
 		JobCategoryID:    req.JobCategoryID,
+		JobSubcategoryID: req.JobSubcategoryID,
 		JobTypeID:        req.JobTypeID,
 		WorkPolicyID:     req.WorkPolicyID,
 		GajiMin:          req.GajiMin,

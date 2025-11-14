@@ -3,7 +3,11 @@ package http
 import (
 	"strconv"
 
+	"keerja-backend/internal/domain/company"
+	"keerja-backend/internal/domain/job"
 	"keerja-backend/internal/domain/master"
+	"keerja-backend/internal/dto/mapper"
+	"keerja-backend/internal/middleware"
 	"keerja-backend/internal/utils"
 
 	"github.com/gofiber/fiber/v2"
@@ -13,16 +17,25 @@ import (
 type MasterDataHandler struct {
 	jobTitleService   master.JobTitleService
 	jobOptionsService master.JobOptionsService
+	jobService        job.JobService
+	companyService    company.CompanyService
+	skillsService     master.SkillsMasterService
 }
 
 // NewMasterDataHandler creates a new master data handler
 func NewMasterDataHandler(
 	jobTitleService master.JobTitleService,
 	jobOptionsService master.JobOptionsService,
+	jobService job.JobService,
+	companyService company.CompanyService,
+	skillsService master.SkillsMasterService,
 ) *MasterDataHandler {
 	return &MasterDataHandler{
 		jobTitleService:   jobTitleService,
 		jobOptionsService: jobOptionsService,
+		jobService:        jobService,
+		companyService:    companyService,
+		skillsService:     skillsService,
 	}
 }
 
@@ -136,6 +149,132 @@ func (h *MasterDataHandler) GetJobTypesOptions(c *fiber.Ctx) error {
 	}
 
 	return utils.SuccessResponse(c, "Job types options retrieved successfully", response)
+}
+
+// GetJobPostingFormOptions handles GET /api/v1/master/job-posting-form-options
+// @Summary Get job posting form fields/options for mobile
+// @Description Returns job categories, subcategories, job types, work policies, education levels, experience levels, gender preferences, salary and age defaults
+// @Tags Master Data
+// @Accept json
+// @Produce json
+// @Success 200 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /api/v1/master/job-posting-form-options [get]
+func (h *MasterDataHandler) GetJobPostingFormOptions(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	// Get categories (with subcategories)
+	categories, err := h.jobService.GetCategoryTree(ctx)
+	if err != nil {
+		return utils.InternalServerErrorResponse(c, "Failed to retrieve job categories")
+	}
+
+	// Get combined job options
+	options, err := h.jobOptionsService.GetJobOptions(ctx)
+	if err != nil {
+		return utils.InternalServerErrorResponse(c, "Failed to retrieve job options")
+	}
+
+	// Salary and age defaults (as requested)
+	salaryDefaults := map[string]interface{}{
+		"min":      8000000,
+		"max":      15000000,
+		"display":  "range",
+		"currency": "IDR",
+	}
+
+	ageDefaults := map[string]int{"min_age": 22, "max_age": 35}
+
+	response := fiber.Map{
+		"job_categories":     categories,
+		"job_types":          options.JobTypes,
+		"work_policies":      options.WorkPolicies,
+		"education_levels":   options.EducationLevels,
+		"experience_levels":  options.ExperienceLevels,
+		"gender_preferences": options.GenderPreferences,
+		"salary_defaults":    salaryDefaults,
+		"salary_units":       []string{"Rp/bulan", "Rp/hari", "Rp/jam", "Rp/proyek"},
+		"age_defaults":       ageDefaults,
+	}
+
+	// If the user is authenticated, include their company addresses (full address)
+	// and company summary + skills for the form
+	userID := middleware.GetUserID(c)
+	if userID != 0 {
+		companies, err := h.companyService.GetUserCompanies(ctx, userID)
+		if err == nil && len(companies) > 0 {
+			// Use the first company for now (business rule: 1 user -> 1 company)
+			comp := companies[0]
+
+			// company_addresses (full address)
+			companyAddresses := make([]map[string]interface{}, 0)
+			if comp.FullAddress != "" {
+				addr := map[string]interface{}{
+					"id":             comp.ID,
+					"alamat_lengkap": comp.FullAddress,
+				}
+				if comp.Latitude != nil {
+					addr["latitude"] = *comp.Latitude
+				}
+				if comp.Longitude != nil {
+					addr["longitude"] = *comp.Longitude
+				}
+				companyAddresses = append(companyAddresses, addr)
+			}
+			response["company_addresses"] = companyAddresses
+
+			// company summary (lightweight company object)
+			if cresp := mapper.ToCompanyResponse(&comp); cresp != nil {
+				response["company"] = cresp
+			}
+		}
+
+		// Include skills (for autocomplete / suggestions) - fetch first 100 skills
+		if h.skillsService != nil {
+			filter := &master.SkillsFilter{Page: 1, PageSize: 100}
+			skillsResp, err := h.skillsService.GetSkills(ctx, filter)
+			if err == nil && skillsResp != nil {
+				response["skills"] = skillsResp.Skills
+			}
+		}
+	}
+
+	// Build flat subcategories list from category tree (useful for form selects)
+	var flatSubcategories []map[string]interface{}
+	for _, cat := range categories {
+		// include subcategories directly under this category if loaded
+		if len(cat.Subcategories) > 0 {
+			for _, sc := range cat.Subcategories {
+				flatSubcategories = append(flatSubcategories, map[string]interface{}{
+					"id":          sc.ID,
+					"category_id": sc.CategoryID,
+					"code":        sc.Code,
+					"name":        sc.Name,
+					"is_active":   sc.IsActive,
+				})
+			}
+		}
+		// include subcategories for any children categories as well
+		if len(cat.Children) > 0 {
+			for _, ch := range cat.Children {
+				if len(ch.Subcategories) > 0 {
+					for _, sc := range ch.Subcategories {
+						flatSubcategories = append(flatSubcategories, map[string]interface{}{
+							"id":          sc.ID,
+							"category_id": sc.CategoryID,
+							"code":        sc.Code,
+							"name":        sc.Name,
+							"is_active":   sc.IsActive,
+						})
+					}
+				}
+			}
+		}
+	}
+
+	response["job_subcategories"] = flatSubcategories
+
+	return utils.SuccessResponse(c, "Job posting form options retrieved successfully", response)
 }
 
 // Admin-only endpoints for managing job titles

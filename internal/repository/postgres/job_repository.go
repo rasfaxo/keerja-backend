@@ -814,6 +814,8 @@ func (r *jobRepository) GetCategoryTree(ctx context.Context) ([]job.JobCategory,
 	var categories []job.JobCategory
 	err := r.db.WithContext(ctx).
 		Preload("Children").
+		Preload("Subcategories").
+		Preload("Children.Subcategories").
 		Where("parent_id IS NULL AND is_active = ?", true).
 		Order("name ASC").
 		Find(&categories).Error

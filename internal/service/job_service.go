@@ -75,8 +75,8 @@ func (s *jobService) CreateJob(ctx context.Context, req *job.CreateJobRequest) (
 		employerUserID = employerUser.ID
 	}
 
-	// Validate master data IDs (all required now)
-	if err := s.ValidateJobMasterDataIDs(ctx, &req.JobTitleID, &req.JobTypeID, &req.WorkPolicyID,
+	// Validate master data IDs (job title is optional now)
+	if err := s.ValidateJobMasterDataIDs(ctx, req.JobTitleID, &req.JobTypeID, &req.WorkPolicyID,
 		&req.EducationLevelID, &req.ExperienceLevelID, &req.GenderPreferenceID); err != nil {
 		return nil, fmt.Errorf("master data validation failed: %w", err)
 	}
@@ -87,17 +87,57 @@ func (s *jobService) CreateJob(ctx context.Context, req *job.CreateJobRequest) (
 		return nil, fmt.Errorf("invalid company_id: company with ID %d not found", req.CompanyID)
 	}
 
-	// Get job title to generate slug
-	jobTitle, err := s.jobTitleRepo.FindByID(ctx, req.JobTitleID)
-	if err != nil || jobTitle == nil {
-		return nil, fmt.Errorf("invalid job_title_id: %d", req.JobTitleID)
+	// Determine job title (may come from job_title_id or from subcategory)
+	var title string
+	if req.JobTitleID != nil && *req.JobTitleID > 0 {
+		jobTitle, err := s.jobTitleRepo.FindByID(ctx, *req.JobTitleID)
+		if err != nil || jobTitle == nil {
+			return nil, fmt.Errorf("invalid job_title_id: %d", *req.JobTitleID)
+		}
+		title = jobTitle.Name
+	} else if req.JobSubcategoryID > 0 {
+		// Derive title from subcategory if job title is not provided
+		sub, err := s.jobRepo.FindSubcategoryByID(ctx, req.JobSubcategoryID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to resolve job_subcategory_id for title: %w", err)
+		}
+		if sub == nil {
+			return nil, fmt.Errorf("invalid job_subcategory_id: %d", req.JobSubcategoryID)
+		}
+		title = sub.Name
 	}
 
-	// Generate unique slug from job title
-	slug := utils.GenerateUniqueSlug(jobTitle.Name, func(slugToCheck string) bool {
+	if title == "" {
+		return nil, fmt.Errorf("either job_title_id or job_subcategory_id must be provided to determine job title")
+	}
+
+	// Generate unique slug from determined title
+	slug := utils.GenerateUniqueSlug(title, func(slugToCheck string) bool {
 		existingJob, _ := s.jobRepo.FindBySlug(ctx, slugToCheck)
 		return existingJob != nil
 	})
+
+	// Validate and resolve category/subcategory if provided
+	if req.JobSubcategoryID > 0 {
+		sub, err := s.jobRepo.FindSubcategoryByID(ctx, req.JobSubcategoryID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to validate job_subcategory_id: %w", err)
+		}
+		if sub == nil {
+			return nil, fmt.Errorf("invalid job_subcategory_id: %d", req.JobSubcategoryID)
+		}
+		if !sub.IsActive {
+			return nil, fmt.Errorf("invalid job_subcategory_id: %d is inactive", req.JobSubcategoryID)
+		}
+		// If category provided, ensure it matches subcategory's category
+		if req.JobCategoryID > 0 && sub.CategoryID != req.JobCategoryID {
+			return nil, fmt.Errorf("job_subcategory_id %d does not belong to category %d", req.JobSubcategoryID, req.JobCategoryID)
+		}
+		// If category not provided, derive it from subcategory
+		if req.JobCategoryID == 0 {
+			req.JobCategoryID = sub.CategoryID
+		}
+	}
 
 	// Create job entity - master data only
 	jobStatus := "draft"
@@ -107,11 +147,11 @@ func (s *jobService) CreateJob(ctx context.Context, req *job.CreateJobRequest) (
 	newJob := &job.Job{
 		CompanyID:      req.CompanyID,
 		EmployerUserID: &employerUserID, // Use resolved employer_user ID (not user_id)
-		Title:          jobTitle.Name,   // Use job title name
+		Title:          title,           // Use determined title
 		Slug:           slug,
 
 		// Master Data FK fields (All required)
-		JobTitleID:         &req.JobTitleID,
+		JobTitleID:         req.JobTitleID,
 		JobTypeID:          &req.JobTypeID,
 		WorkPolicyID:       &req.WorkPolicyID,
 		EducationLevelID:   &req.EducationLevelID,
@@ -128,6 +168,14 @@ func (s *jobService) CreateJob(ctx context.Context, req *job.CreateJobRequest) (
 		Currency:         "IDR", // Default currency
 		TotalHires:       1,     // Default total hires
 		Status:           jobStatus,
+	}
+
+	// Attach category/subcategory if provided
+	if req.JobCategoryID > 0 {
+		newJob.CategoryID = &req.JobCategoryID
+	}
+	if req.JobSubcategoryID > 0 {
+		newJob.JobSubcategoryID = &req.JobSubcategoryID
 	}
 
 	// Validate job before creation
@@ -313,10 +361,42 @@ func (s *jobService) SaveJobDraft(ctx context.Context, companyID int64, req *job
 	}
 
 	// 7. Map request fields to job entity
-	// Note: JobTitleID maps to Title (we'll need to fetch the title text)
-	// For now, we'll use a placeholder title
-	jobDraft.Title = fmt.Sprintf("Draft Job %d", time.Now().Unix()) // Temporary, should fetch from JobTitle master data
+	// Determine title: prefer JobTitle master data, otherwise derive from subcategory, else use placeholder
+	if req.JobTitleID != nil && *req.JobTitleID > 0 {
+		if jt, err := s.jobTitleRepo.FindByID(ctx, *req.JobTitleID); err == nil && jt != nil {
+			jobDraft.Title = jt.Name
+		} else {
+			jobDraft.Title = fmt.Sprintf("Draft Job %d", time.Now().Unix())
+		}
+	} else if req.JobSubcategoryID > 0 {
+		if sub, err := s.jobRepo.FindSubcategoryByID(ctx, req.JobSubcategoryID); err == nil && sub != nil {
+			jobDraft.Title = sub.Name
+		} else {
+			jobDraft.Title = fmt.Sprintf("Draft Job %d", time.Now().Unix())
+		}
+	} else {
+		jobDraft.Title = fmt.Sprintf("Draft Job %d", time.Now().Unix())
+	}
 	jobDraft.CategoryID = &req.JobCategoryID
+
+	// Validate/attach subcategory if provided
+	if req.JobSubcategoryID > 0 {
+		sub, err := s.jobRepo.FindSubcategoryByID(ctx, req.JobSubcategoryID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to validate job_subcategory_id: %w", err)
+		}
+		if sub == nil {
+			return nil, fmt.Errorf("invalid job_subcategory_id: %d", req.JobSubcategoryID)
+		}
+		if !sub.IsActive {
+			return nil, fmt.Errorf("invalid job_subcategory_id: %d is inactive", req.JobSubcategoryID)
+		}
+		// Ensure subcategory belongs to provided category
+		if sub.CategoryID != req.JobCategoryID {
+			return nil, fmt.Errorf("job_subcategory_id %d does not belong to category %d", req.JobSubcategoryID, req.JobCategoryID)
+		}
+		jobDraft.JobSubcategoryID = &req.JobSubcategoryID
+	}
 	jobDraft.Description = sanitizedDesc
 	jobDraft.JobTypeID = &req.JobTypeID
 

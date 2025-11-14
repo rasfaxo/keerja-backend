@@ -64,9 +64,10 @@ func EmployerUsersSeeder(db *gorm.DB) error {
 		return nil
 	}
 
-	// Use OnConflict to handle duplicates gracefully
+	// Use OnConflict to handle duplicates gracefully — target unique (user_id, company_id)
 	result := db.Clauses(clause.OnConflict{
-		UpdateAll: true,
+		Columns:   []clause.Column{{Name: "user_id"}, {Name: "company_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"role", "position_title", "department", "email_company", "phone_company", "is_verified", "verified_at", "verified_by", "is_active", "last_login", "updated_at"}),
 	}).Create(&employerUsers)
 
 	if result.Error != nil {

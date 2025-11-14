@@ -7,13 +7,17 @@ type CreateJobRequest struct {
 	CompanyID   int64  `json:"company_id" validate:"required,min=1"`
 	Description string `json:"description" validate:"required,min=50"`
 
+	// Category/Subcategory (optional but recommended)
+	JobCategoryID    int64 `json:"job_category_id" validate:"omitempty,min=1"`
+	JobSubcategoryID int64 `json:"job_subcategory_id" validate:"omitempty,min=1"`
+
 	// Master Data IDs (All Required)
-	JobTitleID         int64 `json:"job_title_id" validate:"required,min=1"`
-	JobTypeID          int64 `json:"job_type_id" validate:"required,min=1"`
-	WorkPolicyID       int64 `json:"work_policy_id" validate:"required,min=1"`
-	EducationLevelID   int64 `json:"education_level_id" validate:"required,min=1"`
-	ExperienceLevelID  int64 `json:"experience_level_id" validate:"required,min=1"`
-	GenderPreferenceID int64 `json:"gender_preference_id" validate:"required,min=1"`
+	JobTitleID         *int64 `json:"job_title_id" validate:"omitempty,min=1"`
+	JobTypeID          int64  `json:"job_type_id" validate:"required,min=1"`
+	WorkPolicyID       int64  `json:"work_policy_id" validate:"required,min=1"`
+	EducationLevelID   int64  `json:"education_level_id" validate:"required,min=1"`
+	ExperienceLevelID  int64  `json:"experience_level_id" validate:"required,min=1"`
+	GenderPreferenceID int64  `json:"gender_preference_id" validate:"required,min=1"`
 
 	// Salary Range (Required)
 	SalaryMin     *float64 `json:"salary_min" validate:"required,min=0"`
@@ -169,8 +173,9 @@ type JobRecommendationRequest struct {
 type SaveJobDraftRequest struct {
 	DraftID          *int64  `json:"draft_id" validate:"omitempty,min=1"`                           // Optional: for updating existing draft
 	CompanyID        int64   `json:"company_id" validate:"required,min=1"`                          // Company ID for the job draft
-	JobTitleID       int64   `json:"job_title_id" validate:"required,min=1"`                        // Master data: job title ID
+	JobTitleID       *int64  `json:"job_title_id" validate:"omitempty,min=1"`                       // Master data: job title ID
 	JobCategoryID    int64   `json:"job_category_id" validate:"required,min=1"`                     // Master data: job category ID
+	JobSubcategoryID int64   `json:"job_subcategory_id" validate:"omitempty,min=1"`                 // Master data: job subcategory ID (optional)
 	JobTypeID        int64   `json:"job_type_id" validate:"required,min=1"`                         // Master data: job type ID (full-time, part-time, etc.)
 	WorkPolicyID     int64   `json:"work_policy_id" validate:"required,min=1"`                      // Master data: work policy ID (onsite, remote, hybrid)
 	GajiMin          int     `json:"gaji_min" validate:"required,min=0"`                            // Minimum salary

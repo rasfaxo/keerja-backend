@@ -270,7 +270,7 @@ func main() {
 	locationHandler := master.NewLocationHandler(provinceService, cityService, districtService)
 
 	// Initialize job master data handler (job titles & options)
-	masterDataHandler := http.NewMasterDataHandler(jobTitleService, jobOptionsService)
+	masterDataHandler := http.NewMasterDataHandler(jobTitleService, jobOptionsService, jobService, companyService, skillsMasterService)
 
 	masterDataHandlers := &routes.MasterDataHandlers{
 		IndustryHandler:    industryHandler,

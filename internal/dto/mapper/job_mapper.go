@@ -104,13 +104,13 @@ func ToJobDetailResponse(j *job.Job) *response.JobDetailResponse {
 		Title:          j.Title,
 		Slug:           j.Slug,
 
-		// Master Data IDs (required, dereference pointers)
-		JobTitleID:         derefInt64(j.JobTitleID),
-		JobTypeID:          derefInt64(j.JobTypeID),
-		WorkPolicyID:       derefInt64(j.WorkPolicyID),
-		EducationLevelID:   derefInt64(j.EducationLevelID),
-		ExperienceLevelID:  derefInt64(j.ExperienceLevelID),
-		GenderPreferenceID: derefInt64(j.GenderPreferenceID),
+		// Master Data IDs (nullable pointers)
+		JobTitleID:         j.JobTitleID,
+		JobTypeID:          j.JobTypeID,
+		WorkPolicyID:       j.WorkPolicyID,
+		EducationLevelID:   j.EducationLevelID,
+		ExperienceLevelID:  j.ExperienceLevelID,
+		GenderPreferenceID: j.GenderPreferenceID,
 
 		Description: j.Description,
 

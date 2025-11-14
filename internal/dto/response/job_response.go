@@ -44,12 +44,12 @@ type JobDetailResponse struct {
 	Slug            string `json:"slug"`
 
 	// Master Data IDs
-	JobTitleID         int64 `json:"job_title_id"`
-	JobTypeID          int64 `json:"job_type_id"`
-	WorkPolicyID       int64 `json:"work_policy_id"`
-	EducationLevelID   int64 `json:"education_level_id"`
-	ExperienceLevelID  int64 `json:"experience_level_id"`
-	GenderPreferenceID int64 `json:"gender_preference_id"`
+	JobTitleID         *int64 `json:"job_title_id,omitempty"`
+	JobTypeID          *int64 `json:"job_type_id,omitempty"`
+	WorkPolicyID       *int64 `json:"work_policy_id,omitempty"`
+	EducationLevelID   *int64 `json:"education_level_id,omitempty"`
+	ExperienceLevelID  *int64 `json:"experience_level_id,omitempty"`
+	GenderPreferenceID *int64 `json:"gender_preference_id,omitempty"`
 
 	// Master Data Details
 	JobTitle         *JobMasterDataItem `json:"job_title,omitempty"`

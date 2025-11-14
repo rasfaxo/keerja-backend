@@ -34,6 +34,12 @@ func RunSeeders(db *gorm.DB) error {
 		return err
 	}
 
+	// Run job subcategories seeder (depends on job_categories)
+	if err := JobSubcategoriesSeeder(db); err != nil {
+		log.Printf("Failed to run JobSubcategoriesSeeder: %v", err)
+		return err
+	}
+
 	// Run admin roles seeder
 	if err := AdminRolesSeeder(db); err != nil {
 		log.Printf("Failed to run AdminRolesSeeder: %v", err)

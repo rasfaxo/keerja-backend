@@ -51,6 +51,9 @@ type Job struct {
 	// Company Address (Optional - for work location)
 	CompanyAddressID *int64 `gorm:"column:company_address_id" json:"company_address_id,omitempty"`
 
+	// Category/Subcategory
+	JobSubcategoryID *int64 `gorm:"column:job_subcategory_id;index" json:"job_subcategory_id,omitempty"`
+
 	Status            string     `gorm:"column:status;type:varchar(20);check:status IN ('in_review','draft','pending_review','published','closed','expired','suspended','rejected');default:'draft';index" json:"status" validate:"omitempty,oneof='in_review' 'draft' 'pending_review' 'published' 'closed' 'expired' 'suspended' 'rejected'"`
 	ViewsCount        int64      `gorm:"column:views_count;default:0" json:"views_count"`
 	ApplicationsCount int64      `gorm:"column:applications_count;default:0" json:"applications_count"`
@@ -61,6 +64,7 @@ type Job struct {
 
 	// Relationships
 	Category        *JobCategory     `gorm:"foreignKey:CategoryID;references:ID;constraint:OnDelete:SET NULL" json:"category,omitempty"`
+	JobSubcategory  *JobSubcategory  `gorm:"foreignKey:JobSubcategoryID;references:ID;constraint:OnDelete:SET NULL" json:"job_subcategory,omitempty"`
 	Locations       []JobLocation    `gorm:"foreignKey:JobID;references:ID;constraint:OnDelete:CASCADE" json:"locations,omitempty"`
 	Benefits        []JobBenefit     `gorm:"foreignKey:JobID;references:ID;constraint:OnDelete:CASCADE" json:"benefits,omitempty"`
 	Skills          []JobSkill       `gorm:"foreignKey:JobID;references:ID;constraint:OnDelete:CASCADE" json:"skills,omitempty"`
