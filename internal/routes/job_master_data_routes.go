@@ -31,6 +31,7 @@ func SetupJobMasterDataRoutes(api fiber.Router, handler *http.MasterDataHandler,
 	// GET /api/v1/master/job-posting-form-options
 	master.Get("/job-posting-form-options",
 		middleware.RateLimitByIP(60, 1*time.Minute),
+		authMw.OptionalAuth(),
 		handler.GetJobPostingFormOptions,
 	)
 
