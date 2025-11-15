@@ -164,13 +164,14 @@ type UpdateJobRequest struct {
 	GenderPreferenceID *int64 `json:"gender_preference_id,omitempty"`
 
 	// Other Fields (Optional)
-	Description      string   `json:"description,omitempty"`
-	SalaryMin        *float64 `json:"salary_min,omitempty"`
-	SalaryMax        *float64 `json:"salary_max,omitempty"`
-	SalaryDisplay    *string  `json:"salary_display,omitempty" validate:"omitempty,oneof='range' 'min_only' 'max_only' 'negotiable' 'competitive' 'hidden'"`
-	MinAge           *int     `json:"min_age,omitempty" validate:"omitempty,min=17,max=65"`
-	MaxAge           *int     `json:"max_age,omitempty" validate:"omitempty,min=17,max=65,gtefield=MinAge"`
-	CompanyAddressID *int64   `json:"company_address_id,omitempty" validate:"omitempty,min=1"`
+	Description      string            `json:"description,omitempty"`
+	SalaryMin        *float64          `json:"salary_min,omitempty"`
+	SalaryMax        *float64          `json:"salary_max,omitempty"`
+	SalaryDisplay    *string           `json:"salary_display,omitempty" validate:"omitempty,oneof='range' 'min_only' 'max_only' 'negotiable' 'competitive' 'hidden'"`
+	MinAge           *int              `json:"min_age,omitempty" validate:"omitempty,min=17,max=65"`
+	MaxAge           *int              `json:"max_age,omitempty" validate:"omitempty,min=17,max=65,gtefield=MinAge"`
+	CompanyAddressID *int64            `json:"company_address_id,omitempty" validate:"omitempty,min=1"`
+	Skills           []AddSkillRequest `json:"skills,omitempty"`
 }
 
 // SaveJobDraftRequest represents request to save job draft (Phase 6)

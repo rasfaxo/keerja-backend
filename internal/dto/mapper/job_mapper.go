@@ -28,6 +28,9 @@ func ToJobResponse(j *job.Job) *response.JobResponse {
 		Slug:              j.Slug,
 		SalaryMin:         j.SalaryMin,
 		SalaryMax:         j.SalaryMax,
+		SalaryDisplay:     j.SalaryDisplay,
+		MinAge:            j.MinAge,
+		MaxAge:            j.MaxAge,
 		Currency:          j.Currency,
 		Status:            j.Status,
 		ViewsCount:        j.ViewsCount,
@@ -55,6 +58,55 @@ func ToJobResponse(j *job.Job) *response.JobResponse {
 			Code:        j.WorkPolicy.Code,
 			Name:        j.WorkPolicy.Name,
 			Description: "",
+		}
+	}
+
+	// Include additional master-data if available
+	if j.JobTitle != nil {
+		resp.JobTitle = &response.JobMasterDataItem{
+			ID:   j.JobTitle.ID,
+			Code: j.JobTitle.NormalizedName,
+			Name: j.JobTitle.Name,
+		}
+	}
+
+	if j.EducationLevelM != nil {
+		resp.EducationLevel = &response.JobMasterDataItem{
+			ID:   j.EducationLevelM.ID,
+			Code: j.EducationLevelM.Code,
+			Name: j.EducationLevelM.Name,
+		}
+	}
+
+	if j.ExperienceLevelM != nil {
+		resp.ExperienceLevel = &response.JobMasterDataItem{
+			ID:   j.ExperienceLevelM.ID,
+			Code: j.ExperienceLevelM.Code,
+			Name: j.ExperienceLevelM.Name,
+		}
+	}
+
+	if j.GenderPreference != nil {
+		resp.GenderPreference = &response.JobMasterDataItem{
+			ID:   j.GenderPreference.ID,
+			Code: j.GenderPreference.Code,
+			Name: j.GenderPreference.Name,
+		}
+	}
+
+	// Map category/subcategory objects
+	if j.Category != nil {
+		resp.JobCategory = &response.JobCategoryResponse{
+			ID:           j.Category.ID,
+			CategoryName: j.Category.Name,
+			Description:  j.Category.Description,
+		}
+	}
+	if j.JobSubcategory != nil {
+		resp.JobSubcategory = &response.JobSubcategoryResponse{
+			ID:              j.JobSubcategory.ID,
+			SubcategoryName: j.JobSubcategory.Name,
+			Description:     j.JobSubcategory.Description,
 		}
 	}
 
@@ -104,18 +156,13 @@ func ToJobDetailResponse(j *job.Job) *response.JobDetailResponse {
 		Title:          j.Title,
 		Slug:           j.Slug,
 
-		// Master Data IDs (nullable pointers)
-		JobTitleID:         j.JobTitleID,
-		JobTypeID:          j.JobTypeID,
-		WorkPolicyID:       j.WorkPolicyID,
-		EducationLevelID:   j.EducationLevelID,
-		ExperienceLevelID:  j.ExperienceLevelID,
-		GenderPreferenceID: j.GenderPreferenceID,
-
 		Description: j.Description,
 
 		SalaryMin:         j.SalaryMin,
 		SalaryMax:         j.SalaryMax,
+		SalaryDisplay:     j.SalaryDisplay,
+		MinAge:            j.MinAge,
+		MaxAge:            j.MaxAge,
 		Currency:          j.Currency,
 		Status:            j.Status,
 		ViewsCount:        j.ViewsCount,
@@ -127,6 +174,8 @@ func ToJobDetailResponse(j *job.Job) *response.JobDetailResponse {
 		IsExpired:         j.IsExpired(),
 		DaysRemaining:     daysRemaining,
 	}
+
+	// Category/Subcategory objects are populated below (no numeric IDs in response)
 
 	// Map Job Master Data Details
 	if j.HasJobMasterDataRelations() {
@@ -187,6 +236,22 @@ func ToJobDetailResponse(j *job.Job) *response.JobDetailResponse {
 				Code:        j.GenderPreference.Code,
 				Name:        j.GenderPreference.Name,
 				Description: "",
+			}
+		}
+
+		// Map category/subcategory objects
+		if j.Category != nil {
+			resp.JobCategory = &response.JobCategoryResponse{
+				ID:           j.Category.ID,
+				CategoryName: j.Category.Name,
+				Description:  j.Category.Description,
+			}
+		}
+		if j.JobSubcategory != nil {
+			resp.JobSubcategory = &response.JobSubcategoryResponse{
+				ID:              j.JobSubcategory.ID,
+				SubcategoryName: j.JobSubcategory.Name,
+				Description:     j.JobSubcategory.Description,
 			}
 		}
 	}

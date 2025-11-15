@@ -577,6 +577,15 @@ func (h *JobHandler) UpdateJob(c *fiber.Ctx) error {
 		return utils.ForbiddenResponse(c, ErrNotJobOwner)
 	}
 
+	// Map skills from DTO if provided
+	skills := make([]job.AddSkillRequest, 0, len(req.Skills))
+	for _, s := range req.Skills {
+		skills = append(skills, job.AddSkillRequest{
+			SkillID:         s.SkillID,
+			ImportanceLevel: s.ImportanceLevel,
+		})
+	}
+
 	// Build domain request - master data only
 	domainReq := &job.UpdateJobRequest{
 		EmployerUserID:     employerID,            // User ID for verification
@@ -593,6 +602,7 @@ func (h *JobHandler) UpdateJob(c *fiber.Ctx) error {
 		MinAge:             req.MinAge,
 		MaxAge:             req.MaxAge,
 		CompanyAddressID:   req.CompanyAddressID,
+		Skills:             skills,
 	}
 
 	// NOTE: Status is NOT updated by users - it's controlled by workflow

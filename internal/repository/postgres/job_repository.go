@@ -34,6 +34,7 @@ func (r *jobRepository) FindByID(ctx context.Context, id int64) (*job.Job, error
 	var j job.Job
 	err := r.db.WithContext(ctx).
 		Preload("Category").
+		Preload("JobSubcategory").
 		Preload("Locations").
 		Preload("Benefits").
 		Preload("Skills.Skill").
@@ -60,6 +61,7 @@ func (r *jobRepository) FindByUUID(ctx context.Context, uuid string) (*job.Job, 
 	var j job.Job
 	err := r.db.WithContext(ctx).
 		Preload("Category").
+		Preload("JobSubcategory").
 		Preload("Locations").
 		Preload("Benefits").
 		Preload("Skills.Skill").
@@ -87,6 +89,7 @@ func (r *jobRepository) FindBySlug(ctx context.Context, slug string) (*job.Job, 
 	var j job.Job
 	err := r.db.WithContext(ctx).
 		Preload("Category").
+		Preload("JobSubcategory").
 		Preload("Locations").
 		Preload("Benefits").
 		Preload("Skills.Skill").
@@ -121,7 +124,7 @@ func (r *jobRepository) Update(ctx context.Context, j *job.Job) error {
 		"Location", "City", "Province", "RemoteOption",
 
 		// Salary fields
-		"SalaryMin", "SalaryMax", "Currency",
+		"SalaryMin", "SalaryMax", "SalaryDisplay", "MinAge", "MaxAge", "Currency",
 
 		// Experience and Education (legacy fields)
 		"ExperienceMin", "ExperienceMax", "EducationLevel",
@@ -177,6 +180,7 @@ func (r *jobRepository) List(ctx context.Context, filter job.JobFilter, page, li
 	// Execute query
 	err := query.
 		Preload("Category").
+		Preload("JobSubcategory").
 		Preload("Locations").
 		Preload("Benefits").
 		Preload("Skills.Skill").
@@ -221,6 +225,13 @@ func (r *jobRepository) ListByEmployer(ctx context.Context, employerUserID int64
 
 	err := query.
 		Preload("Category").
+		Preload("JobSubcategory").
+		Preload("JobTitle").
+		Preload("JobType").
+		Preload("WorkPolicy").
+		Preload("EducationLevelM").
+		Preload("ExperienceLevelM").
+		Preload("GenderPreference").
 		Preload("Locations").
 		Preload("Benefits").
 		Preload("Skills.Skill").
@@ -331,6 +342,7 @@ func (r *jobRepository) SearchJobs(ctx context.Context, filter job.JobSearchFilt
 	// Execute final query
 	err := query.
 		Preload("Category").
+		Preload("JobSubcategory").
 		Preload("Locations").
 		Preload("Benefits").
 		Preload("Skills.Skill").

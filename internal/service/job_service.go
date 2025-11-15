@@ -294,6 +294,13 @@ func (s *jobService) UpdateJob(ctx context.Context, jobID int64, req *job.Update
 		return nil, fmt.Errorf("failed to update job: %w", err)
 	}
 
+	// If skills provided, replace existing skills with new set
+	if req.Skills != nil && len(req.Skills) > 0 {
+		if err := s.BulkAddSkills(ctx, jobID, req.Skills); err != nil {
+			return nil, fmt.Errorf("failed to update job skills: %w", err)
+		}
+	}
+
 	// Reload job with relationships
 	return s.jobRepo.FindByID(ctx, jobID)
 }
@@ -1360,7 +1367,21 @@ func (s *jobService) BulkAddSkills(ctx context.Context, jobID int64, skills []jo
 		})
 	}
 
-	return s.jobRepo.BulkCreateSkills(ctx, jobSkills)
+	// Replace existing skills: delete then create
+	if err := s.jobRepo.BulkDeleteSkills(ctx, jobID); err != nil {
+		return fmt.Errorf("failed to delete existing skills: %w", err)
+	}
+
+	if len(jobSkills) == 0 {
+		// nothing to create
+		return nil
+	}
+
+	if err := s.jobRepo.BulkCreateSkills(ctx, jobSkills); err != nil {
+		return fmt.Errorf("failed to create job skills: %w", err)
+	}
+
+	return nil
 }
 
 // AddRequirement adds a requirement to a job
