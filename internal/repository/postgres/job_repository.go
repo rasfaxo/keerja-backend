@@ -34,6 +34,7 @@ func (r *jobRepository) FindByID(ctx context.Context, id int64) (*job.Job, error
 	var j job.Job
 	err := r.db.WithContext(ctx).
 		Preload("Category").
+		Preload("CompanyAddress").
 		Preload("JobSubcategory").
 		Preload("Locations").
 		Preload("Benefits").
@@ -61,6 +62,7 @@ func (r *jobRepository) FindByUUID(ctx context.Context, uuid string) (*job.Job, 
 	var j job.Job
 	err := r.db.WithContext(ctx).
 		Preload("Category").
+		Preload("CompanyAddress").
 		Preload("JobSubcategory").
 		Preload("Locations").
 		Preload("Benefits").
@@ -89,6 +91,7 @@ func (r *jobRepository) FindBySlug(ctx context.Context, slug string) (*job.Job, 
 	var j job.Job
 	err := r.db.WithContext(ctx).
 		Preload("Category").
+		Preload("CompanyAddress").
 		Preload("JobSubcategory").
 		Preload("Locations").
 		Preload("Benefits").
@@ -180,6 +183,7 @@ func (r *jobRepository) List(ctx context.Context, filter job.JobFilter, page, li
 	// Execute query
 	err := query.
 		Preload("Category").
+		Preload("CompanyAddress").
 		Preload("JobSubcategory").
 		Preload("Locations").
 		Preload("Benefits").
@@ -225,6 +229,7 @@ func (r *jobRepository) ListByEmployer(ctx context.Context, employerUserID int64
 
 	err := query.
 		Preload("Category").
+		Preload("CompanyAddress").
 		Preload("JobSubcategory").
 		Preload("JobTitle").
 		Preload("JobType").
@@ -342,6 +347,7 @@ func (r *jobRepository) SearchJobs(ctx context.Context, filter job.JobSearchFilt
 	// Execute final query
 	err := query.
 		Preload("Category").
+		Preload("CompanyAddress").
 		Preload("JobSubcategory").
 		Preload("Locations").
 		Preload("Benefits").
@@ -582,6 +588,7 @@ func (r *jobRepository) GetRecommendedJobs(ctx context.Context, userID int64, li
 		Order("published_at DESC").
 		Limit(limit).
 		Preload("Category").
+		Preload("CompanyAddress").
 		Preload("Locations").
 		Preload("Benefits").
 		Find(&jobs).Error
@@ -612,6 +619,7 @@ func (r *jobRepository) GetSimilarJobs(ctx context.Context, jobID int64, limit i
 		Order("published_at DESC").
 		Limit(limit).
 		Preload("Category").
+		Preload("CompanyAddress").
 		Preload("Locations").
 		Find(&jobs).Error
 
@@ -1204,6 +1212,7 @@ func (r *jobRepository) GetTrendingJobs(ctx context.Context, limit int) ([]job.J
 		Order("views_count DESC, applications_count DESC").
 		Limit(limit).
 		Preload("Category").
+		Preload("CompanyAddress").
 		Preload("Locations").
 		Preload("Benefits").
 		Find(&jobs).Error
@@ -1266,6 +1275,7 @@ func (r *jobRepository) FindByIDWithMasterData(ctx context.Context, id int64) (*
 
 	err := r.db.WithContext(ctx).
 		Preload("Category").
+		Preload("CompanyAddress").
 		Preload("Skills.Skill").
 		Preload("Benefits").
 		Preload("Locations").

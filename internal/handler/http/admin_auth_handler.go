@@ -27,7 +27,7 @@ func NewAdminAuthHandler(adminAuthService *service.AdminAuthService) *AdminAuthH
 // @Accept json
 // @Produce json
 // @Param request body request.AdminLoginRequest true "Admin login request"
-// @Success 200 {object} utils.Response{data=response.AdminAuthResponse}
+// @Success 200 {object} utils.Response
 // @Failure 400 {object} utils.Response
 // @Failure 401 {object} utils.Response
 // @Failure 500 {object} utils.Response
@@ -107,7 +107,7 @@ func (h *AdminAuthHandler) Logout(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param request body request.AdminRefreshTokenRequest true "Refresh token request"
-// @Success 200 {object} utils.Response{data=response.AdminTokenResponse}
+// @Success 200 {object} utils.Response
 // @Failure 400 {object} utils.Response
 // @Failure 401 {object} utils.Response
 // @Failure 500 {object} utils.Response
@@ -155,7 +155,7 @@ func (h *AdminAuthHandler) RefreshToken(c *fiber.Ctx) error {
 // @Tags admin-auth
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} utils.Response{data=response.AdminProfileResponse}
+// @Success 200 {object} utils.Response
 // @Failure 401 {object} utils.Response
 // @Failure 500 {object} utils.Response
 // @Router /auth/admin/me [get]

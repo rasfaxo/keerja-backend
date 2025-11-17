@@ -112,6 +112,15 @@ type CompanyService interface {
 
 	// Job grouping by status
 	GetJobsGroupedByStatus(ctx context.Context, userID int64) (map[string][]job.Job, error)
+
+	// Company address management
+	CreateCompanyAddress(ctx context.Context, companyID int64, req *CreateCompanyAddressRequest) (*CompanyAddress, error)
+	// UpdateCompanyAddress updates an existing company address after ownership check
+	UpdateCompanyAddress(ctx context.Context, companyID, addressID int64, req *UpdateCompanyAddressRequest) (*CompanyAddress, error)
+	// GetCompanyAddressByID returns a company address by its ID ensuring it belongs to the given company
+	GetCompanyAddressByID(ctx context.Context, companyID, addressID int64) (*CompanyAddress, error)
+	GetCompanyAddresses(ctx context.Context, companyID int64, includeDeleted bool) ([]CompanyAddress, error)
+	SoftDeleteCompanyAddress(ctx context.Context, companyID, addressID int64) error
 }
 
 // Request DTOs
@@ -304,6 +313,26 @@ type UpdateIndustryRequest struct {
 	Description *string
 	ParentID    *int64
 	IsActive    *bool
+}
+
+// CreateCompanyAddressRequest represents a request to create a persistent company address
+type CreateCompanyAddressRequest struct {
+	FullAddress string
+	Latitude    *float64
+	Longitude   *float64
+	ProvinceID  *int64
+	CityID      *int64
+	DistrictID  *int64
+}
+
+// UpdateCompanyAddressRequest represents fields allowed to be updated on an address
+type UpdateCompanyAddressRequest struct {
+	FullAddress *string
+	Latitude    *float64
+	Longitude   *float64
+	ProvinceID  *int64
+	CityID      *int64
+	DistrictID  *int64
 }
 
 // Response DTOs

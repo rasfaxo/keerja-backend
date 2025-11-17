@@ -1,5 +1,25 @@
 package main
 
+// @title Keerja Backend API
+// @version 1.0
+// @description Job platform backend API with authentication, job management, applications, companies, and push notifications
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.email support@keerja.com
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @host localhost:3000
+// @BasePath /
+// @schemes http https
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token
+
 import (
 	"fmt"
 	"log"

@@ -41,6 +41,8 @@ func SetupCompanyRoutes(api fiber.Router, deps *Dependencies, authMw *middleware
 		deps.CompanyBasicHandler.GetMyCompanyVerificationStatus,
 	)
 
+	// NOTE: address creation/listing/deletion require authentication and admin permission.
+
 	// Get user's followed companies
 	companies.Get("/followed",
 		authMw.AuthRequired(),
@@ -124,6 +126,21 @@ func SetupCompanyRoutes(api fiber.Router, deps *Dependencies, authMw *middleware
 	// ==========================================
 	protected := companies.Group("")
 	protected.Use(authMw.AuthRequired())
+
+	// Create a new company address (persisted)
+	protected.Post("/me/addresses",
+		deps.CompanyBasicHandler.CreateMyAddress,
+	)
+
+	// Update a company address (persisted)
+	protected.Put("/me/addresses/:id",
+		deps.CompanyBasicHandler.UpdateMyAddress,
+	)
+
+	// Delete a company address (soft-delete)
+	protected.Delete("/me/addresses/:id",
+		deps.CompanyBasicHandler.DeleteMyAddress,
+	)
 
 	// ------------------------------------------
 	// Basic CRUD Operations (CompanyBasicHandler)

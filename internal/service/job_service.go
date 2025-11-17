@@ -87,6 +87,20 @@ func (s *jobService) CreateJob(ctx context.Context, req *job.CreateJobRequest) (
 		return nil, fmt.Errorf("invalid company_id: company with ID %d not found", req.CompanyID)
 	}
 
+	// Validate company_address_id ownership if provided (address must belong to the company)
+	if req.CompanyAddressID != nil && *req.CompanyAddressID > 0 {
+		addr, err := s.companyRepo.FindCompanyAddressByID(ctx, *req.CompanyAddressID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to validate company_address_id: %w", err)
+		}
+		if addr == nil {
+			return nil, fmt.Errorf("invalid company_address_id: %d", *req.CompanyAddressID)
+		}
+		if addr.CompanyID != req.CompanyID {
+			return nil, fmt.Errorf("company_address_id (%d) does not belong to company (%d)", *req.CompanyAddressID, req.CompanyID)
+		}
+	}
+
 	// Determine job title (may come from job_title_id or from subcategory)
 	var title string
 	if req.JobTitleID != nil && *req.JobTitleID > 0 {
@@ -280,6 +294,19 @@ func (s *jobService) UpdateJob(ctx context.Context, jobID int64, req *job.Update
 		existingJob.MaxAge = req.MaxAge
 	}
 	if req.CompanyAddressID != nil {
+		// Validate ownership: provided address must belong to the job's company
+		if req.CompanyAddressID != nil && *req.CompanyAddressID > 0 {
+			addr, err := s.companyRepo.FindCompanyAddressByID(ctx, *req.CompanyAddressID)
+			if err != nil {
+				return nil, fmt.Errorf("failed to validate company_address_id: %w", err)
+			}
+			if addr == nil {
+				return nil, fmt.Errorf("invalid company_address_id: %d", *req.CompanyAddressID)
+			}
+			if addr.CompanyID != existingJob.CompanyID {
+				return nil, fmt.Errorf("company_address_id (%d) does not belong to job's company (%d)", *req.CompanyAddressID, existingJob.CompanyID)
+			}
+		}
 		existingJob.CompanyAddressID = req.CompanyAddressID
 	}
 	// Use dedicated endpoints for status changes

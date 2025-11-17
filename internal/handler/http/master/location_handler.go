@@ -42,7 +42,7 @@ func NewLocationHandler(
 // @Produce json
 // @Param active query boolean false "Filter by active status (true/false)"
 // @Param search query string false "Search provinces by name (min 2 characters)"
-// @Success 200 {object} utils.Response{data=[]master.ProvinceResponse}
+// @Success 200 {object} utils.Response
 // @Failure 400 {object} utils.Response
 // @Failure 500 {object} utils.Response
 // @Router /api/v1/meta/locations/provinces [get]
@@ -79,7 +79,7 @@ func (h *LocationHandler) GetAllProvinces(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Province ID"
-// @Success 200 {object} utils.Response{data=master.ProvinceResponse}
+// @Success 200 {object} utils.Response
 // @Failure 400 {object} utils.Response
 // @Failure 404 {object} utils.Response
 // @Failure 500 {object} utils.Response
@@ -120,7 +120,7 @@ func (h *LocationHandler) GetProvinceByID(c *fiber.Ctx) error {
 // @Param province_id query int true "Province ID to filter cities"
 // @Param active query boolean false "Filter by active status (true/false)"
 // @Param search query string false "Search cities by name (min 2 characters)"
-// @Success 200 {object} utils.Response{data=[]master.CityResponse}
+// @Success 200 {object} utils.Response
 // @Failure 400 {object} utils.Response
 // @Failure 404 {object} utils.Response
 // @Failure 500 {object} utils.Response
@@ -172,7 +172,7 @@ func (h *LocationHandler) GetCities(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "City ID"
-// @Success 200 {object} utils.Response{data=master.CityResponse}
+// @Success 200 {object} utils.Response
 // @Failure 400 {object} utils.Response
 // @Failure 404 {object} utils.Response
 // @Failure 500 {object} utils.Response
@@ -213,7 +213,7 @@ func (h *LocationHandler) GetCityByID(c *fiber.Ctx) error {
 // @Param city_id query int true "City ID to filter districts"
 // @Param active query boolean false "Filter by active status (true/false)"
 // @Param search query string false "Search districts by name (min 2 characters)"
-// @Success 200 {object} utils.Response{data=[]master.DistrictResponse}
+// @Success 200 {object} utils.Response
 // @Failure 400 {object} utils.Response
 // @Failure 404 {object} utils.Response
 // @Failure 500 {object} utils.Response
@@ -265,7 +265,7 @@ func (h *LocationHandler) GetDistricts(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "District ID"
-// @Success 200 {object} utils.Response{data=master.DistrictResponse}
+// @Success 200 {object} utils.Response
 // @Failure 400 {object} utils.Response
 // @Failure 404 {object} utils.Response
 // @Failure 500 {object} utils.Response

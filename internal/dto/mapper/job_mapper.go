@@ -288,6 +288,23 @@ func ToJobDetailResponse(j *job.Job) *response.JobDetailResponse {
 		}
 	}
 
+	// If job has a preloaded CompanyAddress relation (job-local type), map it
+	if j.CompanyAddress != nil {
+		resp.CompanyAddress = &response.CompanyAddressResponse{
+			ID:            j.CompanyAddress.ID,
+			AlamatLengkap: j.CompanyAddress.FullAddress,
+		}
+		if j.CompanyAddress.Latitude != nil {
+			resp.CompanyAddress.Latitude = *j.CompanyAddress.Latitude
+		}
+		if j.CompanyAddress.Longitude != nil {
+			resp.CompanyAddress.Longitude = *j.CompanyAddress.Longitude
+		}
+		resp.CompanyAddress.ProvinceID = j.CompanyAddress.ProvinceID
+		resp.CompanyAddress.CityID = j.CompanyAddress.CityID
+		resp.CompanyAddress.DistrictID = j.CompanyAddress.DistrictID
+	}
+
 	return resp
 }
 
@@ -300,7 +317,7 @@ func derefInt64(ptr *int64) int64 {
 }
 
 // ToJobDetailResponseWithCompany maps Job entity with company info to JobDetailResponse DTO
-func ToJobDetailResponseWithCompany(j *job.Job, comp *company.Company) *response.JobDetailResponse {
+func ToJobDetailResponseWithCompany(j *job.Job, comp *company.Company, addr *company.CompanyAddress) *response.JobDetailResponse {
 	if j == nil {
 		return nil
 	}
@@ -318,6 +335,23 @@ func ToJobDetailResponseWithCompany(j *job.Job, comp *company.Company) *response
 		}
 		resp.CompanyVerified = comp.IsVerified()
 		resp.CompanySlug = comp.Slug
+	}
+
+	// Add selected company address if provided
+	if addr != nil {
+		resp.CompanyAddress = &response.CompanyAddressResponse{
+			ID:            addr.ID,
+			AlamatLengkap: addr.FullAddress,
+		}
+		if addr.Latitude != nil {
+			resp.CompanyAddress.Latitude = *addr.Latitude
+		}
+		if addr.Longitude != nil {
+			resp.CompanyAddress.Longitude = *addr.Longitude
+		}
+		resp.CompanyAddress.ProvinceID = addr.ProvinceID
+		resp.CompanyAddress.CityID = addr.CityID
+		resp.CompanyAddress.DistrictID = addr.DistrictID
 	}
 
 	return resp

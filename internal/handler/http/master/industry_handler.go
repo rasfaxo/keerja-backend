@@ -30,7 +30,7 @@ func NewIndustryHandler(service master.IndustryService) *IndustryHandler {
 // @Produce json
 // @Param active query boolean false "Filter by active status (true/false)"
 // @Param search query string false "Search industries by name (min 2 characters)"
-// @Success 200 {object} utils.Response{data=[]master.IndustryResponse}
+// @Success 200 {object} utils.Response
 // @Failure 400 {object} utils.Response
 // @Failure 500 {object} utils.Response
 // @Router /api/v1/meta/industries [get]
@@ -67,7 +67,7 @@ func (h *IndustryHandler) GetAllIndustries(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Industry ID"
-// @Success 200 {object} utils.Response{data=master.IndustryResponse}
+// @Success 200 {object} utils.Response
 // @Failure 400 {object} utils.Response
 // @Failure 404 {object} utils.Response
 // @Failure 500 {object} utils.Response

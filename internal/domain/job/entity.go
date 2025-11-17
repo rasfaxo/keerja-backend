@@ -49,7 +49,8 @@ type Job struct {
 	TotalHires    int16  `gorm:"column:total_hires;default:1" json:"total_hires"`
 
 	// Company Address (Optional - for work location)
-	CompanyAddressID *int64 `gorm:"column:company_address_id" json:"company_address_id,omitempty"`
+	CompanyAddressID *int64          `gorm:"column:company_address_id" json:"company_address_id,omitempty"`
+	CompanyAddress   *CompanyAddress `gorm:"foreignKey:CompanyAddressID;references:ID;constraint:OnDelete:SET NULL" json:"company_address,omitempty"`
 
 	// Category/Subcategory
 	JobSubcategoryID *int64 `gorm:"column:job_subcategory_id;index" json:"job_subcategory_id,omitempty"`
@@ -403,4 +404,24 @@ func (jr *JobRequirement) IsExperienceRequirement() bool {
 // IsSkillRequirement checks if requirement is skill type
 func (jr *JobRequirement) IsSkillRequirement() bool {
 	return jr.RequirementType == "skill"
+}
+
+// CompanyAddress represents a minimal company address structure for job relations
+type CompanyAddress struct {
+	ID          int64      `gorm:"primaryKey;autoIncrement" json:"id"`
+	CompanyID   int64      `gorm:"not null;index" json:"company_id"`
+	FullAddress string     `gorm:"type:text;not null" json:"full_address"`
+	Latitude    *float64   `gorm:"type:numeric(10,6)" json:"latitude,omitempty"`
+	Longitude   *float64   `gorm:"type:numeric(10,6)" json:"longitude,omitempty"`
+	ProvinceID  *int64     `gorm:"type:bigint;index" json:"province_id,omitempty"`
+	CityID      *int64     `gorm:"type:bigint;index" json:"city_id,omitempty"`
+	DistrictID  *int64     `gorm:"type:bigint;index" json:"district_id,omitempty"`
+	CreatedAt   time.Time  `gorm:"type:timestamp;default:now()" json:"created_at"`
+	UpdatedAt   time.Time  `gorm:"type:timestamp;default:now()" json:"updated_at"`
+	DeletedAt   *time.Time `gorm:"index" json:"deleted_at,omitempty"`
+}
+
+// TableName ensures GORM uses the existing company_addresses table
+func (CompanyAddress) TableName() string {
+	return "company_addresses"
 }

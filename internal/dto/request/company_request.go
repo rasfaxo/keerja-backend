@@ -18,9 +18,15 @@ type RegisterCompanyRequest struct {
 	CityName        *string `json:"city_name" validate:"omitempty,max=100"`
 	DistrictName    *string `json:"district_name" validate:"omitempty,max=100"`
 
+	// Master Data Relations (ID-based - alternative to names)
+	ProvinceID *int64 `json:"province_id" validate:"omitempty"`
+	CityID     *int64 `json:"city_id" validate:"omitempty"`
+
 	// Location Details
-	FullAddress string  `json:"full_address" validate:"omitempty,max=500"`
-	Description *string `json:"description" validate:"omitempty"`
+	FullAddress string   `json:"full_address" validate:"omitempty,max=500"`
+	Latitude    *float64 `json:"latitude" validate:"omitempty"`
+	Longitude   *float64 `json:"longitude" validate:"omitempty"`
+	Description *string  `json:"description" validate:"omitempty"`
 
 	// Legacy Fields (kept for backward compatibility)
 	Industry     *string `json:"industry" validate:"omitempty,max=100"`
@@ -157,4 +163,24 @@ type CompanySearchRequest struct {
 	Limit        int    `json:"limit" query:"limit" validate:"omitempty,min=1,max=100"`
 	SortBy       string `json:"sort_by" query:"sort_by" validate:"omitempty,oneof=name created_at followers rating"`
 	SortOrder    string `json:"sort_order" query:"sort_order" validate:"omitempty,oneof=asc desc"`
+}
+
+// CreateCompanyAddressRequest represents creating a reusable company address
+type CreateCompanyAddressRequest struct {
+	FullAddress string   `json:"full_address" validate:"required,min=3,max=500"`
+	Latitude    *float64 `json:"latitude" validate:"omitempty"`
+	Longitude   *float64 `json:"longitude" validate:"omitempty"`
+	ProvinceID  *int64   `json:"province_id" validate:"omitempty"`
+	CityID      *int64   `json:"city_id" validate:"omitempty"`
+	DistrictID  *int64   `json:"district_id" validate:"omitempty"`
+}
+
+// UpdateCompanyAddressRequest represents fields allowed when updating a company address
+type UpdateCompanyAddressRequest struct {
+	FullAddress *string  `json:"full_address" validate:"omitempty,min=3,max=500"`
+	Latitude    *float64 `json:"latitude" validate:"omitempty"`
+	Longitude   *float64 `json:"longitude" validate:"omitempty"`
+	ProvinceID  *int64   `json:"province_id" validate:"omitempty"`
+	CityID      *int64   `json:"city_id" validate:"omitempty"`
+	DistrictID  *int64   `json:"district_id" validate:"omitempty"`
 }

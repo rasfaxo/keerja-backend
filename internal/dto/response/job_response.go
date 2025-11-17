@@ -90,6 +90,8 @@ type JobDetailResponse struct {
 	JobRequirements    []JobRequirementResponse `json:"job_requirements,omitempty"`
 	HasApplied         bool                     `json:"has_applied,omitempty"`
 	IsSaved            bool                     `json:"is_saved,omitempty"`
+	// Optional selected company address (when job references a company_address_id)
+	CompanyAddress *CompanyAddressResponse `json:"company_address,omitempty"`
 }
 
 // JobMasterDataItem represents a generic master data item for job details

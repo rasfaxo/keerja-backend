@@ -1667,6 +1667,123 @@ func (s *companyService) GetUserCompanies(ctx context.Context, userID int64) ([]
 	return companies, nil
 }
 
+// CreateCompanyAddress creates a persistent address record for a company
+func (s *companyService) CreateCompanyAddress(ctx context.Context, companyID int64, req *company.CreateCompanyAddressRequest) (*company.CompanyAddress, error) {
+	// Ensure company exists
+	comp, err := s.companyRepo.FindByID(ctx, companyID)
+	if err != nil || comp == nil {
+		return nil, fmt.Errorf("company not found: %w", err)
+	}
+
+	addr := &company.CompanyAddress{
+		CompanyID:   companyID,
+		FullAddress: req.FullAddress,
+		Latitude:    req.Latitude,
+		Longitude:   req.Longitude,
+		ProvinceID:  req.ProvinceID,
+		CityID:      req.CityID,
+		DistrictID:  req.DistrictID,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}
+
+	if err := s.companyRepo.CreateCompanyAddress(ctx, addr); err != nil {
+		return nil, fmt.Errorf("failed to create company address: %w", err)
+	}
+
+	return addr, nil
+}
+
+// GetCompanyAddresses returns company addresses; includeDeleted toggles returning soft-deleted rows
+func (s *companyService) GetCompanyAddresses(ctx context.Context, companyID int64, includeDeleted bool) ([]company.CompanyAddress, error) {
+	// Ensure company exists
+	comp, err := s.companyRepo.FindByID(ctx, companyID)
+	if err != nil || comp == nil {
+		return nil, fmt.Errorf("company not found: %w", err)
+	}
+
+	addrs, err := s.companyRepo.GetCompanyAddressesByCompanyID(ctx, companyID, includeDeleted)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch company addresses: %w", err)
+	}
+	return addrs, nil
+}
+
+// GetCompanyAddressByID retrieves a single company address by id and verifies it belongs to the company
+func (s *companyService) GetCompanyAddressByID(ctx context.Context, companyID, addressID int64) (*company.CompanyAddress, error) {
+	addr, err := s.companyRepo.FindCompanyAddressByID(ctx, addressID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get company address: %w", err)
+	}
+	if addr == nil {
+		return nil, nil
+	}
+	if addr.CompanyID != companyID {
+		return nil, nil
+	}
+	return addr, nil
+}
+
+// SoftDeleteCompanyAddress soft-deletes an address after verifying ownership
+func (s *companyService) SoftDeleteCompanyAddress(ctx context.Context, companyID, addressID int64) error {
+	addr, err := s.companyRepo.FindCompanyAddressByID(ctx, addressID)
+	if err != nil {
+		return fmt.Errorf("failed to find address: %w", err)
+	}
+	if addr == nil {
+		return fmt.Errorf("address not found")
+	}
+	if addr.CompanyID != companyID {
+		return fmt.Errorf("unauthorized to delete this address")
+	}
+
+	if err := s.companyRepo.SoftDeleteCompanyAddress(ctx, addressID); err != nil {
+		return fmt.Errorf("failed to delete address: %w", err)
+	}
+	return nil
+}
+
+// UpdateCompanyAddress updates an existing address after verifying ownership
+func (s *companyService) UpdateCompanyAddress(ctx context.Context, companyID, addressID int64, req *company.UpdateCompanyAddressRequest) (*company.CompanyAddress, error) {
+	addr, err := s.companyRepo.FindCompanyAddressByID(ctx, addressID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find address: %w", err)
+	}
+	if addr == nil {
+		return nil, fmt.Errorf("address not found")
+	}
+	if addr.CompanyID != companyID {
+		return nil, fmt.Errorf("unauthorized to update this address")
+	}
+
+	// Apply updates only for provided fields
+	if req.FullAddress != nil {
+		addr.FullAddress = *req.FullAddress
+	}
+	if req.Latitude != nil {
+		addr.Latitude = req.Latitude
+	}
+	if req.Longitude != nil {
+		addr.Longitude = req.Longitude
+	}
+	if req.ProvinceID != nil {
+		addr.ProvinceID = req.ProvinceID
+	}
+	if req.CityID != nil {
+		addr.CityID = req.CityID
+	}
+	if req.DistrictID != nil {
+		addr.DistrictID = req.DistrictID
+	}
+
+	addr.UpdatedAt = time.Now()
+
+	if err := s.companyRepo.UpdateCompanyAddress(ctx, addr); err != nil {
+		return nil, fmt.Errorf("failed to update address: %w", err)
+	}
+	return addr, nil
+}
+
 // CheckEmployerPermission checks if user has required permission for company
 func (s *companyService) CheckEmployerPermission(ctx context.Context, userID, companyID int64, requiredRole string) (bool, error) {
 	employerUser, err := s.companyRepo.FindEmployerUserByUserAndCompany(ctx, userID, companyID)

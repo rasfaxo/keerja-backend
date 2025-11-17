@@ -47,7 +47,7 @@ func NewMasterDataHandler(
 // @Produce json
 // @Param q query string false "Search query"
 // @Param limit query int false "Results limit (default: 20, max: 100)"
-// @Success 200 {object} utils.Response{data=[]master.JobTitleResponse}
+// @Success 200 {object} utils.Response
 // @Failure 400 {object} utils.Response
 // @Failure 429 {object} utils.Response
 // @Failure 500 {object} utils.Response
@@ -77,7 +77,7 @@ func (h *MasterDataHandler) GetJobTitles(c *fiber.Ctx) error {
 // @Tags Master Data
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.Response{data=master.JobOptionsResponse}
+// @Success 200 {object} utils.Response
 // @Failure 429 {object} utils.Response
 // @Failure 500 {object} utils.Response
 // @Router /api/v1/master/job-options [get]
@@ -206,20 +206,23 @@ func (h *MasterDataHandler) GetJobPostingFormOptions(c *fiber.Ctx) error {
 			// Use the first company for now (business rule: 1 user -> 1 company)
 			comp := companies[0]
 
-			// company_addresses (full address)
+			// company_addresses (fetch persistent addresses from company_addresses table)
 			companyAddresses := make([]map[string]interface{}, 0)
-			if comp.FullAddress != "" {
-				addr := map[string]interface{}{
-					"id":             comp.ID,
-					"alamat_lengkap": comp.FullAddress,
+			addrs, err := h.companyService.GetCompanyAddresses(ctx, comp.ID, false)
+			if err == nil && len(addrs) > 0 {
+				for _, a := range addrs {
+					addr := map[string]interface{}{
+						"id":             a.ID,
+						"alamat_lengkap": a.FullAddress,
+					}
+					if a.Latitude != nil {
+						addr["latitude"] = *a.Latitude
+					}
+					if a.Longitude != nil {
+						addr["longitude"] = *a.Longitude
+					}
+					companyAddresses = append(companyAddresses, addr)
 				}
-				if comp.Latitude != nil {
-					addr["latitude"] = *comp.Latitude
-				}
-				if comp.Longitude != nil {
-					addr["longitude"] = *comp.Longitude
-				}
-				companyAddresses = append(companyAddresses, addr)
 			}
 			response["company_addresses"] = companyAddresses
 
@@ -287,7 +290,7 @@ func (h *MasterDataHandler) GetJobPostingFormOptions(c *fiber.Ctx) error {
 // @Produce json
 // @Param request body master.CreateJobTitleRequest true "Job title details"
 // @Security BearerAuth
-// @Success 201 {object} utils.Response{data=master.JobTitle}
+// @Success 201 {object} utils.Response
 // @Failure 400 {object} utils.Response
 // @Failure 401 {object} utils.Response
 // @Failure 403 {object} utils.Response
@@ -320,7 +323,7 @@ func (h *MasterDataHandler) CreateJobTitle(c *fiber.Ctx) error {
 // @Param id path int true "Job Title ID"
 // @Param request body master.UpdateJobTitleRequest true "Updated job title details"
 // @Security BearerAuth
-// @Success 200 {object} utils.Response{data=master.JobTitle}
+// @Success 200 {object} utils.Response
 // @Failure 400 {object} utils.Response
 // @Failure 401 {object} utils.Response
 // @Failure 403 {object} utils.Response
@@ -395,7 +398,7 @@ func (h *MasterDataHandler) DeleteJobTitle(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Job Title ID"
 // @Security BearerAuth
-// @Success 200 {object} utils.Response{data=master.JobTitleResponse}
+// @Success 200 {object} utils.Response
 // @Failure 400 {object} utils.Response
 // @Failure 401 {object} utils.Response
 // @Failure 403 {object} utils.Response

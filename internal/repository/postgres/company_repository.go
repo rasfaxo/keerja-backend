@@ -717,6 +717,76 @@ func (r *companyRepository) FindDocumentByID(ctx context.Context, id int64) (*co
 	return &doc, nil
 }
 
+// Company Address operations
+func (r *companyRepository) CreateCompanyAddress(ctx context.Context, address *company.CompanyAddress) error {
+	return r.db.WithContext(ctx).Create(address).Error
+}
+
+func (r *companyRepository) GetCompanyAddressesByCompanyID(ctx context.Context, companyID int64, includeDeleted bool) ([]company.CompanyAddress, error) {
+	var addresses []company.CompanyAddress
+	query := r.db.WithContext(ctx).Model(&company.CompanyAddress{}).Where("company_id = ?", companyID)
+	if !includeDeleted {
+		query = query.Where("deleted_at IS NULL")
+	}
+	err := query.Order("created_at DESC").Find(&addresses).Error
+	return addresses, err
+}
+
+func (r *companyRepository) FindCompanyAddressByID(ctx context.Context, id int64) (*company.CompanyAddress, error) {
+	var addr company.CompanyAddress
+	err := r.db.WithContext(ctx).First(&addr, id).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &addr, nil
+}
+
+func (r *companyRepository) SoftDeleteCompanyAddress(ctx context.Context, id int64) error {
+	return r.db.WithContext(ctx).Delete(&company.CompanyAddress{}, id).Error
+}
+
+// UpdateCompanyAddress updates fields on an existing company address
+func (r *companyRepository) UpdateCompanyAddress(ctx context.Context, address *company.CompanyAddress) error {
+	// Use map update to avoid zero-value overwrites
+	updates := map[string]interface{}{
+		"full_address": address.FullAddress,
+		"updated_at":   time.Now(),
+	}
+	if address.Latitude != nil {
+		updates["latitude"] = address.Latitude
+	} else {
+		updates["latitude"] = nil
+	}
+	if address.Longitude != nil {
+		updates["longitude"] = address.Longitude
+	} else {
+		updates["longitude"] = nil
+	}
+	if address.ProvinceID != nil {
+		updates["province_id"] = address.ProvinceID
+	} else {
+		updates["province_id"] = nil
+	}
+	if address.CityID != nil {
+		updates["city_id"] = address.CityID
+	} else {
+		updates["city_id"] = nil
+	}
+	if address.DistrictID != nil {
+		updates["district_id"] = address.DistrictID
+	} else {
+		updates["district_id"] = nil
+	}
+
+	return r.db.WithContext(ctx).
+		Model(&company.CompanyAddress{}).
+		Where("id = ?", address.ID).
+		Updates(updates).Error
+}
+
 // GetDocumentsByCompanyID retrieves all documents for a company
 func (r *companyRepository) GetDocumentsByCompanyID(ctx context.Context, companyID int64) ([]company.CompanyDocument, error) {
 	var documents []company.CompanyDocument

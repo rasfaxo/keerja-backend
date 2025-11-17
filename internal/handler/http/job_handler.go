@@ -114,44 +114,33 @@ func (h *JobHandler) GetJobTypesOptions(c *fiber.Ctx) error {
 		return utils.InternalServerErrorResponse(c, "Failed to retrieve work policies")
 	}
 
-	// Get user's company addresses
+	// Get user's companies and their persistent addresses
 	companies, err := h.companyService.GetUserCompanies(ctx, userID)
 	if err != nil {
 		return utils.InternalServerErrorResponse(c, "Failed to retrieve company addresses")
 	}
 
-	// Extract addresses from all companies
 	var addresses []response.WorkAddressOption
 	for _, comp := range companies {
-		// only include if company has address
-		if comp.FullAddress == "" {
+		// Fetch persistent addresses for each company (exclude deleted)
+		addrs, err := h.companyService.GetCompanyAddresses(ctx, comp.ID, false)
+		if err != nil {
+			// skip this company on error but continue with others
 			continue
 		}
-
-		address := response.WorkAddressOption{
-			ID:          comp.ID, // Using company ID as address ID
-			CompanyID:   comp.ID,
-			CompanyName: comp.CompanyName,
-			FullAddress: comp.FullAddress,
-			Latitude:    comp.Latitude,
-			Longitude:   comp.Longitude,
+		for _, a := range addrs {
+			address := response.WorkAddressOption{
+				ID:          a.ID,
+				CompanyID:   a.CompanyID,
+				CompanyName: comp.CompanyName,
+				FullAddress: a.FullAddress,
+				Latitude:    a.Latitude,
+				Longitude:   a.Longitude,
+			}
+			// We don't currently have resolved location names on CompanyAddress,
+			// so leave Location nil (frontend can resolve via IDs if needed).
+			addresses = append(addresses, address)
 		}
-
-		// Add location details if available
-		if comp.DistrictRelation != nil || comp.CityRelation != nil || comp.ProvinceRelation != nil {
-			location := &response.LocationDetail{}
-			if comp.DistrictRelation != nil {
-				location.District = comp.DistrictRelation.Name
-			}
-			if comp.CityRelation != nil {
-				location.City = comp.CityRelation.Name
-			}
-			if comp.ProvinceRelation != nil {
-				location.Province = comp.ProvinceRelation.Name
-			}
-			address.Location = location
-		}
-		addresses = append(addresses, address)
 	}
 	// Prepare salary ranges (in rupiah)
 	salaryRanges := []response.SalaryRangeOption{
@@ -360,9 +349,10 @@ func (h *JobHandler) GetJob(c *fiber.Ctx) error {
 	}
 
 	// Get company info to include in response
-	company, _ := h.companyService.GetCompany(ctx, j.CompanyID)
+	comp, _ := h.companyService.GetCompany(ctx, j.CompanyID)
 
-	resp := mapper.ToJobDetailResponseWithCompany(j, company)
+	// `job.Job` now may preload `CompanyAddress`; mapper will map it.
+	resp := mapper.ToJobDetailResponseWithCompany(j, comp, nil)
 	return utils.SuccessResponse(c, MsgFetchedSuccess, resp)
 }
 
@@ -464,9 +454,10 @@ func (h *JobHandler) CreateJob(c *fiber.Ctx) error {
 	}
 
 	// Get company info to include in response
-	company, _ := h.companyService.GetCompany(ctx, req.CompanyID)
+	comp, _ := h.companyService.GetCompany(ctx, req.CompanyID)
 
-	resp := mapper.ToJobDetailResponseWithCompany(created, company)
+	// rely on job.CompanyAddress being preloaded by repository; mapper will pick it up
+	resp := mapper.ToJobDetailResponseWithCompany(created, comp, nil)
 	return utils.CreatedResponse(c, MsgCreatedSuccess, resp)
 }
 
@@ -478,8 +469,8 @@ func (h *JobHandler) CreateJob(c *fiber.Ctx) error {
 // @Produce json
 // @Security BearerAuth
 // @Param request body request.SaveJobDraftRequest true "Job draft data"
-// @Success 201 {object} utils.Response{data=response.JobDetailResponse}
-// @Success 200 {object} utils.Response{data=response.JobDetailResponse}
+// @Success 201 {object} utils.Response
+// @Success 200 {object} utils.Response
 // @Failure 400 {object} utils.Response
 // @Failure 401 {object} utils.Response
 // @Failure 500 {object} utils.Response
@@ -537,10 +528,10 @@ func (h *JobHandler) SaveJobDraft(c *fiber.Ctx) error {
 	}
 
 	// Get company info to include in response
-	company, _ := h.companyService.GetCompany(ctx, draft.CompanyID)
+	comp, _ := h.companyService.GetCompany(ctx, draft.CompanyID)
 
-	// Map to response
-	resp := mapper.ToJobDetailResponseWithCompany(draft, company)
+	// Map to response; job may have preloaded CompanyAddress
+	resp := mapper.ToJobDetailResponseWithCompany(draft, comp, nil)
 
 	// Return 201 Created for new draft, 200 OK for update
 	if req.DraftID == nil || *req.DraftID == 0 {
@@ -634,9 +625,10 @@ func (h *JobHandler) UpdateJob(c *fiber.Ctx) error {
 	}
 
 	// Get company info to include in response
-	company, _ := h.companyService.GetCompany(ctx, latestJob.CompanyID)
+	comp, _ := h.companyService.GetCompany(ctx, latestJob.CompanyID)
 
-	resp := mapper.ToJobDetailResponseWithCompany(latestJob, company)
+	// Rely on preloaded CompanyAddress in latestJob; mapper will include it
+	resp := mapper.ToJobDetailResponseWithCompany(latestJob, comp, nil)
 	return utils.SuccessResponse(c, MsgUpdatedSuccess, resp)
 }
 
@@ -720,11 +712,11 @@ func (h *JobHandler) GetMyJobs(c *fiber.Ctx) error {
 		jr := mapper.ToJobDetailResponse(&j)
 		if jr != nil {
 			// Fetch company info for each job to fill company_name
-			company, err := h.companyService.GetCompany(ctx, j.CompanyID)
-			if err == nil && company != nil {
-				jr.CompanyName = company.CompanyName
-				jr.CompanySlug = company.Slug
-				jr.CompanyVerified = company.IsVerified()
+			comp, err := h.companyService.GetCompany(ctx, j.CompanyID)
+			if err == nil && comp != nil {
+				jr.CompanyName = comp.CompanyName
+				jr.CompanySlug = comp.Slug
+				jr.CompanyVerified = comp.IsVerified()
 			}
 			respJobs = append(respJobs, *jr)
 		}

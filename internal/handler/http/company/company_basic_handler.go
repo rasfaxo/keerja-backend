@@ -181,6 +181,16 @@ func (h *CompanyBasicHandler) CreateCompany(c *fiber.Ctx) error {
 				req.DistrictID = &id
 			}
 		}
+		if provinceID := c.FormValue("province_id"); provinceID != "" {
+			if id, err := strconv.ParseInt(provinceID, 10, 64); err == nil {
+				req.ProvinceID = &id
+			}
+		}
+		if cityID := c.FormValue("city_id"); cityID != "" {
+			if id, err := strconv.ParseInt(cityID, 10, 64); err == nil {
+				req.CityID = &id
+			}
+		}
 
 		// Parse location names (for mobile app dropdown)
 		if industryName := c.FormValue("industry_name"); industryName != "" {
@@ -202,6 +212,16 @@ func (h *CompanyBasicHandler) CreateCompany(c *fiber.Ctx) error {
 		// Parse optional string fields
 		if fullAddress := c.FormValue("full_address"); fullAddress != "" {
 			req.FullAddress = fullAddress
+		}
+		if latitude := c.FormValue("latitude"); latitude != "" {
+			if lat, err := strconv.ParseFloat(latitude, 64); err == nil {
+				req.Latitude = &lat
+			}
+		}
+		if longitude := c.FormValue("longitude"); longitude != "" {
+			if lon, err := strconv.ParseFloat(longitude, 64); err == nil {
+				req.Longitude = &lon
+			}
 		}
 		if description := c.FormValue("description"); description != "" {
 			req.Description = &description
@@ -361,6 +381,41 @@ func (h *CompanyBasicHandler) CreateCompany(c *fiber.Ctx) error {
 		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
 	}
 
+	// Create persistent company address if address info is provided
+	if req.FullAddress != "" || req.DistrictID != nil || req.ProvinceID != nil || req.CityID != nil {
+		// Need to resolve ProvinceID and CityID if they're not already resolved from names
+		provinceID := req.ProvinceID
+		cityID := req.CityID
+		districtID := req.DistrictID
+
+		if districtID != nil {
+			district, err := h.districtRepo.GetByID(ctx, *districtID)
+			if err == nil && district != nil {
+				// Get city from district
+				city, err := h.cityRepo.GetByID(ctx, district.CityID)
+				if err == nil && city != nil {
+					cityID = &city.ID
+					// Get province from city
+					province, err := h.provinceRepo.GetByID(ctx, city.ProvinceID)
+					if err == nil && province != nil {
+						provinceID = &province.ID
+					}
+				}
+			}
+		}
+
+		// Create the address
+		_, _ = h.companyService.CreateCompanyAddress(ctx, createdCompany.ID, &company.CreateCompanyAddressRequest{
+			FullAddress: req.FullAddress,
+			ProvinceID:  provinceID,
+			CityID:      cityID,
+			DistrictID:  districtID,
+			Latitude:    req.Latitude,
+			Longitude:   req.Longitude,
+		})
+		// Ignore error for address creation (non-blocking)
+	}
+
 	// Handle logo upload if provided (multipart/form-data only)
 	if isMultipart {
 		if logoFile, err := c.FormFile("logo"); err == nil && logoFile != nil {
@@ -374,9 +429,33 @@ func (h *CompanyBasicHandler) CreateCompany(c *fiber.Ctx) error {
 		}
 	}
 
-	// Map to response DTO with master data
-	response := mapper.ToCompanyDetailResponse(createdCompany)
-	return utils.CreatedResponse(c, http.MsgCreatedSuccess, response)
+	// Map to response DTO with master data and addresses
+	resp := mapper.ToCompanyDetailResponse(createdCompany)
+	// Fetch addresses for response
+	addrs, err := h.companyService.GetCompanyAddresses(ctx, createdCompany.ID, false)
+	if err == nil && len(addrs) > 0 {
+		resp.CompanyAddresses = make([]response.CompanyAddressResponse, len(addrs))
+		for i, a := range addrs {
+			lat := 0.0
+			lon := 0.0
+			if a.Latitude != nil {
+				lat = *a.Latitude
+			}
+			if a.Longitude != nil {
+				lon = *a.Longitude
+			}
+			resp.CompanyAddresses[i] = response.CompanyAddressResponse{
+				ID:            a.ID,
+				AlamatLengkap: a.FullAddress,
+				Latitude:      lat,
+				Longitude:     lon,
+				ProvinceID:    a.ProvinceID,
+				CityID:        a.CityID,
+				DistrictID:    a.DistrictID,
+			}
+		}
+	}
+	return utils.CreatedResponse(c, http.MsgCreatedSuccess, resp)
 }
 
 // GetCompany godoc
@@ -940,10 +1019,34 @@ func (h *CompanyBasicHandler) GetMyCompanies(c *fiber.Ctx) error {
 		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
 	}
 
-	// Map to response DTOs with full company details
+	// Map to response DTOs with full company details and addresses
 	responses := make([]response.CompanyDetailResponse, 0, len(companies))
 	for _, comp := range companies {
 		if detail := mapper.ToCompanyDetailResponse(&comp); detail != nil {
+			// Fetch company addresses for this company
+			addrs, err := h.companyService.GetCompanyAddresses(ctx, comp.ID, false)
+			if err == nil && len(addrs) > 0 {
+				detail.CompanyAddresses = make([]response.CompanyAddressResponse, len(addrs))
+				for i, a := range addrs {
+					lat := 0.0
+					lon := 0.0
+					if a.Latitude != nil {
+						lat = *a.Latitude
+					}
+					if a.Longitude != nil {
+						lon = *a.Longitude
+					}
+					detail.CompanyAddresses[i] = response.CompanyAddressResponse{
+						ID:            a.ID,
+						AlamatLengkap: a.FullAddress,
+						Latitude:      lat,
+						Longitude:     lon,
+						ProvinceID:    a.ProvinceID,
+						CityID:        a.CityID,
+						DistrictID:    a.DistrictID,
+					}
+				}
+			}
 			responses = append(responses, *detail)
 		}
 	}
@@ -987,29 +1090,316 @@ func (h *CompanyBasicHandler) GetMyAddresses(c *fiber.Ctx) error {
 	// In future, we can support multiple companies
 	company := companies[0]
 
-	// Build address response
-	// Currently, company has single embedded address
-	addresses := make([]response.CompanyAddressResponse, 0)
-
-	// Only return address if FullAddress is not empty
-	if company.FullAddress != "" {
-		addressResp := response.CompanyAddressResponse{
-			ID:            company.ID, // Using company ID as address ID
-			AlamatLengkap: company.FullAddress,
-		}
-
-		// Include coordinates if available
-		if company.Latitude != nil {
-			addressResp.Latitude = *company.Latitude
-		}
-		if company.Longitude != nil {
-			addressResp.Longitude = *company.Longitude
-		}
-
-		addresses = append(addresses, addressResp)
+	// By default only return non-deleted addresses. Client may set ?include_deleted=true
+	includeDeleted := false
+	if val := c.Query("include_deleted"); val == "true" {
+		includeDeleted = true
 	}
 
-	return utils.SuccessResponse(c, http.MsgFetchedSuccess, addresses)
+	// Fetch persisted addresses from service
+	addrs, err := h.companyService.GetCompanyAddresses(ctx, company.ID, includeDeleted)
+	if err != nil {
+		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
+	}
+
+	// Map to response objects and include nested location objects
+	responses := make([]interface{}, 0, len(addrs))
+	for _, a := range addrs {
+		addrResp := response.CompanyAddressResponse{
+			ID:            a.ID,
+			AlamatLengkap: a.FullAddress,
+		}
+		if a.Latitude != nil {
+			addrResp.Latitude = *a.Latitude
+		}
+		if a.Longitude != nil {
+			addrResp.Longitude = *a.Longitude
+		}
+		if a.ProvinceID != nil {
+			addrResp.ProvinceID = a.ProvinceID
+		}
+		if a.CityID != nil {
+			addrResp.CityID = a.CityID
+		}
+		if a.DistrictID != nil {
+			addrResp.DistrictID = a.DistrictID
+		}
+
+		// Resolve nested location objects if IDs present
+		var provResp *response.ProvinceResponse
+		var cityResp *response.CityResponse
+		var distResp *response.DistrictResponse
+
+		if a.ProvinceID != nil {
+			if p, err := h.provinceRepo.GetByID(ctx, *a.ProvinceID); err == nil && p != nil {
+				provResp = &response.ProvinceResponse{ID: p.ID, Code: p.Code, Name: p.Name}
+			}
+		}
+		if a.CityID != nil {
+			if cobj, err := h.cityRepo.GetByID(ctx, *a.CityID); err == nil && cobj != nil {
+				cityResp = &response.CityResponse{ID: cobj.ID, Code: cobj.Code, Name: cobj.Name, Type: cobj.Type, ProvinceID: cobj.ProvinceID}
+			}
+		}
+		if a.DistrictID != nil {
+			if d, err := h.districtRepo.GetWithFullLocation(ctx, *a.DistrictID); err == nil && d != nil {
+				distResp = &response.DistrictResponse{ID: d.ID, Code: d.Code, Name: d.Name, CityID: d.CityID}
+				if d.City != nil {
+					cityResp = &response.CityResponse{ID: d.City.ID, Code: d.City.Code, Name: d.City.Name, Type: d.City.Type, ProvinceID: d.City.ProvinceID}
+					if d.City.Province != nil {
+						provResp = &response.ProvinceResponse{ID: d.City.Province.ID, Code: d.City.Province.Code, Name: d.City.Province.Name}
+					}
+				}
+			}
+		}
+
+		// Append combined object (includes ids and nested objects)
+		responses = append(responses, addrResp.WithLocations(provResp, cityResp, distResp))
+	}
+
+	return utils.SuccessResponse(c, http.MsgFetchedSuccess, responses)
+}
+
+// DeleteMyAddress godoc
+// @Summary Soft-delete a company address
+// @Description Soft-delete an address record belonging to the authenticated user's company
+// @Tags companies
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Address ID"
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 404 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /companies/me/addresses/{id} [delete]
+func (h *CompanyBasicHandler) DeleteMyAddress(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	userID := middleware.GetUserID(c)
+	if userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, http.ErrUnauthorized, "userID not found in context")
+	}
+
+	// Get user's companies
+	companies, err := h.companyService.GetUserCompanies(ctx, userID)
+	if err != nil {
+		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
+	}
+	if len(companies) == 0 {
+		return utils.ErrorResponse(c, fiber.StatusNotFound, http.ErrCompanyNotFound, "User is not affiliated with any company")
+	}
+
+	companyID := companies[0].ID
+
+	// Check permission (must be admin or owner to delete company addresses)
+	hasPermission, err := h.companyService.CheckEmployerPermission(ctx, userID, companyID, "admin")
+	if err != nil || !hasPermission {
+		return utils.ErrorResponse(c, fiber.StatusForbidden, http.ErrForbidden, "You don't have permission to delete company addresses")
+	}
+
+	// Parse address ID
+	addrID, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	if err != nil || addrID <= 0 {
+		return utils.BadRequestResponse(c, http.ErrInvalidID)
+	}
+
+	// Soft-delete via service
+	if err := h.companyService.SoftDeleteCompanyAddress(ctx, companyID, addrID); err != nil {
+		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
+	}
+
+	return utils.SuccessResponse(c, http.MsgDeletedSuccess, nil)
+}
+
+// CreateMyAddress godoc
+// @Summary Create a new company address (persisted)
+// @Description Create a new address record for the authenticated user's company. Address records are persisted and soft-deletable so users can reuse previously created addresses.
+// @Tags companies
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body request.CreateCompanyAddressRequest true "Create address request"
+// @Success 201 {object} utils.Response{data=response.CompanyAddressResponse}
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /companies/me/addresses [post]
+func (h *CompanyBasicHandler) CreateMyAddress(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	userID := middleware.GetUserID(c)
+	if userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, http.ErrUnauthorized, "userID not found in context")
+	}
+
+	// Parse request
+	var req request.CreateCompanyAddressRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.BadRequestResponse(c, http.ErrInvalidBody)
+	}
+	if err := utils.ValidateStruct(&req); err != nil {
+		errs := utils.FormatValidationErrors(err)
+		return utils.ValidationErrorResponse(c, http.ErrValidationFailed, errs)
+	}
+
+	// Get user's companies
+	companies, err := h.companyService.GetUserCompanies(ctx, userID)
+	if err != nil {
+		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
+	}
+	if len(companies) == 0 {
+		return utils.ErrorResponse(c, fiber.StatusNotFound, http.ErrCompanyNotFound, "User is not affiliated with any company")
+	}
+
+	// Use first company (business rule: one company per user)
+	companyID := companies[0].ID
+
+	// Check permission (must be admin or owner to create company addresses)
+	hasPermission, err := h.companyService.CheckEmployerPermission(ctx, userID, companyID, "admin")
+	if err != nil || !hasPermission {
+		return utils.ErrorResponse(c, fiber.StatusForbidden, http.ErrForbidden, "You don't have permission to create company addresses")
+	}
+
+	// Map to domain request
+	domainReq := &company.CreateCompanyAddressRequest{
+		FullAddress: req.FullAddress,
+		Latitude:    req.Latitude,
+		Longitude:   req.Longitude,
+		ProvinceID:  req.ProvinceID,
+		CityID:      req.CityID,
+		DistrictID:  req.DistrictID,
+	}
+
+	// Create address
+	addr, err := h.companyService.CreateCompanyAddress(ctx, companyID, domainReq)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, http.ErrFailedOperation, err.Error())
+	}
+
+	// Build response
+	resp := response.CompanyAddressResponse{
+		ID:            addr.ID,
+		AlamatLengkap: addr.FullAddress,
+	}
+	if addr.Latitude != nil {
+		resp.Latitude = *addr.Latitude
+	}
+	if addr.Longitude != nil {
+		resp.Longitude = *addr.Longitude
+	}
+
+	return utils.CreatedResponse(c, http.MsgCreatedSuccess, resp)
+}
+
+// UpdateMyAddress godoc
+// @Summary Update an existing company address
+// @Description Update fields of a persisted company address belonging to the authenticated user's company
+// @Tags companies
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Address ID"
+// @Param request body request.UpdateCompanyAddressRequest true "Update address request"
+// @Success 200 {object} utils.Response{data=response.CompanyAddressResponse}
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 404 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /companies/me/addresses/{id} [put]
+func (h *CompanyBasicHandler) UpdateMyAddress(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	userID := middleware.GetUserID(c)
+	if userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, http.ErrUnauthorized, "userID not found in context")
+	}
+
+	// Parse address ID
+	addrID, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	if err != nil || addrID <= 0 {
+		return utils.BadRequestResponse(c, http.ErrInvalidID)
+	}
+
+	// Parse request body
+	var req request.UpdateCompanyAddressRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.BadRequestResponse(c, http.ErrInvalidBody)
+	}
+	if err := utils.ValidateStruct(&req); err != nil {
+		errs := utils.FormatValidationErrors(err)
+		return utils.ValidationErrorResponse(c, http.ErrValidationFailed, errs)
+	}
+
+	// Get user's companies
+	companies, err := h.companyService.GetUserCompanies(ctx, userID)
+	if err != nil {
+		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
+	}
+	if len(companies) == 0 {
+		return utils.ErrorResponse(c, fiber.StatusNotFound, http.ErrCompanyNotFound, "User is not affiliated with any company")
+	}
+
+	companyID := companies[0].ID
+
+	// Check permission
+	hasPermission, err := h.companyService.CheckEmployerPermission(ctx, userID, companyID, "admin")
+	if err != nil || !hasPermission {
+		return utils.ErrorResponse(c, fiber.StatusForbidden, http.ErrForbidden, "You don't have permission to update company addresses")
+	}
+
+	// Map to domain request
+	domainReq := &company.UpdateCompanyAddressRequest{}
+	if req.FullAddress != nil {
+		domainReq.FullAddress = req.FullAddress
+	}
+	if req.Latitude != nil {
+		domainReq.Latitude = req.Latitude
+	}
+	if req.Longitude != nil {
+		domainReq.Longitude = req.Longitude
+	}
+	if req.ProvinceID != nil {
+		domainReq.ProvinceID = req.ProvinceID
+	}
+	if req.CityID != nil {
+		domainReq.CityID = req.CityID
+	}
+	if req.DistrictID != nil {
+		domainReq.DistrictID = req.DistrictID
+	}
+
+	// Update via service
+	updated, err := h.companyService.UpdateCompanyAddress(ctx, companyID, addrID, domainReq)
+	if err != nil {
+		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
+	}
+
+	// Build response
+	resp := response.CompanyAddressResponse{
+		ID:            updated.ID,
+		AlamatLengkap: updated.FullAddress,
+	}
+	if updated.Latitude != nil {
+		resp.Latitude = *updated.Latitude
+	}
+	if updated.Longitude != nil {
+		resp.Longitude = *updated.Longitude
+	}
+	if updated.ProvinceID != nil {
+		resp.ProvinceID = updated.ProvinceID
+	}
+	if updated.CityID != nil {
+		resp.CityID = updated.CityID
+	}
+	if updated.DistrictID != nil {
+		resp.DistrictID = updated.DistrictID
+	}
+
+	return utils.SuccessResponse(c, http.MsgUpdatedSuccess, resp)
 }
 
 // RequestVerification godoc
