@@ -272,13 +272,9 @@ func (h *CompanyReviewHandler) GetCompanyReviews(c *fiber.Ctx) error {
 		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
 	}
 
-	resp := make([]response.CompanyReviewResponse, 0, len(reviews))
-	for _, r := range reviews {
-		rr := mapper.ToCompanyReviewResponse(&r)
-		if rr != nil {
-			resp = append(resp, *rr)
-		}
-	}
+	resp := mapper.MapEntities[company.CompanyReview, response.CompanyReviewResponse](reviews, func(r *company.CompanyReview) *response.CompanyReviewResponse {
+		return mapper.ToCompanyReviewResponse(r)
+	})
 	meta := utils.GetPaginationMeta(page, limit, total)
 	return utils.SuccessResponseWithMeta(c, http.MsgFetchedSuccess, fiber.Map{"reviews": resp}, meta)
 }

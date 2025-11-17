@@ -1,7 +1,6 @@
 package http
 
 import (
-	"strconv"
 	"strings"
 	"time"
 
@@ -17,13 +16,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 )
-
-// JobHandler aligns with the style used in user_handler:
-// - Uses utils.Response helpers
-// - Extracts user ID via middleware
-// - Converts DTO <-> domain using mapper
-// - Calls domain job.JobService directly
-
 type JobHandler struct {
 	jobService        job.JobService
 	companyService    company.CompanyService
@@ -61,12 +53,9 @@ func (h *JobHandler) GetJobsGroupedByStatus(c *fiber.Ctx) error {
 		"in_review": {},
 	}
 	for status, jobs := range groupedJobs {
-		for _, j := range jobs {
-			jr := mapper.ToJobResponse(&j)
-			if jr != nil {
-				groupedResp[status] = append(groupedResp[status], *jr)
-			}
-		}
+		groupedResp[status] = mapper.MapEntities[job.Job, response.JobResponse](jobs, func(j *job.Job) *response.JobResponse {
+			return mapper.ToJobResponse(j)
+		})
 	}
 
 	return utils.SuccessResponse(c, "Jobs grouped by status retrieved successfully", groupedResp)
@@ -137,8 +126,6 @@ func (h *JobHandler) GetJobTypesOptions(c *fiber.Ctx) error {
 				Latitude:    a.Latitude,
 				Longitude:   a.Longitude,
 			}
-			// We don't currently have resolved location names on CompanyAddress,
-			// so leave Location nil (frontend can resolve via IDs if needed).
 			addresses = append(addresses, address)
 		}
 	}
@@ -320,13 +307,9 @@ func (h *JobHandler) ListJobs(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to list jobs", err.Error())
 	}
 
-	respJobs := make([]response.JobResponse, 0, len(jobs))
-	for _, j := range jobs {
-		jr := mapper.ToJobResponse(&j)
-		if jr != nil {
-			respJobs = append(respJobs, *jr)
-		}
-	}
+	respJobs := mapper.MapEntities[job.Job, response.JobResponse](jobs, func(j *job.Job) *response.JobResponse {
+		return mapper.ToJobResponse(j)
+	})
 
 	meta := utils.GetPaginationMeta(q.Page, q.Limit, total)
 	payload := response.JobListResponse{Jobs: respJobs}
@@ -337,7 +320,7 @@ func (h *JobHandler) ListJobs(c *fiber.Ctx) error {
 // GET /jobs/:id
 func (h *JobHandler) GetJob(c *fiber.Ctx) error {
 	ctx := c.Context()
-	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	id, err := utils.ParseIDParam(c, "id")
 	if err != nil || id <= 0 {
 		return utils.BadRequestResponse(c, ErrInvalidID)
 	}
@@ -371,8 +354,8 @@ func (h *JobHandler) SearchJobs(c *fiber.Ctx) error {
 	q.Page, q.Limit = utils.ValidatePagination(q.Page, q.Limit, 100)
 
 	// Sanitize search inputs
-	q.Query = utils.SanitizeString(q.Query)
-	q.Location = utils.SanitizeString(q.Location)
+	q.Query = utils.SanitizeIfNonEmpty(q.Query)
+	q.Location = utils.SanitizeIfNonEmpty(q.Location)
 
 	// Build domain search filter using helper
 	f := helpers.BuildJobSearchFilter(q)
@@ -382,13 +365,9 @@ func (h *JobHandler) SearchJobs(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to search jobs", err.Error())
 	}
 
-	respJobs := make([]response.JobResponse, 0, len(result.Jobs))
-	for _, j := range result.Jobs {
-		jr := mapper.ToJobResponse(&j)
-		if jr != nil {
-			respJobs = append(respJobs, *jr)
-		}
-	}
+	respJobs := mapper.MapEntities[job.Job, response.JobResponse](result.Jobs, func(j *job.Job) *response.JobResponse {
+		return mapper.ToJobResponse(j)
+	})
 	meta := utils.GetPaginationMeta(result.Page, result.Limit, result.Total)
 	payload := response.JobListResponse{Jobs: respJobs}
 	return utils.SuccessResponseWithMeta(c, MsgFetchedSuccess, payload, meta)
@@ -496,9 +475,6 @@ func (h *JobHandler) SaveJobDraft(c *fiber.Ctx) error {
 		return utils.ValidationErrorResponse(c, ErrValidationFailed, errs)
 	}
 
-	// Get company ID from user context
-	// Note: We need to get the user's company. For now, we'll use a helper or assume CompanyID is available
-	// In production, you should fetch this from user's employer relationship
 	companyID := req.CompanyID
 
 	// Map request DTO to domain request
@@ -545,7 +521,7 @@ func (h *JobHandler) UpdateJob(c *fiber.Ctx) error {
 	ctx := c.Context()
 	employerID := middleware.GetUserID(c)
 
-	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	id, err := utils.ParseIDParam(c, "id")
 	if err != nil || id <= 0 {
 		return utils.BadRequestResponse(c, ErrInvalidID)
 	}
@@ -595,15 +571,7 @@ func (h *JobHandler) UpdateJob(c *fiber.Ctx) error {
 		CompanyAddressID:   req.CompanyAddressID,
 		Skills:             skills,
 	}
-
-	// NOTE: Status is NOT updated by users - it's controlled by workflow
-	// Users can only update job details, not status
-	// Status changes are handled by:
-	// - PublishJob endpoint (draft → pending_approval)
-	// - Admin ApproveJob endpoint (pending_approval → published)
-	// - Admin RejectJob endpoint (pending_approval → rejected)
-	// - System/Admin lifecycle management (published → closed/expired/suspended)
-
+	
 	// Sanitize description if provided
 	if req.Description != nil {
 		sanitized := utils.SanitizeHTML(*req.Description)
@@ -637,7 +605,7 @@ func (h *JobHandler) DeleteJob(c *fiber.Ctx) error {
 	ctx := c.Context()
 	employerID := middleware.GetUserID(c)
 
-	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	id, err := utils.ParseIDParam(c, "id")
 	if err != nil || id <= 0 {
 		return utils.BadRequestResponse(c, ErrInvalidID)
 	}
@@ -707,18 +675,17 @@ func (h *JobHandler) GetMyJobs(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get my jobs", err.Error())
 	}
 
-	respJobs := make([]response.JobDetailResponse, 0, len(jobs))
-	for _, j := range jobs {
-		jr := mapper.ToJobDetailResponse(&j)
-		if jr != nil {
-			// Fetch company info for each job to fill company_name
-			comp, err := h.companyService.GetCompany(ctx, j.CompanyID)
-			if err == nil && comp != nil {
-				jr.CompanyName = comp.CompanyName
-				jr.CompanySlug = comp.Slug
-				jr.CompanyVerified = comp.IsVerified()
-			}
-			respJobs = append(respJobs, *jr)
+	// Map entities to DTOs first, then enrich with company info
+	respJobs := mapper.MapEntities[job.Job, response.JobDetailResponse](jobs, func(j *job.Job) *response.JobDetailResponse {
+		return mapper.ToJobDetailResponse(j)
+	})
+	for i := range respJobs {
+		// corresponding job is jobs[i]
+		comp, err := h.companyService.GetCompany(ctx, jobs[i].CompanyID)
+		if err == nil && comp != nil {
+			respJobs[i].CompanyName = comp.CompanyName
+			respJobs[i].CompanySlug = comp.Slug
+			respJobs[i].CompanyVerified = comp.IsVerified()
 		}
 	}
 	meta := utils.GetPaginationMeta(f.Page, f.Limit, total)
@@ -748,7 +715,7 @@ func (h *JobHandler) PublishJob(c *fiber.Ctx) error {
 	ctx := c.Context()
 	employerID := middleware.GetUserID(c)
 
-	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	id, err := utils.ParseIDParam(c, "id")
 	if err != nil || id <= 0 {
 		return utils.BadRequestResponse(c, ErrInvalidID)
 	}
@@ -826,7 +793,7 @@ func (h *JobHandler) CloseJob(c *fiber.Ctx) error {
 	ctx := c.Context()
 	employerID := middleware.GetUserID(c)
 
-	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	id, err := utils.ParseIDParam(c, "id")
 	if err != nil || id <= 0 {
 		return utils.BadRequestResponse(c, ErrInvalidID)
 	}
@@ -862,7 +829,7 @@ func (h *JobHandler) InactivateJob(c *fiber.Ctx) error {
 	ctx := c.Context()
 	employerID := middleware.GetUserID(c)
 
-	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	id, err := utils.ParseIDParam(c, "id")
 	if err != nil || id <= 0 {
 		return utils.BadRequestResponse(c, ErrInvalidID)
 	}

@@ -37,24 +37,14 @@ func (h *SkillsMasterHandler) GetAllSkills(c *fiber.Ctx) error {
 		SortOrder:       c.Query("sort_order", "ASC"),
 	}
 
-	// Parse pagination
-	if page := c.Query("page"); page != "" {
-		if p, err := strconv.Atoi(page); err == nil && p > 0 {
-			filter.Page = p
-		}
-	}
+	// Parse pagination (use QueryInt with defaults)
+	filter.Page = c.QueryInt("page", 1)
+	filter.PageSize = c.QueryInt("page_size", 20)
 
-	if pageSize := c.Query("page_size"); pageSize != "" {
-		if ps, err := strconv.Atoi(pageSize); err == nil && ps > 0 {
-			filter.PageSize = ps
-		}
-	}
-
-	// Parse category_id if provided
-	if categoryID := c.Query("category_id"); categoryID != "" {
-		if cid, err := strconv.ParseInt(categoryID, 10, 64); err == nil {
-			filter.CategoryID = &cid
-		}
+	// Parse category_id if provided (as query param)
+	if v := c.QueryInt("category_id", 0); v > 0 {
+		cid := int64(v)
+		filter.CategoryID = &cid
 	}
 
 	// Parse is_active if provided
@@ -107,20 +97,8 @@ func (h *SkillsMasterHandler) SearchSkills(c *fiber.Ctx) error {
 	}
 
 	// Parse pagination
-	page := 1
-	pageSize := 20
-
-	if p := c.Query("page"); p != "" {
-		if parsed, err := strconv.Atoi(p); err == nil && parsed > 0 {
-			page = parsed
-		}
-	}
-
-	if ps := c.Query("page_size"); ps != "" {
-		if parsed, err := strconv.Atoi(ps); err == nil && parsed > 0 {
-			pageSize = parsed
-		}
-	}
+	page := c.QueryInt("page", 1)
+	pageSize := c.QueryInt("page_size", 20)
 
 	// Search skills
 	result, err := h.service.SearchSkills(ctx, query, page, pageSize)
@@ -189,7 +167,7 @@ func (h *SkillsMasterHandler) GetSkillByID(c *fiber.Ctx) error {
 	ctx := c.Context()
 
 	// Parse skill ID
-	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	id, err := utils.ParseIDParam(c, "id")
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest,
 			"Invalid skill ID",
@@ -270,13 +248,7 @@ func (h *SkillsMasterHandler) GetRecommendedSkills(c *fiber.Ctx) error {
 
 	// Parse optional filters
 	skillType := c.Query("skill_type", "")
-	limit := 10
-
-	if l := c.Query("limit"); l != "" {
-		if parsed, err := strconv.Atoi(l); err == nil && parsed > 0 {
-			limit = parsed
-		}
-	}
+	limit := c.QueryInt("limit", 10)
 
 	// Build filter for popular/recommended skills
 	filter := &master.SkillsFilter{

@@ -1,7 +1,6 @@
 package master
 
 import (
-	"strconv"
 	"strings"
 
 	"keerja-backend/internal/domain/master"
@@ -76,8 +75,7 @@ func (h *IndustryHandler) GetIndustryByID(c *fiber.Ctx) error {
 	ctx := c.Context()
 
 	// Parse ID from path parameter
-	idParam := c.Params("id")
-	id, err := strconv.ParseInt(idParam, 10, 64)
+	id, err := utils.ParseIDParam(c, "id")
 	if err != nil || id <= 0 {
 		return utils.BadRequestResponse(c, "Invalid industry ID")
 	}

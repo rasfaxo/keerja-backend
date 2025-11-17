@@ -304,13 +304,9 @@ func (h *CompanyProfileHandler) GetFollowers(c *fiber.Ctx) error {
 		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
 	}
 
-	resp := make([]response.CompanyFollowerResponse, 0, len(followers))
-	for _, f := range followers {
-		fr := mapper.ToCompanyFollowerResponse(&f)
-		if fr != nil {
-			resp = append(resp, *fr)
-		}
-	}
+	resp := mapper.MapEntities[company.CompanyFollower, response.CompanyFollowerResponse](followers, func(f *company.CompanyFollower) *response.CompanyFollowerResponse {
+		return mapper.ToCompanyFollowerResponse(f)
+	})
 	meta := utils.GetPaginationMeta(page, limit, total)
 	return utils.SuccessResponseWithMeta(c, http.MsgFetchedSuccess, fiber.Map{"followers": resp}, meta)
 }
@@ -338,13 +334,9 @@ func (h *CompanyProfileHandler) GetFollowedCompanies(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
 	}
-	respList := make([]response.CompanyResponse, 0, len(companies))
-	for _, comp := range companies {
-		cr := mapper.ToCompanyResponse(&comp)
-		if cr != nil {
-			respList = append(respList, *cr)
-		}
-	}
+	respList := mapper.MapEntities[company.Company, response.CompanyResponse](companies, func(comp *company.Company) *response.CompanyResponse {
+		return mapper.ToCompanyResponse(comp)
+	})
 	meta := utils.GetPaginationMeta(page, limit, total)
 	payload := response.CompanyListResponse{Companies: respList}
 	return utils.SuccessResponseWithMeta(c, http.MsgFetchedSuccess, payload, meta)

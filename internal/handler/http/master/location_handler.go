@@ -1,7 +1,6 @@
 package master
 
 import (
-	"strconv"
 	"strings"
 
 	"keerja-backend/internal/domain/master"
@@ -88,8 +87,7 @@ func (h *LocationHandler) GetProvinceByID(c *fiber.Ctx) error {
 	ctx := c.Context()
 
 	// Parse ID from path parameter
-	idParam := c.Params("id")
-	id, err := strconv.ParseInt(idParam, 10, 64)
+	id, err := utils.ParseIDParam(c, "id")
 	if err != nil || id <= 0 {
 		return utils.BadRequestResponse(c, "Invalid province ID")
 	}
@@ -129,14 +127,9 @@ func (h *LocationHandler) GetCities(c *fiber.Ctx) error {
 	ctx := c.Context()
 
 	// Parse query parameters
-	provinceIDParam := strings.TrimSpace(c.Query("province_id"))
-	if provinceIDParam == "" {
-		return utils.BadRequestResponse(c, "province_id query parameter is required")
-	}
-
-	provinceID, err := strconv.ParseInt(provinceIDParam, 10, 64)
-	if err != nil || provinceID <= 0 {
-		return utils.BadRequestResponse(c, "Invalid province_id parameter")
+	provinceID := int64(c.QueryInt("province_id", 0))
+	if provinceID <= 0 {
+		return utils.BadRequestResponse(c, "province_id query parameter is required and must be a positive integer")
 	}
 
 	activeParam := strings.TrimSpace(c.Query("active"))
@@ -144,6 +137,7 @@ func (h *LocationHandler) GetCities(c *fiber.Ctx) error {
 
 	// Determine if we should filter by active status
 	var cities []master.CityResponse
+	var err error
 
 	if activeParam == "true" {
 		// Get only active cities in province
@@ -181,8 +175,7 @@ func (h *LocationHandler) GetCityByID(c *fiber.Ctx) error {
 	ctx := c.Context()
 
 	// Parse ID from path parameter
-	idParam := c.Params("id")
-	id, err := strconv.ParseInt(idParam, 10, 64)
+	id, err := utils.ParseIDParam(c, "id")
 	if err != nil || id <= 0 {
 		return utils.BadRequestResponse(c, "Invalid city ID")
 	}
@@ -222,14 +215,9 @@ func (h *LocationHandler) GetDistricts(c *fiber.Ctx) error {
 	ctx := c.Context()
 
 	// Parse query parameters
-	cityIDParam := strings.TrimSpace(c.Query("city_id"))
-	if cityIDParam == "" {
-		return utils.BadRequestResponse(c, "city_id query parameter is required")
-	}
-
-	cityID, err := strconv.ParseInt(cityIDParam, 10, 64)
-	if err != nil || cityID <= 0 {
-		return utils.BadRequestResponse(c, "Invalid city_id parameter")
+	cityID := int64(c.QueryInt("city_id", 0))
+	if cityID <= 0 {
+		return utils.BadRequestResponse(c, "city_id query parameter is required and must be a positive integer")
 	}
 
 	activeParam := strings.TrimSpace(c.Query("active"))
@@ -237,6 +225,7 @@ func (h *LocationHandler) GetDistricts(c *fiber.Ctx) error {
 
 	// Determine if we should filter by active status
 	var districts []master.DistrictResponse
+	var err error
 
 	if activeParam == "true" {
 		// Get only active districts in city
@@ -274,8 +263,7 @@ func (h *LocationHandler) GetDistrictByID(c *fiber.Ctx) error {
 	ctx := c.Context()
 
 	// Parse ID from path parameter
-	idParam := c.Params("id")
-	id, err := strconv.ParseInt(idParam, 10, 64)
+	id, err := utils.ParseIDParam(c, "id")
 	if err != nil || id <= 0 {
 		return utils.BadRequestResponse(c, "Invalid district ID")
 	}

@@ -108,10 +108,10 @@ func (h *CompanyHandler) ListCompanies(c *fiber.Ctx) error {
 	}
 
 	// Map to response
-	companies := make([]response.AdminCompanyListItemResponse, 0, len(result.Companies))
-	for _, item := range result.Companies {
-		companies = append(companies, mapper.ToAdminCompanyListItemResponse(&item))
-	}
+	companies := mapper.MapEntities[admin.AdminCompanyListItem, response.AdminCompanyListItemResponse](result.Companies, func(item *admin.AdminCompanyListItem) *response.AdminCompanyListItemResponse {
+		r := mapper.ToAdminCompanyListItemResponse(item)
+		return &r
+	})
 
 	resp := response.AdminCompaniesListResponse{
 		Companies: companies,

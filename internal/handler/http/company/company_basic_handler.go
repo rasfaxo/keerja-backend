@@ -476,13 +476,13 @@ func (h *CompanyBasicHandler) GetCompany(c *fiber.Ctx) error {
 	ctx := c.Context()
 
 	// Get company ID from the URL
-	companyID, err := strconv.Atoi(c.Params("id"))
+	companyID, err := utils.ParseIDParam(c, "id")
 	if err != nil || companyID <= 0 {
 		return utils.BadRequestResponse(c, "Invalid company ID")
 	}
 
 	// Get the company from the service
-	companyData, err := h.companyService.GetCompany(ctx, int64(companyID))
+	companyData, err := h.companyService.GetCompany(ctx, companyID)
 	if err != nil {
 		return utils.NotFoundResponse(c, http.ErrNotFound)
 	}
@@ -553,7 +553,7 @@ func (h *CompanyBasicHandler) UpdateCompany(c *fiber.Ctx) error {
 	}
 
 	// Get company ID from the URL
-	companyID, err := strconv.Atoi(c.Params("id"))
+	companyID, err := utils.ParseIDParam(c, "id")
 	if err != nil || companyID <= 0 {
 		return utils.BadRequestResponse(c, "Invalid company ID")
 	}
@@ -596,7 +596,7 @@ func (h *CompanyBasicHandler) UpdateCompany(c *fiber.Ctx) error {
 		}
 
 		// Call service without files (backward compatibility)
-		if err := h.companyService.UpdateCompany(ctx, int64(companyID), domainReq, nil, nil); err != nil {
+		if err := h.companyService.UpdateCompany(ctx, companyID, domainReq, nil, nil); err != nil {
 			return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
 		}
 
@@ -703,7 +703,7 @@ func (h *CompanyBasicHandler) UpdateCompany(c *fiber.Ctx) error {
 	}
 
 	// Update the company profile with files
-	if err := h.companyService.UpdateCompany(ctx, int64(companyID), domainReq, bannerFile, logoFile); err != nil {
+	if err := h.companyService.UpdateCompany(ctx, companyID, domainReq, bannerFile, logoFile); err != nil {
 		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
 	}
 
@@ -735,7 +735,7 @@ func (h *CompanyBasicHandler) DeleteCompany(c *fiber.Ctx) error {
 	}
 
 	// Get company ID from the URL
-	companyID, err := strconv.Atoi(c.Params("id"))
+	companyID, err := utils.ParseIDParam(c, "id")
 	if err != nil || companyID <= 0 {
 		return utils.BadRequestResponse(c, http.ErrInvalidCompanyID)
 	}
@@ -774,7 +774,7 @@ func (h *CompanyBasicHandler) DeleteCompany(c *fiber.Ctx) error {
 func (h *CompanyBasicHandler) UploadLogo(c *fiber.Ctx) error {
 	ctx := c.Context()
 
-	companyID, err := strconv.Atoi(c.Params("id"))
+	companyID, err := utils.ParseIDParam(c, "id")
 	if err != nil || companyID <= 0 {
 		return utils.BadRequestResponse(c, http.ErrInvalidCompanyID)
 	}
@@ -784,7 +784,7 @@ func (h *CompanyBasicHandler) UploadLogo(c *fiber.Ctx) error {
 		return utils.BadRequestResponse(c, http.ErrNoFileUploaded)
 	}
 
-	url, err := h.companyService.UploadLogo(ctx, int64(companyID), file)
+	url, err := h.companyService.UploadLogo(ctx, companyID, file)
 	if err != nil {
 		return utils.InternalServerErrorResponse(c, http.ErrFileUploadFailed)
 	}
@@ -808,7 +808,7 @@ func (h *CompanyBasicHandler) UploadLogo(c *fiber.Ctx) error {
 func (h *CompanyBasicHandler) UploadBanner(c *fiber.Ctx) error {
 	ctx := c.Context()
 
-	companyID, err := strconv.Atoi(c.Params("id"))
+	companyID, err := utils.ParseIDParam(c, "id")
 	if err != nil || companyID <= 0 {
 		return utils.BadRequestResponse(c, http.ErrInvalidCompanyID)
 	}
@@ -818,7 +818,7 @@ func (h *CompanyBasicHandler) UploadBanner(c *fiber.Ctx) error {
 		return utils.BadRequestResponse(c, http.ErrNoFileUploaded)
 	}
 
-	url, err := h.companyService.UploadBanner(ctx, int64(companyID), file)
+	url, err := h.companyService.UploadBanner(ctx, companyID, file)
 	if err != nil {
 		return utils.InternalServerErrorResponse(c, http.ErrFileUploadFailed)
 	}
@@ -840,7 +840,7 @@ func (h *CompanyBasicHandler) UploadBanner(c *fiber.Ctx) error {
 func (h *CompanyBasicHandler) GetCompanyVerificationStatus(c *fiber.Ctx) error {
 	ctx := c.Context()
 
-	companyID, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	companyID, err := utils.ParseIDParam(c, "id")
 	if err != nil || companyID <= 0 {
 		return utils.BadRequestResponse(c, http.ErrInvalidID)
 	}
@@ -957,7 +957,7 @@ func (h *CompanyBasicHandler) GetMyCompanyVerificationStatus(c *fiber.Ctx) error
 func (h *CompanyBasicHandler) DeleteLogo(c *fiber.Ctx) error {
 	ctx := c.Context()
 
-	companyID, err := strconv.Atoi(c.Params("id"))
+	companyID, err := utils.ParseIDParam(c, "id")
 	if err != nil || companyID <= 0 {
 		return utils.BadRequestResponse(c, http.ErrInvalidCompanyID)
 	}
@@ -982,7 +982,7 @@ func (h *CompanyBasicHandler) DeleteLogo(c *fiber.Ctx) error {
 func (h *CompanyBasicHandler) DeleteBanner(c *fiber.Ctx) error {
 	ctx := c.Context()
 
-	companyID, err := strconv.Atoi(c.Params("id"))
+	companyID, err := utils.ParseIDParam(c, "id")
 	if err != nil || companyID <= 0 {
 		return utils.BadRequestResponse(c, http.ErrInvalidCompanyID)
 	}
@@ -1019,37 +1019,39 @@ func (h *CompanyBasicHandler) GetMyCompanies(c *fiber.Ctx) error {
 		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
 	}
 
-	// Map to response DTOs with full company details and addresses
-	responses := make([]response.CompanyDetailResponse, 0, len(companies))
-	for _, comp := range companies {
-		if detail := mapper.ToCompanyDetailResponse(&comp); detail != nil {
-			// Fetch company addresses for this company
-			addrs, err := h.companyService.GetCompanyAddresses(ctx, comp.ID, false)
-			if err == nil && len(addrs) > 0 {
-				detail.CompanyAddresses = make([]response.CompanyAddressResponse, len(addrs))
-				for i, a := range addrs {
-					lat := 0.0
-					lon := 0.0
-					if a.Latitude != nil {
-						lat = *a.Latitude
-					}
-					if a.Longitude != nil {
-						lon = *a.Longitude
-					}
-					detail.CompanyAddresses[i] = response.CompanyAddressResponse{
-						ID:            a.ID,
-						AlamatLengkap: a.FullAddress,
-						Latitude:      lat,
-						Longitude:     lon,
-						ProvinceID:    a.ProvinceID,
-						CityID:        a.CityID,
-						DistrictID:    a.DistrictID,
-					}
+	// Map companies to detailed responses, including addresses
+	responses := mapper.MapEntities(companies, func(comp *company.Company) *response.CompanyDetailResponse {
+		detail := mapper.ToCompanyDetailResponse(comp)
+		if detail == nil {
+			return nil
+		}
+
+		// Fetch company addresses for this company
+		addrs, err := h.companyService.GetCompanyAddresses(ctx, comp.ID, false)
+		if err == nil && len(addrs) > 0 {
+			detail.CompanyAddresses = make([]response.CompanyAddressResponse, len(addrs))
+			for i, a := range addrs {
+				lat := 0.0
+				lon := 0.0
+				if a.Latitude != nil {
+					lat = *a.Latitude
+				}
+				if a.Longitude != nil {
+					lon = *a.Longitude
+				}
+				detail.CompanyAddresses[i] = response.CompanyAddressResponse{
+					ID:            a.ID,
+					AlamatLengkap: a.FullAddress,
+					Latitude:      lat,
+					Longitude:     lon,
+					ProvinceID:    a.ProvinceID,
+					CityID:        a.CityID,
+					DistrictID:    a.DistrictID,
 				}
 			}
-			responses = append(responses, *detail)
 		}
-	}
+		return detail
+	})
 
 	return utils.SuccessResponse(c, http.MsgFetchedSuccess, responses)
 }
@@ -1200,7 +1202,7 @@ func (h *CompanyBasicHandler) DeleteMyAddress(c *fiber.Ctx) error {
 	}
 
 	// Parse address ID
-	addrID, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	addrID, err := utils.ParseIDParam(c, "id")
 	if err != nil || addrID <= 0 {
 		return utils.BadRequestResponse(c, http.ErrInvalidID)
 	}
@@ -1319,7 +1321,7 @@ func (h *CompanyBasicHandler) UpdateMyAddress(c *fiber.Ctx) error {
 	}
 
 	// Parse address ID
-	addrID, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	addrID, err := utils.ParseIDParam(c, "id")
 	if err != nil || addrID <= 0 {
 		return utils.BadRequestResponse(c, http.ErrInvalidID)
 	}
@@ -1426,7 +1428,7 @@ func (h *CompanyBasicHandler) RequestVerification(c *fiber.Ctx) error {
 	ctx := c.Context()
 
 	// Get company ID from URL params
-	companyID, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	companyID, err := utils.ParseIDParam(c, "id")
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, http.ErrInvalidCompanyID, err.Error())
 	}
