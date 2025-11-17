@@ -8,6 +8,7 @@ import (
 
 	"keerja-backend/internal/cache"
 	"keerja-backend/internal/domain/company"
+	"keerja-backend/internal/domain/job"
 	"keerja-backend/internal/domain/master"
 	"keerja-backend/internal/utils"
 
@@ -35,6 +36,13 @@ type companyService struct {
 	industryService    master.IndustryService
 	companySizeService master.CompanySizeService
 	districtService    master.DistrictService
+	jobRepo            job.JobRepository
+}
+
+// GetJobsGroupedByStatus implements CompanyService interface for job status grouping
+func (s *companyService) GetJobsGroupedByStatus(ctx context.Context, userID int64) (map[string][]job.Job, error) {
+	// Delegate to jobRepo for real data
+	return s.jobRepo.GetJobsGroupedByStatus(ctx, userID)
 }
 
 // NewCompanyService creates a new company service instance
@@ -46,6 +54,7 @@ func NewCompanyService(
 	industryService master.IndustryService,
 	companySizeService master.CompanySizeService,
 	districtService master.DistrictService,
+	jobRepo job.JobRepository,
 ) company.CompanyService {
 	return &companyService{
 		companyRepo:        companyRepo,
@@ -55,6 +64,7 @@ func NewCompanyService(
 		industryService:    industryService,
 		companySizeService: companySizeService,
 		districtService:    districtService,
+		jobRepo:            jobRepo,
 	}
 }
 
@@ -328,6 +338,24 @@ func (s *companyService) UpdateCompany(ctx context.Context, companyID int64, req
 	// CompanyCulture mapped to Culture field
 	if req.CompanyCulture != nil {
 		comp.Culture = req.CompanyCulture
+	}
+
+	// Automatically update jobs if company verification status changes from false to true
+	wasVerified := comp.Verified
+	newVerified := wasVerified
+	if req.Verified != nil {
+		newVerified = *req.Verified
+	}
+
+	if !wasVerified && newVerified {
+		// Update all jobs for this company from 'in_review' to 'draft'
+		if err := s.db.Model(&job.Job{}).
+			Where("company_id = ? AND status = ?", companyID, "in_review").
+			Update("status", "draft").Error; err != nil {
+			return fmt.Errorf("failed to update jobs to draft: %w", err)
+		}
+		comp.Verified = true
+		comp.VerifiedAt = utils.TimePtr(time.Now())
 	}
 
 	// Update company in database
@@ -1639,6 +1667,123 @@ func (s *companyService) GetUserCompanies(ctx context.Context, userID int64) ([]
 	return companies, nil
 }
 
+// CreateCompanyAddress creates a persistent address record for a company
+func (s *companyService) CreateCompanyAddress(ctx context.Context, companyID int64, req *company.CreateCompanyAddressRequest) (*company.CompanyAddress, error) {
+	// Ensure company exists
+	comp, err := s.companyRepo.FindByID(ctx, companyID)
+	if err != nil || comp == nil {
+		return nil, fmt.Errorf("company not found: %w", err)
+	}
+
+	addr := &company.CompanyAddress{
+		CompanyID:   companyID,
+		FullAddress: req.FullAddress,
+		Latitude:    req.Latitude,
+		Longitude:   req.Longitude,
+		ProvinceID:  req.ProvinceID,
+		CityID:      req.CityID,
+		DistrictID:  req.DistrictID,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}
+
+	if err := s.companyRepo.CreateCompanyAddress(ctx, addr); err != nil {
+		return nil, fmt.Errorf("failed to create company address: %w", err)
+	}
+
+	return addr, nil
+}
+
+// GetCompanyAddresses returns company addresses; includeDeleted toggles returning soft-deleted rows
+func (s *companyService) GetCompanyAddresses(ctx context.Context, companyID int64, includeDeleted bool) ([]company.CompanyAddress, error) {
+	// Ensure company exists
+	comp, err := s.companyRepo.FindByID(ctx, companyID)
+	if err != nil || comp == nil {
+		return nil, fmt.Errorf("company not found: %w", err)
+	}
+
+	addrs, err := s.companyRepo.GetCompanyAddressesByCompanyID(ctx, companyID, includeDeleted)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch company addresses: %w", err)
+	}
+	return addrs, nil
+}
+
+// GetCompanyAddressByID retrieves a single company address by id and verifies it belongs to the company
+func (s *companyService) GetCompanyAddressByID(ctx context.Context, companyID, addressID int64) (*company.CompanyAddress, error) {
+	addr, err := s.companyRepo.FindCompanyAddressByID(ctx, addressID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get company address: %w", err)
+	}
+	if addr == nil {
+		return nil, nil
+	}
+	if addr.CompanyID != companyID {
+		return nil, nil
+	}
+	return addr, nil
+}
+
+// SoftDeleteCompanyAddress soft-deletes an address after verifying ownership
+func (s *companyService) SoftDeleteCompanyAddress(ctx context.Context, companyID, addressID int64) error {
+	addr, err := s.companyRepo.FindCompanyAddressByID(ctx, addressID)
+	if err != nil {
+		return fmt.Errorf("failed to find address: %w", err)
+	}
+	if addr == nil {
+		return fmt.Errorf("address not found")
+	}
+	if addr.CompanyID != companyID {
+		return fmt.Errorf("unauthorized to delete this address")
+	}
+
+	if err := s.companyRepo.SoftDeleteCompanyAddress(ctx, addressID); err != nil {
+		return fmt.Errorf("failed to delete address: %w", err)
+	}
+	return nil
+}
+
+// UpdateCompanyAddress updates an existing address after verifying ownership
+func (s *companyService) UpdateCompanyAddress(ctx context.Context, companyID, addressID int64, req *company.UpdateCompanyAddressRequest) (*company.CompanyAddress, error) {
+	addr, err := s.companyRepo.FindCompanyAddressByID(ctx, addressID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find address: %w", err)
+	}
+	if addr == nil {
+		return nil, fmt.Errorf("address not found")
+	}
+	if addr.CompanyID != companyID {
+		return nil, fmt.Errorf("unauthorized to update this address")
+	}
+
+	// Apply updates only for provided fields
+	if req.FullAddress != nil {
+		addr.FullAddress = *req.FullAddress
+	}
+	if req.Latitude != nil {
+		addr.Latitude = req.Latitude
+	}
+	if req.Longitude != nil {
+		addr.Longitude = req.Longitude
+	}
+	if req.ProvinceID != nil {
+		addr.ProvinceID = req.ProvinceID
+	}
+	if req.CityID != nil {
+		addr.CityID = req.CityID
+	}
+	if req.DistrictID != nil {
+		addr.DistrictID = req.DistrictID
+	}
+
+	addr.UpdatedAt = time.Now()
+
+	if err := s.companyRepo.UpdateCompanyAddress(ctx, addr); err != nil {
+		return nil, fmt.Errorf("failed to update address: %w", err)
+	}
+	return addr, nil
+}
+
 // CheckEmployerPermission checks if user has required permission for company
 func (s *companyService) CheckEmployerPermission(ctx context.Context, userID, companyID int64, requiredRole string) (bool, error) {
 	employerUser, err := s.companyRepo.FindEmployerUserByUserAndCompany(ctx, userID, companyID)
@@ -1818,6 +1963,19 @@ func (s *companyService) RequestVerification(ctx context.Context, companyID, req
 
 	// Invalidate cache
 	s.cache.Delete(cache.GenerateCacheKey("company", "verification", companyID))
+	s.cache.Delete(cache.GenerateCacheKey("company", "detail", companyID))
+
+	// Get company to invalidate slug-based cache
+	comp, err := s.companyRepo.FindByID(ctx, companyID)
+	if err == nil && comp != nil {
+		s.cache.Delete(cache.GenerateCacheKey("company", "slug", comp.Slug))
+	}
+
+	// Invalidate user companies cache for all members of this company
+	employees, _ := s.companyRepo.GetEmployerUsersByCompanyID(ctx, companyID)
+	for _, emp := range employees {
+		s.cache.Delete(cache.GenerateCacheKey("user", "companies", emp.UserID))
+	}
 
 	return nil
 }

@@ -204,15 +204,23 @@ func (s *adminCompanyService) UpdateCompanyStatus(ctx context.Context, companyID
 	verification.ReviewedBy = &adminID
 	verification.ReviewedAt = &now
 
+	if req.GrantBadge != nil {
+		verification.BadgeGranted = *req.GrantBadge
+	}
+
 	if req.Status == "verified" {
 		// Set verified flag
 		comp.Verified = true
 		comp.VerifiedAt = &now
 		comp.VerifiedBy = &adminID
-		verification.BadgeGranted = req.GrantBadge != nil && *req.GrantBadge
 		// Set verification expiry to 1 year from now
 		expiry := now.AddDate(1, 0, 0)
 		verification.VerificationExpiry = &expiry
+
+		// Update all jobs for this company from 'in_review' to 'draft'
+		if err := s.jobRepo.UpdateStatusByCompany(ctx, companyID, "in_review", "draft"); err != nil {
+			return fmt.Errorf("failed to update jobs to draft: %w", err)
+		}
 	} else if req.Status == "rejected" {
 		// Keep verified as false, set rejection reason
 		comp.Verified = false

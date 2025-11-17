@@ -18,8 +18,6 @@ type Job struct {
 	CategoryID       *int64    `gorm:"column:category_id;index" json:"category_id,omitempty"`
 	Title            string    `gorm:"column:title;type:varchar(200);not null" json:"title" validate:"required,max=200"`
 	Slug             string    `gorm:"column:slug;type:varchar(220);unique" json:"slug"`
-	JobLevel         string    `gorm:"column:job_level;type:varchar(50)" json:"job_level,omitempty" validate:"omitempty,oneof='Internship' 'Entry Level' 'Mid Level' 'Senior Level' 'Manager' 'Director'"`
-	EmploymentType   string    `gorm:"column:employment_type;type:varchar(30)" json:"employment_type,omitempty" validate:"omitempty,oneof='Full-Time' 'Part-Time' 'Contract' 'Internship' 'Freelance'"`
 	Description      string    `gorm:"column:description;type:text;not null" json:"description" validate:"required"`
 	RequirementsText string    `gorm:"column:requirements;type:text" json:"requirements_text,omitempty"`
 	Responsibilities string    `gorm:"column:responsibilities;type:text" json:"responsibilities,omitempty"`
@@ -38,14 +36,26 @@ type Job struct {
 	Province     string `gorm:"column:province;type:varchar(100)" json:"province,omitempty"`
 	RemoteOption bool   `gorm:"column:remote_option;default:false" json:"remote_option"`
 
-	SalaryMin         *float64   `gorm:"column:salary_min;type:numeric(12,2)" json:"salary_min,omitempty"`
-	SalaryMax         *float64   `gorm:"column:salary_max;type:numeric(12,2)" json:"salary_max,omitempty"`
-	Currency          string     `gorm:"column:currency;type:varchar(10);default:'IDR'" json:"currency" validate:"omitempty,len=3"`
-	ExperienceMin     *int16     `gorm:"column:experience_min" json:"experience_min,omitempty"`
-	ExperienceMax     *int16     `gorm:"column:experience_max" json:"experience_max,omitempty"`
-	EducationLevel    string     `gorm:"column:education_level;type:varchar(50)" json:"education_level,omitempty"`
-	TotalHires        int16      `gorm:"column:total_hires;default:1" json:"total_hires"`
-	Status            string     `gorm:"column:status;type:varchar(20);default:'draft';index" json:"status" validate:"omitempty,oneof='draft' 'pending_review' 'published' 'closed' 'expired' 'suspended' 'rejected'"`
+	SalaryMin     *float64 `gorm:"column:salary_min;type:numeric(12,2)" json:"salary_min,omitempty"`
+	SalaryMax     *float64 `gorm:"column:salary_max;type:numeric(12,2)" json:"salary_max,omitempty"`
+	SalaryDisplay string   `gorm:"column:salary_display;type:varchar(20);default:'range'" json:"salary_display"`
+	Currency      string   `gorm:"column:currency;type:varchar(10);default:'IDR'" json:"currency" validate:"omitempty,len=3"`
+
+	// Age Requirements
+	MinAge        *int   `gorm:"column:min_age" json:"min_age,omitempty" validate:"omitempty,min=17,max=100"`
+	MaxAge        *int   `gorm:"column:max_age" json:"max_age,omitempty" validate:"omitempty,min=17,max=100"`
+	ExperienceMin *int16 `gorm:"column:experience_min" json:"experience_min,omitempty"`
+	ExperienceMax *int16 `gorm:"column:experience_max" json:"experience_max,omitempty"`
+	TotalHires    int16  `gorm:"column:total_hires;default:1" json:"total_hires"`
+
+	// Company Address (Optional - for work location)
+	CompanyAddressID *int64          `gorm:"column:company_address_id" json:"company_address_id,omitempty"`
+	CompanyAddress   *CompanyAddress `gorm:"foreignKey:CompanyAddressID;references:ID;constraint:OnDelete:SET NULL" json:"company_address,omitempty"`
+
+	// Category/Subcategory
+	JobSubcategoryID *int64 `gorm:"column:job_subcategory_id;index" json:"job_subcategory_id,omitempty"`
+
+	Status            string     `gorm:"column:status;type:varchar(20);check:status IN ('in_review','draft','pending_review','published','closed','expired','suspended','rejected');default:'draft';index" json:"status" validate:"omitempty,oneof='in_review' 'draft' 'pending_review' 'published' 'closed' 'expired' 'suspended' 'rejected'"`
 	ViewsCount        int64      `gorm:"column:views_count;default:0" json:"views_count"`
 	ApplicationsCount int64      `gorm:"column:applications_count;default:0" json:"applications_count"`
 	PublishedAt       *time.Time `gorm:"column:published_at" json:"published_at,omitempty"`
@@ -55,6 +65,7 @@ type Job struct {
 
 	// Relationships
 	Category        *JobCategory     `gorm:"foreignKey:CategoryID;references:ID;constraint:OnDelete:SET NULL" json:"category,omitempty"`
+	JobSubcategory  *JobSubcategory  `gorm:"foreignKey:JobSubcategoryID;references:ID;constraint:OnDelete:SET NULL" json:"job_subcategory,omitempty"`
 	Locations       []JobLocation    `gorm:"foreignKey:JobID;references:ID;constraint:OnDelete:CASCADE" json:"locations,omitempty"`
 	Benefits        []JobBenefit     `gorm:"foreignKey:JobID;references:ID;constraint:OnDelete:CASCADE" json:"benefits,omitempty"`
 	Skills          []JobSkill       `gorm:"foreignKey:JobID;references:ID;constraint:OnDelete:CASCADE" json:"skills,omitempty"`
@@ -393,4 +404,24 @@ func (jr *JobRequirement) IsExperienceRequirement() bool {
 // IsSkillRequirement checks if requirement is skill type
 func (jr *JobRequirement) IsSkillRequirement() bool {
 	return jr.RequirementType == "skill"
+}
+
+// CompanyAddress represents a minimal company address structure for job relations
+type CompanyAddress struct {
+	ID          int64      `gorm:"primaryKey;autoIncrement" json:"id"`
+	CompanyID   int64      `gorm:"not null;index" json:"company_id"`
+	FullAddress string     `gorm:"type:text;not null" json:"full_address"`
+	Latitude    *float64   `gorm:"type:numeric(10,6)" json:"latitude,omitempty"`
+	Longitude   *float64   `gorm:"type:numeric(10,6)" json:"longitude,omitempty"`
+	ProvinceID  *int64     `gorm:"type:bigint;index" json:"province_id,omitempty"`
+	CityID      *int64     `gorm:"type:bigint;index" json:"city_id,omitempty"`
+	DistrictID  *int64     `gorm:"type:bigint;index" json:"district_id,omitempty"`
+	CreatedAt   time.Time  `gorm:"type:timestamp;default:now()" json:"created_at"`
+	UpdatedAt   time.Time  `gorm:"type:timestamp;default:now()" json:"updated_at"`
+	DeletedAt   *time.Time `gorm:"index" json:"deleted_at,omitempty"`
+}
+
+// TableName ensures GORM uses the existing company_addresses table
+func (CompanyAddress) TableName() string {
+	return "company_addresses"
 }

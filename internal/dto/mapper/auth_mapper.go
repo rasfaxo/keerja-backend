@@ -75,13 +75,33 @@ func ToCompanyBasic(c *company.Company) *response.CompanyBasic {
 		logoURL = *c.LogoURL
 	}
 
+	// Default verification values
+	status := "not_requested"
+	badgeGranted := false
+	npwpNumber := ""
+	nibNumber := ""
+
+	// If verification record exists, get details
+	if c.Verification != nil {
+		status = c.Verification.Status
+		badgeGranted = c.Verification.BadgeGranted
+		npwpNumber = c.Verification.NPWPNumber
+		if c.Verification.NIBNumber != nil {
+			nibNumber = *c.Verification.NIBNumber
+		}
+	}
+
 	return &response.CompanyBasic{
-		ID:          c.ID,
-		UUID:        c.UUID.String(),
-		CompanyName: c.CompanyName,
-		Slug:        c.Slug,
-		LogoURL:     logoURL,
-		IsVerified:  c.Verified,
+		ID:           c.ID,
+		UUID:         c.UUID.String(),
+		CompanyName:  c.CompanyName,
+		Slug:         c.Slug,
+		LogoURL:      logoURL,
+		IsVerified:   c.Verified,
+		Status:       status,
+		BadgeGranted: badgeGranted,
+		NPWPNumber:   npwpNumber,
+		NIBNumber:    nibNumber,
 	}
 }
 

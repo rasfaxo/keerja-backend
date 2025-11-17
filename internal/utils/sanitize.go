@@ -27,19 +27,19 @@ func SanitizeHTML(s string) string {
 	// Remove script tags
 	scriptRegex := regexp.MustCompile(`(?i)<script[^>]*>.*?</script>`)
 	s = scriptRegex.ReplaceAllString(s, "")
-	
+
 	// Remove iframe tags
 	iframeRegex := regexp.MustCompile(`(?i)<iframe[^>]*>.*?</iframe>`)
 	s = iframeRegex.ReplaceAllString(s, "")
-	
+
 	// Remove onclick, onerror, and other event handlers
 	eventRegex := regexp.MustCompile(`(?i)\son\w+\s*=\s*["'][^"']*["']`)
 	s = eventRegex.ReplaceAllString(s, "")
-	
+
 	// Remove javascript: protocol
 	jsProtocolRegex := regexp.MustCompile(`(?i)javascript:`)
 	s = jsProtocolRegex.ReplaceAllString(s, "")
-	
+
 	return strings.TrimSpace(s)
 }
 
@@ -55,16 +55,16 @@ func SanitizeHTMLPtr(s *string) *string {
 // SanitizeURL validates and sanitizes URL
 func SanitizeURL(url string) string {
 	url = strings.TrimSpace(url)
-	
+
 	// Check for valid protocols
 	if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
 		return ""
 	}
-	
+
 	// Remove javascript: protocol
 	jsProtocolRegex := regexp.MustCompile(`(?i)javascript:`)
 	url = jsProtocolRegex.ReplaceAllString(url, "")
-	
+
 	return url
 }
 
@@ -135,7 +135,7 @@ func ValidateNoSQLInjection(s string) bool {
 		"(?i)(exec.*sp_)",
 		"(?i)(';|\"--)",
 	}
-	
+
 	for _, pattern := range sqlPatterns {
 		matched, _ := regexp.MatchString(pattern, s)
 		if matched {
@@ -156,7 +156,7 @@ func ValidateNoXSS(s string) bool {
 		"(?i)onclick=",
 		"(?i)<iframe",
 	}
-	
+
 	for _, pattern := range xssPatterns {
 		matched, _ := regexp.MatchString(pattern, s)
 		if matched {

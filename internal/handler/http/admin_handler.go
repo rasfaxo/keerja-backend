@@ -20,15 +20,20 @@ func NewAdminHandler(adminJobService admin.AdminJobService) *AdminHandler {
 	return &AdminHandler{adminJobService: adminJobService}
 }
 
-// PATCH /api/v1/admin/jobs/:id/approve
-// ApproveJobRequest has optional notes
+// ApproveJob godoc
+// @Summary Approve a pending job posting
 // @Description Approve a pending job posting (admin only)
-// @Param id path int64 true "Job ID"
-// @Body job.ApproveJobRequest
-// @Response 200 JobDetailResponse
-// @Response 404 error
-// @Response 409 error
-// @Response 500 error
+// @Tags admin-jobs
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Job ID"
+// @Param request body job.ApproveJobRequest true "Approval request"
+// @Success 200 {object} utils.Response
+// @Failure 404 {object} utils.Response
+// @Failure 409 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /admin/jobs/{id}/approve [patch]
 func (h *AdminHandler) ApproveJob(c *fiber.Ctx) error {
 	ctx := c.Context()
 
@@ -70,14 +75,20 @@ func (h *AdminHandler) ApproveJob(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, "Job approved successfully", resp)
 }
 
-// PATCH /api/v1/admin/jobs/:id/reject
+// RejectJob godoc
+// @Summary Reject a pending job posting
 // @Description Reject a pending job posting (admin only)
-// @Param id path int64 true "Job ID"
-// @Body job.RejectJobRequest
-// @Response 200 JobDetailResponse
-// @Response 404 error
-// @Response 409 error
-// @Response 500 error
+// @Tags admin-jobs
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Job ID"
+// @Param request body job.RejectJobRequest true "Rejection request"
+// @Success 200 {object} utils.Response
+// @Failure 404 {object} utils.Response
+// @Failure 409 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /admin/jobs/{id}/reject [patch]
 func (h *AdminHandler) RejectJob(c *fiber.Ctx) error {
 	ctx := c.Context()
 

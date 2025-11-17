@@ -14,20 +14,30 @@ type JobResponse struct {
 	Slug            string `json:"slug"`
 
 	// Master Data
-	JobType    *JobMasterDataItem `json:"job_type,omitempty"`
-	WorkPolicy *JobMasterDataItem `json:"work_policy,omitempty"`
+	JobTitle         *JobMasterDataItem `json:"job_title,omitempty"`
+	JobType          *JobMasterDataItem `json:"job_type,omitempty"`
+	WorkPolicy       *JobMasterDataItem `json:"work_policy,omitempty"`
+	EducationLevel   *JobMasterDataItem `json:"education_level,omitempty"`
+	ExperienceLevel  *JobMasterDataItem `json:"experience_level,omitempty"`
+	GenderPreference *JobMasterDataItem `json:"gender_preference,omitempty"`
 
-	SalaryMin         *float64   `json:"salary_min,omitempty"`
-	SalaryMax         *float64   `json:"salary_max,omitempty"`
-	Currency          string     `json:"currency"`
-	Status            string     `json:"status"`
-	ViewsCount        int64      `json:"views_count"`
-	ApplicationsCount int64      `json:"applications_count"`
-	PublishedAt       *time.Time `json:"published_at,omitempty"`
-	ExpiredAt         *time.Time `json:"expired_at,omitempty"`
-	CreatedAt         time.Time  `json:"created_at"`
-	IsExpired         bool       `json:"is_expired"`
-	DaysRemaining     *int       `json:"days_remaining,omitempty"`
+	// Category/Subcategory (objects)
+	JobCategory       *JobCategoryResponse    `json:"job_category,omitempty"`
+	JobSubcategory    *JobSubcategoryResponse `json:"job_subcategory,omitempty"`
+	SalaryMin         *float64                `json:"salary_min,omitempty"`
+	SalaryMax         *float64                `json:"salary_max,omitempty"`
+	SalaryDisplay     string                  `json:"salary_display,omitempty"`
+	MinAge            *int                    `json:"min_age,omitempty"`
+	MaxAge            *int                    `json:"max_age,omitempty"`
+	Currency          string                  `json:"currency"`
+	Status            string                  `json:"status"`
+	ViewsCount        int64                   `json:"views_count"`
+	ApplicationsCount int64                   `json:"applications_count"`
+	PublishedAt       *time.Time              `json:"published_at,omitempty"`
+	ExpiredAt         *time.Time              `json:"expired_at,omitempty"`
+	CreatedAt         time.Time               `json:"created_at"`
+	IsExpired         bool                    `json:"is_expired"`
+	DaysRemaining     *int                    `json:"days_remaining,omitempty"`
 }
 
 // JobDetailResponse represents detailed job response (master data only)
@@ -44,41 +54,44 @@ type JobDetailResponse struct {
 	Slug            string `json:"slug"`
 
 	// Master Data IDs
-	JobTitleID         int64 `json:"job_title_id"`
-	JobTypeID          int64 `json:"job_type_id"`
-	WorkPolicyID       int64 `json:"work_policy_id"`
-	EducationLevelID   int64 `json:"education_level_id"`
-	ExperienceLevelID  int64 `json:"experience_level_id"`
-	GenderPreferenceID int64 `json:"gender_preference_id"`
-
-	// Master Data Details
-	JobTitle         *JobMasterDataItem `json:"job_title,omitempty"`
-	JobType          *JobMasterDataItem `json:"job_type,omitempty"`
-	WorkPolicy       *JobMasterDataItem `json:"work_policy,omitempty"`
-	EducationLevel   *JobMasterDataItem `json:"education_level,omitempty"`
-	ExperienceLevel  *JobMasterDataItem `json:"experience_level,omitempty"`
-	GenderPreference *JobMasterDataItem `json:"gender_preference,omitempty"`
-
-	Description string `json:"description"`
-
-	SalaryMin         *float64                 `json:"salary_min,omitempty"`
-	SalaryMax         *float64                 `json:"salary_max,omitempty"`
-	Currency          string                   `json:"currency"`
-	Status            string                   `json:"status"`
-	ViewsCount        int64                    `json:"views_count"`
-	ApplicationsCount int64                    `json:"applications_count"`
-	PublishedAt       *time.Time               `json:"published_at,omitempty"`
-	ExpiredAt         *time.Time               `json:"expired_at,omitempty"`
-	CreatedAt         time.Time                `json:"created_at"`
-	UpdatedAt         time.Time                `json:"updated_at"`
-	IsExpired         bool                     `json:"is_expired"`
-	DaysRemaining     *int                     `json:"days_remaining,omitempty"`
-	Skills            []JobSkillResponse       `json:"skills,omitempty"`
-	Benefits          []JobBenefitResponse     `json:"benefits,omitempty"`
-	Locations         []JobLocationResponse    `json:"locations,omitempty"`
-	JobRequirements   []JobRequirementResponse `json:"job_requirements,omitempty"`
-	HasApplied        bool                     `json:"has_applied,omitempty"`
-	IsSaved           bool                     `json:"is_saved,omitempty"`
+	JobTitle           *JobMasterDataItem       `json:"job_title,omitempty"`
+	JobType            *JobMasterDataItem       `json:"job_type,omitempty"`
+	WorkPolicy         *JobMasterDataItem       `json:"work_policy,omitempty"`
+	EducationLevel     *JobMasterDataItem       `json:"education_level,omitempty"`
+	ExperienceLevel    *JobMasterDataItem       `json:"experience_level,omitempty"`
+	GenderPreference   *JobMasterDataItem       `json:"gender_preference,omitempty"`
+	Description        string                   `json:"description"`
+	SalaryMin          *float64                 `json:"salary_min,omitempty"`
+	SalaryMax          *float64                 `json:"salary_max,omitempty"`
+	SalaryDisplay      string                   `json:"salary_display,omitempty"`
+	MinAge             *int                     `json:"min_age,omitempty"`
+	JobTitleID         *int64                   `json:"job_title_id,omitempty"`
+	JobTypeID          *int64                   `json:"job_type_id,omitempty"`
+	WorkPolicyID       *int64                   `json:"work_policy_id,omitempty"`
+	EducationLevelID   *int64                   `json:"education_level_id,omitempty"`
+	ExperienceLevelID  *int64                   `json:"experience_level_id,omitempty"`
+	GenderPreferenceID *int64                   `json:"gender_preference_id,omitempty"`
+	JobCategory        *JobCategoryResponse     `json:"job_category,omitempty"`
+	JobSubcategory     *JobSubcategoryResponse  `json:"job_subcategory,omitempty"`
+	MaxAge             *int                     `json:"max_age,omitempty"`
+	Currency           string                   `json:"currency"`
+	Status             string                   `json:"status"`
+	ViewsCount         int64                    `json:"views_count"`
+	ApplicationsCount  int64                    `json:"applications_count"`
+	PublishedAt        *time.Time               `json:"published_at,omitempty"`
+	ExpiredAt          *time.Time               `json:"expired_at,omitempty"`
+	CreatedAt          time.Time                `json:"created_at"`
+	UpdatedAt          time.Time                `json:"updated_at"`
+	IsExpired          bool                     `json:"is_expired"`
+	DaysRemaining      *int                     `json:"days_remaining,omitempty"`
+	Skills             []JobSkillResponse       `json:"skills,omitempty"`
+	Benefits           []JobBenefitResponse     `json:"benefits,omitempty"`
+	Locations          []JobLocationResponse    `json:"locations,omitempty"`
+	JobRequirements    []JobRequirementResponse `json:"job_requirements,omitempty"`
+	HasApplied         bool                     `json:"has_applied,omitempty"`
+	IsSaved            bool                     `json:"is_saved,omitempty"`
+	// Optional selected company address (when job references a company_address_id)
+	CompanyAddress *CompanyAddressResponse `json:"company_address,omitempty"`
 }
 
 // JobMasterDataItem represents a generic master data item for job details

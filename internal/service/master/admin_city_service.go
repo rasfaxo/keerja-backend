@@ -234,4 +234,3 @@ func (s *adminCityServiceImpl) mapToResponseWithProvince(city *master.City) *mas
 
 	return &response
 }
-

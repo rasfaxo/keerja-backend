@@ -34,8 +34,8 @@ func NewUserHandler(userService user.UserService) *UserHandler {
 // @Produce json
 // @Security BearerAuth
 // @Param include query string false "Include related data: all, educations, experiences, skills, certifications, languages, projects, documents, preference" example(educations,skills)
-// @Success 200 {object} utils.Response{data=response.UserResponse} "Basic profile"
-// @Success 200 {object} utils.Response{data=response.UserDetailResponse} "Full profile when include=all"
+// @Success 200 {object} utils.Response
+// @Success 200 {object} utils.Response
 // @Failure 401 {object} utils.Response
 // @Failure 500 {object} utils.Response
 // @Router /users/me [get]
@@ -53,15 +53,16 @@ func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
 	}
 
 	// Determine response based on include parameter
-	var response interface{}
+	var response any
 
-	if includeParam == "" {
+	switch includeParam {
+	case "":
 		// Default: Basic profile only (fast, minimal data)
 		response = mapper.ToUserResponse(usr)
-	} else if includeParam == "all" {
+	case "all":
 		// Include everything (full detail)
 		response = mapper.ToUserDetailResponse(usr)
-	} else {
+	default:
 		// Include specific sections (custom includes)
 		includes := strings.Split(includeParam, ",")
 		// Trim spaces from each include
@@ -173,7 +174,7 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} utils.Response{data=[]response.UserEducationResponse}
+// @Success 200 {object} utils.Response
 // @Failure 401 {object} utils.Response
 // @Failure 500 {object} utils.Response
 // @Router /users/me/educations [get]
@@ -203,7 +204,7 @@ func (h *UserHandler) GetEducations(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} utils.Response{data=[]response.UserExperienceResponse}
+// @Success 200 {object} utils.Response
 // @Failure 401 {object} utils.Response
 // @Failure 500 {object} utils.Response
 // @Router /users/me/experiences [get]
@@ -803,9 +804,9 @@ func (h *UserHandler) AddSkills(c *fiber.Ctx) error {
 	}
 
 	// Format response with IDs
-	skillsResponse := make([]map[string]interface{}, len(addedSkills))
+	skillsResponse := make([]map[string]any, len(addedSkills))
 	for i, skill := range addedSkills {
-		skillsResponse[i] = map[string]interface{}{
+		skillsResponse[i] = map[string]any{
 			"id":               skill.ID,
 			"skill_name":       skill.SkillName,
 			"skill_level":      skill.SkillLevel,
@@ -815,7 +816,7 @@ func (h *UserHandler) AddSkills(c *fiber.Ctx) error {
 
 	return utils.CreatedResponse(c,
 		fmt.Sprintf("Successfully added %d skills", len(addedSkills)),
-		map[string]interface{}{
+		map[string]any{
 			"skills": skillsResponse,
 			"total":  len(addedSkills),
 		},

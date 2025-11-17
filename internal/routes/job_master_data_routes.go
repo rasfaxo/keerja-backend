@@ -27,6 +27,14 @@ func SetupJobMasterDataRoutes(api fiber.Router, handler *http.MasterDataHandler,
 		handler.GetJobOptions,
 	)
 
+	// Phase 4: Job posting form options for mobile (public)
+	// GET /api/v1/master/job-posting-form-options
+	master.Get("/job-posting-form-options",
+		middleware.RateLimitByIP(60, 1*time.Minute),
+		authMw.OptionalAuth(),
+		handler.GetJobPostingFormOptions,
+	)
+
 	// Admin-only routes for managing job titles
 	admin := api.Group("/admin/master")
 	admin.Use(authMw.AuthRequired())

@@ -35,6 +35,14 @@ func SetupCompanyRoutes(api fiber.Router, deps *Dependencies, authMw *middleware
 		deps.CompanyBasicHandler.GetMyAddresses,
 	)
 
+	// Get my company verification status (authenticated user's company)
+	companies.Get("/me/verification-status",
+		authMw.AuthRequired(),
+		deps.CompanyBasicHandler.GetMyCompanyVerificationStatus,
+	)
+
+	// NOTE: address creation/listing/deletion require authentication and admin permission.
+
 	// Get user's followed companies
 	companies.Get("/followed",
 		authMw.AuthRequired(),
@@ -59,6 +67,11 @@ func SetupCompanyRoutes(api fiber.Router, deps *Dependencies, authMw *middleware
 	// Get company by slug (SEO-friendly)
 	companies.Get("/slug/:slug",
 		deps.CompanyBasicHandler.GetCompanyBySlug,
+	)
+
+	// Get company verification status
+	companies.Get("/:id/verification-status",
+		deps.CompanyBasicHandler.GetCompanyVerificationStatus,
 	)
 
 	// ==========================================
@@ -113,6 +126,21 @@ func SetupCompanyRoutes(api fiber.Router, deps *Dependencies, authMw *middleware
 	// ==========================================
 	protected := companies.Group("")
 	protected.Use(authMw.AuthRequired())
+
+	// Create a new company address (persisted)
+	protected.Post("/me/addresses",
+		deps.CompanyBasicHandler.CreateMyAddress,
+	)
+
+	// Update a company address (persisted)
+	protected.Put("/me/addresses/:id",
+		deps.CompanyBasicHandler.UpdateMyAddress,
+	)
+
+	// Delete a company address (soft-delete)
+	protected.Delete("/me/addresses/:id",
+		deps.CompanyBasicHandler.DeleteMyAddress,
+	)
 
 	// ------------------------------------------
 	// Basic CRUD Operations (CompanyBasicHandler)
@@ -250,10 +278,10 @@ func SetupCompanyRoutes(api fiber.Router, deps *Dependencies, authMw *middleware
 		deps.CompanyInviteHandler.CancelInvitation,
 	)
 
-	// Request company verification 
+	// Request company verification
 	protected.Post("/:id/verify",
 		middleware.APIRateLimiter(), // Rate limit verification requests
-		permMw.RequireAdmin(),	// Only company admin/owner can request 
+		permMw.RequireAdmin(),       // Only company admin/owner can request
 		deps.CompanyBasicHandler.RequestVerification,
 	)
 }

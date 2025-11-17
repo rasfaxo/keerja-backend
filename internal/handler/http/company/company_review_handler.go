@@ -7,9 +7,9 @@ import (
 	"keerja-backend/internal/dto/mapper"
 	"keerja-backend/internal/dto/request"
 	"keerja-backend/internal/dto/response"
+	"keerja-backend/internal/handler/http"
 	"keerja-backend/internal/middleware"
 	"keerja-backend/internal/utils"
-	"keerja-backend/internal/handler/http"
 
 	"github.com/gofiber/fiber/v2"
 )

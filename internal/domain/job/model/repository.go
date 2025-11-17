@@ -18,6 +18,6 @@ type Job struct {
 	ID              int64   `json:"id" gorm:"primaryKey"`
 	Title           string  `json:"title"`
 	Description     string  `json:"description"`
-	Status          string  `json:"status"`  // pending, approved, rejected
+	Status          string  `json:"status"` // pending, approved, rejected
 	RejectionReason *string `json:"rejection_reason,omitempty"`
 }

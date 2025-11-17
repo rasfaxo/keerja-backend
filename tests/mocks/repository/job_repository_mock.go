@@ -187,7 +187,7 @@ func (m *MockJobRepository) GetCompanyJobStats(ctx context.Context, companyID in
 	return args.Get(0).(*job.CompanyJobStats), args.Error(1)
 }
 
-// NOTE: methods yg dikomentari karena merujuk pada tipe yang belum didefinisikan 
+// NOTE: methods yg dikomentari karena merujuk pada tipe yang belum didefinisikan
 // yang belum ada di domain pekerjaan. Hapus komentar saat tipe-tipe ini sudah didefinisikan di domain pekerjaan.:
 // - GetPopularLocations() - requires job.LocationStats
 // - GetTopCompanies() - requires job.CompanyStats (may exist, check)

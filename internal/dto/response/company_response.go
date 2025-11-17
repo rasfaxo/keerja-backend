@@ -31,9 +31,14 @@ type CompanyResponse struct {
 	About      string     `json:"about,omitempty"`
 	Verified   bool       `json:"verified"`
 	VerifiedAt *time.Time `json:"verified_at,omitempty"`
-	IsActive   bool       `json:"is_active"`
-	CreatedAt  time.Time  `json:"created_at"`
-	UpdatedAt  time.Time  `json:"updated_at"`
+
+	// Verification Status Details
+	Status       string `json:"status,omitempty"`        // "verified", "pending", "under_review", "rejected", "not_requested"
+	BadgeGranted bool   `json:"badge_granted,omitempty"` // Whether company has verification badge
+
+	IsActive  bool      `json:"is_active"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 
 	// Stats
 	FollowersCount int64   `json:"followers_count"`
@@ -88,14 +93,22 @@ type CompanyDetailResponse struct {
 	Benefits   []string   `json:"benefits,omitempty"`
 	Verified   bool       `json:"verified"`
 	VerifiedAt *time.Time `json:"verified_at,omitempty"`
-	IsActive   bool       `json:"is_active"`
-	CreatedAt  time.Time  `json:"created_at"`
-	UpdatedAt  time.Time  `json:"updated_at"`
+
+	// Verification Status Details
+	Status       string `json:"status"`                // "verified", "pending", "under_review", "rejected", "not_requested"
+	BadgeGranted bool   `json:"badge_granted"`         // Whether company has verification badge
+	NPWPNumber   string `json:"npwp_number,omitempty"` // NPWP number if verified
+	NIBNumber    string `json:"nib_number,omitempty"`  // NIB number if provided
+
+	IsActive  bool      `json:"is_active"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 
 	// Relations
-	Profile    *CompanyProfileResponse   `json:"profile,omitempty"`
-	Industries []CompanyIndustryResponse `json:"industries,omitempty"`
-	Reviews    []CompanyReviewResponse   `json:"reviews,omitempty"`
+	Profile          *CompanyProfileResponse   `json:"profile,omitempty"`
+	Industries       []CompanyIndustryResponse `json:"industries,omitempty"`
+	CompanyAddresses []CompanyAddressResponse  `json:"company_addresses,omitempty"` // Persistent company addresses
+	Reviews          []CompanyReviewResponse   `json:"reviews,omitempty"`
 
 	// Stats
 	FollowersCount int64   `json:"followers_count"`
@@ -276,4 +289,39 @@ type CompanyAddressResponse struct {
 	AlamatLengkap string  `json:"alamat_lengkap"` // Full address text
 	Latitude      float64 `json:"latitude,omitempty"`
 	Longitude     float64 `json:"longitude,omitempty"`
+	ProvinceID    *int64  `json:"province_id,omitempty"`
+	CityID        *int64  `json:"city_id,omitempty"`
+	DistrictID    *int64  `json:"district_id,omitempty"`
+}
+
+// Extended nested location fields for address responses
+// include both the id and the resolved location object for convenience
+type CompanyAddressLocationResponse struct {
+	Province *ProvinceResponse `json:"province,omitempty"`
+	City     *CityResponse     `json:"city,omitempty"`
+	District *DistrictResponse `json:"district,omitempty"`
+}
+
+// Backwards-compatible CompanyAddressResponse now also includes nested location objects
+func (r *CompanyAddressResponse) WithLocations(prov *ProvinceResponse, city *CityResponse, dist *DistrictResponse) interface{} {
+	// Use a struct to preserve JSON field order when marshalled
+	out := struct {
+		ID            int64             `json:"id"`
+		AlamatLengkap string            `json:"alamat_lengkap"`
+		City          *CityResponse     `json:"city,omitempty"`
+		District      *DistrictResponse `json:"district,omitempty"`
+		Province      *ProvinceResponse `json:"province,omitempty"`
+		Latitude      float64           `json:"latitude,omitempty"`
+		Longitude     float64           `json:"longitude,omitempty"`
+	}{
+		ID:            r.ID,
+		AlamatLengkap: r.AlamatLengkap,
+		City:          city,
+		District:      dist,
+		Province:      prov,
+		Latitude:      r.Latitude,
+		Longitude:     r.Longitude,
+	}
+
+	return out
 }

@@ -51,10 +51,10 @@ func NewCompanyHandler(adminCompanyService admin.AdminCompanyService) *CompanyHa
 // @Param sort_by query string false "Sort by field" Enums(company_name, created_at, verified_at, updated_at)
 // @Param sort_order query string false "Sort order" Enums(asc, desc)
 // @Success 200 {object} response.AdminCompaniesListResponse
-// @Failure 400 {object} response.ErrorResponse
-// @Failure 401 {object} response.ErrorResponse
-// @Failure 403 {object} response.ErrorResponse
-// @Failure 500 {object} response.ErrorResponse
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 500 {object} utils.Response
 // @Router /api/v1/admin/companies [get]
 func (h *CompanyHandler) ListCompanies(c *fiber.Ctx) error {
 	// Parse query parameters
@@ -142,11 +142,11 @@ func (h *CompanyHandler) ListCompanies(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Param id path int true "Company ID"
 // @Success 200 {object} response.AdminCompanyDetailResponse
-// @Failure 400 {object} response.ErrorResponse
-// @Failure 401 {object} response.ErrorResponse
-// @Failure 403 {object} response.ErrorResponse
-// @Failure 404 {object} response.ErrorResponse
-// @Failure 500 {object} response.ErrorResponse
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 404 {object} utils.Response
+// @Failure 500 {object} utils.Response
 // @Router /api/v1/admin/companies/{id} [get]
 func (h *CompanyHandler) GetCompanyDetail(c *fiber.Ctx) error {
 	// Parse company ID
@@ -182,11 +182,11 @@ func (h *CompanyHandler) GetCompanyDetail(c *fiber.Ctx) error {
 // @Param id path int true "Company ID"
 // @Param request body request.AdminUpdateCompanyStatusRequest true "Status update request"
 // @Success 200 {object} response.AdminCompanyStatusUpdateResponse
-// @Failure 400 {object} response.ErrorResponse
-// @Failure 401 {object} response.ErrorResponse
-// @Failure 403 {object} response.ErrorResponse
-// @Failure 404 {object} response.ErrorResponse
-// @Failure 500 {object} response.ErrorResponse
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 404 {object} utils.Response
+// @Failure 500 {object} utils.Response
 // @Router /api/v1/admin/companies/{id}/status [patch]
 func (h *CompanyHandler) UpdateCompanyStatus(c *fiber.Ctx) error {
 	// Parse company ID
@@ -251,12 +251,12 @@ func (h *CompanyHandler) UpdateCompanyStatus(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Param id path int true "Company ID"
 // @Param request body request.AdminUpdateCompanyRequest true "Company update request"
-// @Success 200 {object} response.SuccessResponse
-// @Failure 400 {object} response.ErrorResponse
-// @Failure 401 {object} response.ErrorResponse
-// @Failure 403 {object} response.ErrorResponse
-// @Failure 404 {object} response.ErrorResponse
-// @Failure 500 {object} response.ErrorResponse
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 404 {object} utils.Response
+// @Failure 500 {object} utils.Response
 // @Router /api/v1/admin/companies/{id} [put]
 func (h *CompanyHandler) UpdateCompany(c *fiber.Ctx) error {
 	// Parse company ID
@@ -326,11 +326,11 @@ func (h *CompanyHandler) UpdateCompany(c *fiber.Ctx) error {
 // @Param force query boolean false "Force delete even with active jobs"
 // @Param request body request.AdminDeleteCompanyRequest true "Delete request with reason"
 // @Success 200 {object} response.AdminCompanyDeleteResponse
-// @Failure 400 {object} response.ErrorResponse
-// @Failure 401 {object} response.ErrorResponse
-// @Failure 403 {object} response.ErrorResponse
-// @Failure 404 {object} response.ErrorResponse
-// @Failure 500 {object} response.ErrorResponse
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 404 {object} utils.Response
+// @Failure 500 {object} utils.Response
 // @Router /api/v1/admin/companies/{id} [delete]
 func (h *CompanyHandler) DeleteCompany(c *fiber.Ctx) error {
 	// Parse company ID

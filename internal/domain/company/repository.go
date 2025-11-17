@@ -106,6 +106,13 @@ type CompanyRepository interface {
 
 	// Full data with relationships
 	GetFullCompanyProfile(ctx context.Context, companyID int64) (*Company, error)
+
+	// Company address operations
+	CreateCompanyAddress(ctx context.Context, address *CompanyAddress) error
+	GetCompanyAddressesByCompanyID(ctx context.Context, companyID int64, includeDeleted bool) ([]CompanyAddress, error)
+	FindCompanyAddressByID(ctx context.Context, id int64) (*CompanyAddress, error)
+	SoftDeleteCompanyAddress(ctx context.Context, id int64) error
+	UpdateCompanyAddress(ctx context.Context, address *CompanyAddress) error
 }
 
 // CompanyFilter represents filters for querying companies

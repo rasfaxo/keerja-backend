@@ -75,8 +75,8 @@ func (s *jobService) CreateJob(ctx context.Context, req *job.CreateJobRequest) (
 		employerUserID = employerUser.ID
 	}
 
-	// Validate master data IDs (all required now)
-	if err := s.ValidateJobMasterDataIDs(ctx, &req.JobTitleID, &req.JobTypeID, &req.WorkPolicyID,
+	// Validate master data IDs (job title is optional now)
+	if err := s.ValidateJobMasterDataIDs(ctx, req.JobTitleID, &req.JobTypeID, &req.WorkPolicyID,
 		&req.EducationLevelID, &req.ExperienceLevelID, &req.GenderPreferenceID); err != nil {
 		return nil, fmt.Errorf("master data validation failed: %w", err)
 	}
@@ -87,39 +87,109 @@ func (s *jobService) CreateJob(ctx context.Context, req *job.CreateJobRequest) (
 		return nil, fmt.Errorf("invalid company_id: company with ID %d not found", req.CompanyID)
 	}
 
-	// Get job title to generate slug
-	jobTitle, err := s.jobTitleRepo.FindByID(ctx, req.JobTitleID)
-	if err != nil || jobTitle == nil {
-		return nil, fmt.Errorf("invalid job_title_id: %d", req.JobTitleID)
+	// Validate company_address_id ownership if provided (address must belong to the company)
+	if req.CompanyAddressID != nil && *req.CompanyAddressID > 0 {
+		addr, err := s.companyRepo.FindCompanyAddressByID(ctx, *req.CompanyAddressID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to validate company_address_id: %w", err)
+		}
+		if addr == nil {
+			return nil, fmt.Errorf("invalid company_address_id: %d", *req.CompanyAddressID)
+		}
+		if addr.CompanyID != req.CompanyID {
+			return nil, fmt.Errorf("company_address_id (%d) does not belong to company (%d)", *req.CompanyAddressID, req.CompanyID)
+		}
 	}
 
-	// Generate unique slug from job title
-	slug := utils.GenerateUniqueSlug(jobTitle.Name, func(slugToCheck string) bool {
+	// Determine job title (may come from job_title_id or from subcategory)
+	var title string
+	if req.JobTitleID != nil && *req.JobTitleID > 0 {
+		jobTitle, err := s.jobTitleRepo.FindByID(ctx, *req.JobTitleID)
+		if err != nil || jobTitle == nil {
+			return nil, fmt.Errorf("invalid job_title_id: %d", *req.JobTitleID)
+		}
+		title = jobTitle.Name
+	} else if req.JobSubcategoryID > 0 {
+		// Derive title from subcategory if job title is not provided
+		sub, err := s.jobRepo.FindSubcategoryByID(ctx, req.JobSubcategoryID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to resolve job_subcategory_id for title: %w", err)
+		}
+		if sub == nil {
+			return nil, fmt.Errorf("invalid job_subcategory_id: %d", req.JobSubcategoryID)
+		}
+		title = sub.Name
+	}
+
+	if title == "" {
+		return nil, fmt.Errorf("either job_title_id or job_subcategory_id must be provided to determine job title")
+	}
+
+	// Generate unique slug from determined title
+	slug := utils.GenerateUniqueSlug(title, func(slugToCheck string) bool {
 		existingJob, _ := s.jobRepo.FindBySlug(ctx, slugToCheck)
 		return existingJob != nil
 	})
 
+	// Validate and resolve category/subcategory if provided
+	if req.JobSubcategoryID > 0 {
+		sub, err := s.jobRepo.FindSubcategoryByID(ctx, req.JobSubcategoryID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to validate job_subcategory_id: %w", err)
+		}
+		if sub == nil {
+			return nil, fmt.Errorf("invalid job_subcategory_id: %d", req.JobSubcategoryID)
+		}
+		if !sub.IsActive {
+			return nil, fmt.Errorf("invalid job_subcategory_id: %d is inactive", req.JobSubcategoryID)
+		}
+		// If category provided, ensure it matches subcategory's category
+		if req.JobCategoryID > 0 && sub.CategoryID != req.JobCategoryID {
+			return nil, fmt.Errorf("job_subcategory_id %d does not belong to category %d", req.JobSubcategoryID, req.JobCategoryID)
+		}
+		// If category not provided, derive it from subcategory
+		if req.JobCategoryID == 0 {
+			req.JobCategoryID = sub.CategoryID
+		}
+	}
+
 	// Create job entity - master data only
+	jobStatus := "draft"
+	if !company.Verified {
+		jobStatus = "in_review"
+	}
 	newJob := &job.Job{
 		CompanyID:      req.CompanyID,
 		EmployerUserID: &employerUserID, // Use resolved employer_user ID (not user_id)
-		Title:          jobTitle.Name,   // Use job title name
+		Title:          title,           // Use determined title
 		Slug:           slug,
 
 		// Master Data FK fields (All required)
-		JobTitleID:         &req.JobTitleID,
+		JobTitleID:         req.JobTitleID,
 		JobTypeID:          &req.JobTypeID,
 		WorkPolicyID:       &req.WorkPolicyID,
 		EducationLevelID:   &req.EducationLevelID,
 		ExperienceLevelID:  &req.ExperienceLevelID,
 		GenderPreferenceID: &req.GenderPreferenceID,
 
-		Description: req.Description,
-		SalaryMin:   req.SalaryMin,
-		SalaryMax:   req.SalaryMax,
-		Currency:    "IDR", // Default currency
-		TotalHires:  1,     // Default total hires
-		Status:      "draft",
+		Description:      req.Description,
+		SalaryMin:        req.SalaryMin,
+		SalaryMax:        req.SalaryMax,
+		SalaryDisplay:    req.SalaryDisplay,
+		MinAge:           req.MinAge,
+		MaxAge:           req.MaxAge,
+		CompanyAddressID: req.CompanyAddressID,
+		Currency:         "IDR", // Default currency
+		TotalHires:       1,     // Default total hires
+		Status:           jobStatus,
+	}
+
+	// Attach category/subcategory if provided
+	if req.JobCategoryID > 0 {
+		newJob.CategoryID = &req.JobCategoryID
+	}
+	if req.JobSubcategoryID > 0 {
+		newJob.JobSubcategoryID = &req.JobSubcategoryID
 	}
 
 	// Validate job before creation
@@ -214,6 +284,31 @@ func (s *jobService) UpdateJob(ctx context.Context, jobID int64, req *job.Update
 	if req.SalaryMax != nil {
 		existingJob.SalaryMax = req.SalaryMax
 	}
+	if req.SalaryDisplay != nil {
+		existingJob.SalaryDisplay = *req.SalaryDisplay
+	}
+	if req.MinAge != nil {
+		existingJob.MinAge = req.MinAge
+	}
+	if req.MaxAge != nil {
+		existingJob.MaxAge = req.MaxAge
+	}
+	if req.CompanyAddressID != nil {
+		// Validate ownership: provided address must belong to the job's company
+		if req.CompanyAddressID != nil && *req.CompanyAddressID > 0 {
+			addr, err := s.companyRepo.FindCompanyAddressByID(ctx, *req.CompanyAddressID)
+			if err != nil {
+				return nil, fmt.Errorf("failed to validate company_address_id: %w", err)
+			}
+			if addr == nil {
+				return nil, fmt.Errorf("invalid company_address_id: %d", *req.CompanyAddressID)
+			}
+			if addr.CompanyID != existingJob.CompanyID {
+				return nil, fmt.Errorf("company_address_id (%d) does not belong to job's company (%d)", *req.CompanyAddressID, existingJob.CompanyID)
+			}
+		}
+		existingJob.CompanyAddressID = req.CompanyAddressID
+	}
 	// Use dedicated endpoints for status changes
 
 	// Validate updated job
@@ -224,6 +319,13 @@ func (s *jobService) UpdateJob(ctx context.Context, jobID int64, req *job.Update
 	// Update job
 	if err := s.jobRepo.Update(ctx, existingJob); err != nil {
 		return nil, fmt.Errorf("failed to update job: %w", err)
+	}
+
+	// If skills provided, replace existing skills with new set
+	if req.Skills != nil && len(req.Skills) > 0 {
+		if err := s.BulkAddSkills(ctx, jobID, req.Skills); err != nil {
+			return nil, fmt.Errorf("failed to update job skills: %w", err)
+		}
 	}
 
 	// Reload job with relationships
@@ -293,12 +395,44 @@ func (s *jobService) SaveJobDraft(ctx context.Context, companyID int64, req *job
 	}
 
 	// 7. Map request fields to job entity
-	// Note: JobTitleID maps to Title (we'll need to fetch the title text)
-	// For now, we'll use a placeholder title
-	jobDraft.Title = fmt.Sprintf("Draft Job %d", time.Now().Unix()) // Temporary, should fetch from JobTitle master data
+	// Determine title: prefer JobTitle master data, otherwise derive from subcategory, else use placeholder
+	if req.JobTitleID != nil && *req.JobTitleID > 0 {
+		if jt, err := s.jobTitleRepo.FindByID(ctx, *req.JobTitleID); err == nil && jt != nil {
+			jobDraft.Title = jt.Name
+		} else {
+			jobDraft.Title = fmt.Sprintf("Draft Job %d", time.Now().Unix())
+		}
+	} else if req.JobSubcategoryID > 0 {
+		if sub, err := s.jobRepo.FindSubcategoryByID(ctx, req.JobSubcategoryID); err == nil && sub != nil {
+			jobDraft.Title = sub.Name
+		} else {
+			jobDraft.Title = fmt.Sprintf("Draft Job %d", time.Now().Unix())
+		}
+	} else {
+		jobDraft.Title = fmt.Sprintf("Draft Job %d", time.Now().Unix())
+	}
 	jobDraft.CategoryID = &req.JobCategoryID
+
+	// Validate/attach subcategory if provided
+	if req.JobSubcategoryID > 0 {
+		sub, err := s.jobRepo.FindSubcategoryByID(ctx, req.JobSubcategoryID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to validate job_subcategory_id: %w", err)
+		}
+		if sub == nil {
+			return nil, fmt.Errorf("invalid job_subcategory_id: %d", req.JobSubcategoryID)
+		}
+		if !sub.IsActive {
+			return nil, fmt.Errorf("invalid job_subcategory_id: %d is inactive", req.JobSubcategoryID)
+		}
+		// Ensure subcategory belongs to provided category
+		if sub.CategoryID != req.JobCategoryID {
+			return nil, fmt.Errorf("job_subcategory_id %d does not belong to category %d", req.JobSubcategoryID, req.JobCategoryID)
+		}
+		jobDraft.JobSubcategoryID = &req.JobSubcategoryID
+	}
 	jobDraft.Description = sanitizedDesc
-	jobDraft.EmploymentType = fmt.Sprintf("Type%d", req.JobTypeID) // Temporary, should map from JobType master data
+	jobDraft.JobTypeID = &req.JobTypeID
 
 	// Map salary
 	salaryMin := float64(req.GajiMin)
@@ -307,18 +441,16 @@ func (s *jobService) SaveJobDraft(ctx context.Context, companyID int64, req *job
 	jobDraft.SalaryMax = &salaryMax
 	jobDraft.Currency = "IDR"
 
-	// Map age range to job requirements if provided
+	// Map age range to new MinAge/MaxAge fields
 	if req.UmurMin != nil {
-		ageMin := int16(*req.UmurMin)
-		jobDraft.ExperienceMin = &ageMin // Note: Using ExperienceMin temporarily for age
+		jobDraft.MinAge = req.UmurMin
 	}
 	if req.UmurMaks != nil {
-		ageMax := int16(*req.UmurMaks)
-		jobDraft.ExperienceMax = &ageMax // Note: Using ExperienceMax temporarily for age
+		jobDraft.MaxAge = req.UmurMaks
 	}
 
-	// Map education level (PendidikanID) - temporary mapping
-	jobDraft.EducationLevel = fmt.Sprintf("Level%d", req.PendidikanID)
+	// Set EducationLevelID FK instead of deprecated EducationLevel
+	jobDraft.EducationLevelID = &req.PendidikanID
 
 	// Map work policy (onsite/remote/hybrid) to RemoteOption
 	if req.WorkPolicyID == 2 { // Assuming 2 = remote
@@ -414,7 +546,7 @@ func (s *jobService) GetCompanyJobs(ctx context.Context, companyID int64, filter
 // ===== Job Status Management =====
 
 // PublishJob publishes a job (Phase 7: changes status from draft to pending_review)
-func (s *jobService) PublishJob(ctx context.Context, jobID int64, employerUserID int64) error {
+func (s *jobService) PublishJob(ctx context.Context, jobID int64, employerUserID int64, expiredAt *time.Time) error {
 	// Check ownership
 	if err := s.CheckJobOwnership(ctx, jobID, employerUserID); err != nil {
 		return err
@@ -437,14 +569,10 @@ func (s *jobService) PublishJob(ctx context.Context, jobID int64, employerUserID
 		return fmt.Errorf("cannot publish job with status: %s", j.Status)
 	}
 
-	// Phase 7: Check if company is verified
+	// Determine publish flow based on company verification and job status
 	company, err := s.companyRepo.FindByID(ctx, j.CompanyID)
 	if err != nil {
 		return fmt.Errorf("company not found: %w", err)
-	}
-
-	if !company.Verified {
-		return errors.New("company is not verified yet")
 	}
 
 	// Validate job before publishing
@@ -452,10 +580,21 @@ func (s *jobService) PublishJob(ctx context.Context, jobID int64, employerUserID
 		return fmt.Errorf("cannot publish job: %w", err)
 	}
 
-	// Phase 7: Change status from draft to pending_review (not directly to published)
-	if err := s.jobRepo.UpdateStatus(ctx, jobID, "pending_review"); err != nil {
-		return fmt.Errorf("failed to update job status: %w", err)
+	// If the job is a draft OR the company is verified, publish immediately.
+	// Otherwise, move the job to pending_review so admins can approve.
+	if company.Verified || j.Status == "draft" {
+		now := time.Now()
+		if err := s.jobRepo.UpdateStatusWithExpiry(ctx, jobID, "published", &now, expiredAt); err != nil {
+			return fmt.Errorf("failed to publish job: %w", err)
+		}
+		return nil
 	}
+
+	// Company not verified and job not draft -> submit for admin review
+	if err := s.jobRepo.UpdateStatus(ctx, jobID, "pending_review"); err != nil {
+		return fmt.Errorf("failed to update job status to pending_review: %w", err)
+	}
+	return nil
 
 	// TODO Phase 7: Trigger admin notification
 	// This should trigger an event/notification to admin system
@@ -474,6 +613,17 @@ func (s *jobService) UnpublishJob(ctx context.Context, jobID int64, employerUser
 
 	// Update status to draft
 	return s.jobRepo.UpdateStatus(ctx, jobID, "draft")
+}
+
+// InactivateJob marks a job as inactive (hidden from job seekers but not deleted)
+func (s *jobService) InactivateJob(ctx context.Context, jobID int64, employerUserID int64) error {
+	// Check ownership
+	if err := s.CheckJobOwnership(ctx, jobID, employerUserID); err != nil {
+		return err
+	}
+
+	// Update status to inactive
+	return s.jobRepo.UpdateStatus(ctx, jobID, "inactive")
 }
 
 // CloseJob closes a job (no longer accepting applications)
@@ -818,20 +968,20 @@ func (s *jobService) calculateExperienceScore(j *job.Job, userProfile *user.User
 // calculateEducationScore calculates education match score
 func (s *jobService) calculateEducationScore(j *job.Job, userProfile *user.User) float64 {
 	// If no education requirement, perfect match
-	if j.EducationLevel == "" {
+	if j.EducationLevelID == nil || j.EducationLevelM == nil {
 		return 1.0
 	}
 
-	// Education level hierarchy
-	educationLevels := map[string]int{
-		"High School": 1,
-		"Associate":   2,
-		"Bachelor":    3,
-		"Master":      4,
-		"Doctorate":   5,
+	// Education level hierarchy mapping by ID
+	educationLevelHierarchy := map[int64]int{
+		1: 1, // SMA/High School
+		2: 2, // D1/D2/D3 Associate
+		3: 3, // S1 Bachelor
+		4: 4, // S2 Master
+		5: 5, // S3 Doctorate
 	}
 
-	requiredLevel := educationLevels[j.EducationLevel]
+	requiredLevel := educationLevelHierarchy[*j.EducationLevelID]
 
 	// Find user's highest education level
 	highestLevel := 0
@@ -853,7 +1003,16 @@ func (s *jobService) calculateEducationScore(j *job.Job, userProfile *user.User)
 			}
 		}
 
-		if level, ok := educationLevels[degreeLevel]; ok {
+		// Map degree level to hierarchy number
+		levelMapping := map[string]int{
+			"High School": 1,
+			"Associate":   2,
+			"Bachelor":    3,
+			"Master":      4,
+			"Doctorate":   5,
+		}
+
+		if level, ok := levelMapping[degreeLevel]; ok {
 			if level > highestLevel {
 				highestLevel = level
 			}
@@ -1235,7 +1394,21 @@ func (s *jobService) BulkAddSkills(ctx context.Context, jobID int64, skills []jo
 		})
 	}
 
-	return s.jobRepo.BulkCreateSkills(ctx, jobSkills)
+	// Replace existing skills: delete then create
+	if err := s.jobRepo.BulkDeleteSkills(ctx, jobID); err != nil {
+		return fmt.Errorf("failed to delete existing skills: %w", err)
+	}
+
+	if len(jobSkills) == 0 {
+		// nothing to create
+		return nil
+	}
+
+	if err := s.jobRepo.BulkCreateSkills(ctx, jobSkills); err != nil {
+		return fmt.Errorf("failed to create job skills: %w", err)
+	}
+
+	return nil
 }
 
 // AddRequirement adds a requirement to a job
@@ -1844,6 +2017,33 @@ func (s *jobService) CheckJobStatus(ctx context.Context, jobID int64) (string, e
 	}
 
 	return j.Status, nil
+}
+
+// GetJobsGroupedByStatus returns jobs grouped by status for a user (for mobile tab UI)
+func (s *jobService) GetJobsGroupedByStatus(ctx context.Context, userID int64) (map[string][]job.Job, error) {
+	jobs, _, err := s.jobRepo.ListByEmployer(ctx, userID, job.JobFilter{}, 1, 1000) // adjust limit as needed
+	if err != nil {
+		return nil, err
+	}
+	grouped := map[string][]job.Job{
+		"active":    {},
+		"inactive":  {},
+		"draft":     {},
+		"in_review": {},
+	}
+	for _, j := range jobs {
+		switch j.Status {
+		case "active":
+			grouped["active"] = append(grouped["active"], j)
+		case "inactive":
+			grouped["inactive"] = append(grouped["inactive"], j)
+		case "draft":
+			grouped["draft"] = append(grouped["draft"], j)
+		case "in_review":
+			grouped["in_review"] = append(grouped["in_review"], j)
+		}
+	}
+	return grouped, nil
 }
 
 // ===========================================

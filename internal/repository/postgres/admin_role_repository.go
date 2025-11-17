@@ -257,7 +257,7 @@ func (r *adminRoleRepository) GetRoleStats(ctx context.Context) (*admin.AdminRol
 		Order("count DESC").
 		Limit(1).
 		Scan(&mostUsed).Error; err == nil && mostUsed.RoleID > 0 {
-		
+
 		// Get the role details
 		var role admin.AdminRole
 		if err := r.db.WithContext(ctx).First(&role, mostUsed.RoleID).Error; err == nil {

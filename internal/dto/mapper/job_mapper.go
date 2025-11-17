@@ -28,6 +28,9 @@ func ToJobResponse(j *job.Job) *response.JobResponse {
 		Slug:              j.Slug,
 		SalaryMin:         j.SalaryMin,
 		SalaryMax:         j.SalaryMax,
+		SalaryDisplay:     j.SalaryDisplay,
+		MinAge:            j.MinAge,
+		MaxAge:            j.MaxAge,
 		Currency:          j.Currency,
 		Status:            j.Status,
 		ViewsCount:        j.ViewsCount,
@@ -55,6 +58,55 @@ func ToJobResponse(j *job.Job) *response.JobResponse {
 			Code:        j.WorkPolicy.Code,
 			Name:        j.WorkPolicy.Name,
 			Description: "",
+		}
+	}
+
+	// Include additional master-data if available
+	if j.JobTitle != nil {
+		resp.JobTitle = &response.JobMasterDataItem{
+			ID:   j.JobTitle.ID,
+			Code: j.JobTitle.NormalizedName,
+			Name: j.JobTitle.Name,
+		}
+	}
+
+	if j.EducationLevelM != nil {
+		resp.EducationLevel = &response.JobMasterDataItem{
+			ID:   j.EducationLevelM.ID,
+			Code: j.EducationLevelM.Code,
+			Name: j.EducationLevelM.Name,
+		}
+	}
+
+	if j.ExperienceLevelM != nil {
+		resp.ExperienceLevel = &response.JobMasterDataItem{
+			ID:   j.ExperienceLevelM.ID,
+			Code: j.ExperienceLevelM.Code,
+			Name: j.ExperienceLevelM.Name,
+		}
+	}
+
+	if j.GenderPreference != nil {
+		resp.GenderPreference = &response.JobMasterDataItem{
+			ID:   j.GenderPreference.ID,
+			Code: j.GenderPreference.Code,
+			Name: j.GenderPreference.Name,
+		}
+	}
+
+	// Map category/subcategory objects
+	if j.Category != nil {
+		resp.JobCategory = &response.JobCategoryResponse{
+			ID:           j.Category.ID,
+			CategoryName: j.Category.Name,
+			Description:  j.Category.Description,
+		}
+	}
+	if j.JobSubcategory != nil {
+		resp.JobSubcategory = &response.JobSubcategoryResponse{
+			ID:              j.JobSubcategory.ID,
+			SubcategoryName: j.JobSubcategory.Name,
+			Description:     j.JobSubcategory.Description,
 		}
 	}
 
@@ -104,18 +156,13 @@ func ToJobDetailResponse(j *job.Job) *response.JobDetailResponse {
 		Title:          j.Title,
 		Slug:           j.Slug,
 
-		// Master Data IDs (required, dereference pointers)
-		JobTitleID:         derefInt64(j.JobTitleID),
-		JobTypeID:          derefInt64(j.JobTypeID),
-		WorkPolicyID:       derefInt64(j.WorkPolicyID),
-		EducationLevelID:   derefInt64(j.EducationLevelID),
-		ExperienceLevelID:  derefInt64(j.ExperienceLevelID),
-		GenderPreferenceID: derefInt64(j.GenderPreferenceID),
-
 		Description: j.Description,
 
 		SalaryMin:         j.SalaryMin,
 		SalaryMax:         j.SalaryMax,
+		SalaryDisplay:     j.SalaryDisplay,
+		MinAge:            j.MinAge,
+		MaxAge:            j.MaxAge,
 		Currency:          j.Currency,
 		Status:            j.Status,
 		ViewsCount:        j.ViewsCount,
@@ -127,6 +174,8 @@ func ToJobDetailResponse(j *job.Job) *response.JobDetailResponse {
 		IsExpired:         j.IsExpired(),
 		DaysRemaining:     daysRemaining,
 	}
+
+	// Category/Subcategory objects are populated below (no numeric IDs in response)
 
 	// Map Job Master Data Details
 	if j.HasJobMasterDataRelations() {
@@ -189,6 +238,22 @@ func ToJobDetailResponse(j *job.Job) *response.JobDetailResponse {
 				Description: "",
 			}
 		}
+
+		// Map category/subcategory objects
+		if j.Category != nil {
+			resp.JobCategory = &response.JobCategoryResponse{
+				ID:           j.Category.ID,
+				CategoryName: j.Category.Name,
+				Description:  j.Category.Description,
+			}
+		}
+		if j.JobSubcategory != nil {
+			resp.JobSubcategory = &response.JobSubcategoryResponse{
+				ID:              j.JobSubcategory.ID,
+				SubcategoryName: j.JobSubcategory.Name,
+				Description:     j.JobSubcategory.Description,
+			}
+		}
 	}
 
 	// Map skills
@@ -223,6 +288,23 @@ func ToJobDetailResponse(j *job.Job) *response.JobDetailResponse {
 		}
 	}
 
+	// If job has a preloaded CompanyAddress relation (job-local type), map it
+	if j.CompanyAddress != nil {
+		resp.CompanyAddress = &response.CompanyAddressResponse{
+			ID:            j.CompanyAddress.ID,
+			AlamatLengkap: j.CompanyAddress.FullAddress,
+		}
+		if j.CompanyAddress.Latitude != nil {
+			resp.CompanyAddress.Latitude = *j.CompanyAddress.Latitude
+		}
+		if j.CompanyAddress.Longitude != nil {
+			resp.CompanyAddress.Longitude = *j.CompanyAddress.Longitude
+		}
+		resp.CompanyAddress.ProvinceID = j.CompanyAddress.ProvinceID
+		resp.CompanyAddress.CityID = j.CompanyAddress.CityID
+		resp.CompanyAddress.DistrictID = j.CompanyAddress.DistrictID
+	}
+
 	return resp
 }
 
@@ -235,7 +317,7 @@ func derefInt64(ptr *int64) int64 {
 }
 
 // ToJobDetailResponseWithCompany maps Job entity with company info to JobDetailResponse DTO
-func ToJobDetailResponseWithCompany(j *job.Job, comp *company.Company) *response.JobDetailResponse {
+func ToJobDetailResponseWithCompany(j *job.Job, comp *company.Company, addr *company.CompanyAddress) *response.JobDetailResponse {
 	if j == nil {
 		return nil
 	}
@@ -253,6 +335,23 @@ func ToJobDetailResponseWithCompany(j *job.Job, comp *company.Company) *response
 		}
 		resp.CompanyVerified = comp.IsVerified()
 		resp.CompanySlug = comp.Slug
+	}
+
+	// Add selected company address if provided
+	if addr != nil {
+		resp.CompanyAddress = &response.CompanyAddressResponse{
+			ID:            addr.ID,
+			AlamatLengkap: addr.FullAddress,
+		}
+		if addr.Latitude != nil {
+			resp.CompanyAddress.Latitude = *addr.Latitude
+		}
+		if addr.Longitude != nil {
+			resp.CompanyAddress.Longitude = *addr.Longitude
+		}
+		resp.CompanyAddress.ProvinceID = addr.ProvinceID
+		resp.CompanyAddress.CityID = addr.CityID
+		resp.CompanyAddress.DistrictID = addr.DistrictID
 	}
 
 	return resp

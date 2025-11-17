@@ -34,6 +34,8 @@ func (r *jobRepository) FindByID(ctx context.Context, id int64) (*job.Job, error
 	var j job.Job
 	err := r.db.WithContext(ctx).
 		Preload("Category").
+		Preload("CompanyAddress").
+		Preload("JobSubcategory").
 		Preload("Locations").
 		Preload("Benefits").
 		Preload("Skills.Skill").
@@ -60,6 +62,8 @@ func (r *jobRepository) FindByUUID(ctx context.Context, uuid string) (*job.Job, 
 	var j job.Job
 	err := r.db.WithContext(ctx).
 		Preload("Category").
+		Preload("CompanyAddress").
+		Preload("JobSubcategory").
 		Preload("Locations").
 		Preload("Benefits").
 		Preload("Skills.Skill").
@@ -87,6 +91,8 @@ func (r *jobRepository) FindBySlug(ctx context.Context, slug string) (*job.Job, 
 	var j job.Job
 	err := r.db.WithContext(ctx).
 		Preload("Category").
+		Preload("CompanyAddress").
+		Preload("JobSubcategory").
 		Preload("Locations").
 		Preload("Benefits").
 		Preload("Skills.Skill").
@@ -121,7 +127,7 @@ func (r *jobRepository) Update(ctx context.Context, j *job.Job) error {
 		"Location", "City", "Province", "RemoteOption",
 
 		// Salary fields
-		"SalaryMin", "SalaryMax", "Currency",
+		"SalaryMin", "SalaryMax", "SalaryDisplay", "MinAge", "MaxAge", "Currency",
 
 		// Experience and Education (legacy fields)
 		"ExperienceMin", "ExperienceMax", "EducationLevel",
@@ -177,6 +183,8 @@ func (r *jobRepository) List(ctx context.Context, filter job.JobFilter, page, li
 	// Execute query
 	err := query.
 		Preload("Category").
+		Preload("CompanyAddress").
+		Preload("JobSubcategory").
 		Preload("Locations").
 		Preload("Benefits").
 		Preload("Skills.Skill").
@@ -221,6 +229,14 @@ func (r *jobRepository) ListByEmployer(ctx context.Context, employerUserID int64
 
 	err := query.
 		Preload("Category").
+		Preload("CompanyAddress").
+		Preload("JobSubcategory").
+		Preload("JobTitle").
+		Preload("JobType").
+		Preload("WorkPolicy").
+		Preload("EducationLevelM").
+		Preload("ExperienceLevelM").
+		Preload("GenderPreference").
 		Preload("Locations").
 		Preload("Benefits").
 		Preload("Skills.Skill").
@@ -238,17 +254,16 @@ func (r *jobRepository) SearchJobs(ctx context.Context, filter job.JobSearchFilt
 
 	query := r.db.WithContext(ctx).Model(&job.Job{})
 
-	// Keyword search in title and description
+	// Keyword search on title and description
 	if filter.Keyword != "" {
-		searchPattern := "%" + strings.ToLower(filter.Keyword) + "%"
-		query = query.Where("LOWER(title) LIKE ? OR LOWER(description) LIKE ?", searchPattern, searchPattern)
+		kw := "%" + strings.ToLower(filter.Keyword) + "%"
+		query = query.Where("LOWER(title) LIKE ? OR LOWER(description) LIKE ?", kw, kw)
 	}
 
-	// Location search
+	// Location (match city, province or location text)
 	if filter.Location != "" {
-		locationPattern := "%" + strings.ToLower(filter.Location) + "%"
-		query = query.Where("LOWER(city) LIKE ? OR LOWER(province) LIKE ? OR LOWER(location) LIKE ?",
-			locationPattern, locationPattern, locationPattern)
+		loc := "%" + strings.ToLower(filter.Location) + "%"
+		query = query.Where("LOWER(city) = ? OR LOWER(province) = ? OR LOWER(location) LIKE ?", strings.ToLower(filter.Location), strings.ToLower(filter.Location), loc)
 	}
 
 	// Category filter
@@ -303,7 +318,7 @@ func (r *jobRepository) SearchJobs(ctx context.Context, filter job.JobSearchFilt
 		query = query.Where("published_at >= ?", daysAgo)
 	}
 
-	// Skills filter
+	// Skills filter (ensure jobs contain all requested skills)
 	if len(filter.SkillIDs) > 0 {
 		query = query.Joins("INNER JOIN job_skills ON job_skills.job_id = jobs.id").
 			Where("job_skills.skill_id IN ?", filter.SkillIDs).
@@ -311,7 +326,7 @@ func (r *jobRepository) SearchJobs(ctx context.Context, filter job.JobSearchFilt
 			Having("COUNT(DISTINCT job_skills.skill_id) = ?", len(filter.SkillIDs))
 	}
 
-	// Only active jobs
+	// Only active (published and not expired)
 	query = query.Where("status = ?", "published").
 		Where("(expired_at IS NULL OR expired_at > ?)", time.Now())
 
@@ -320,7 +335,7 @@ func (r *jobRepository) SearchJobs(ctx context.Context, filter job.JobSearchFilt
 		return nil, 0, err
 	}
 
-	// Pagination
+	// Pagination defaults
 	if page < 1 {
 		page = 1
 	}
@@ -329,8 +344,11 @@ func (r *jobRepository) SearchJobs(ctx context.Context, filter job.JobSearchFilt
 	}
 	offset := (page - 1) * limit
 
+	// Execute final query
 	err := query.
 		Preload("Category").
+		Preload("CompanyAddress").
+		Preload("JobSubcategory").
 		Preload("Locations").
 		Preload("Benefits").
 		Preload("Skills.Skill").
@@ -342,9 +360,51 @@ func (r *jobRepository) SearchJobs(ctx context.Context, filter job.JobSearchFilt
 	return jobs, total, err
 }
 
+// GetJobsGroupedByStatus returns jobs grouped by status for a user
+func (r *jobRepository) GetJobsGroupedByStatus(ctx context.Context, userID int64) (map[string][]job.Job, error) {
+	var jobs []job.Job
+	err := r.db.WithContext(ctx).
+		Model(&job.Job{}).
+		Joins("JOIN employer_users eu ON eu.id = jobs.employer_user_id").
+		Where("eu.user_id = ?", userID).
+		Find(&jobs).Error
+	if err != nil {
+		return nil, err
+	}
+	grouped := map[string][]job.Job{
+		"active":    {},
+		"inactive":  {},
+		"draft":     {},
+		"in_review": {},
+	}
+	for _, j := range jobs {
+		switch j.Status {
+		case "published":
+			// published jobs are considered 'active' in the mobile UI
+			grouped["active"] = append(grouped["active"], j)
+		case "inactive":
+			grouped["inactive"] = append(grouped["inactive"], j)
+		case "draft":
+			grouped["draft"] = append(grouped["draft"], j)
+		case "in_review", "pending_review":
+			// both in_review and pending_review map to the in_review tab
+			grouped["in_review"] = append(grouped["in_review"], j)
+		}
+	}
+	return grouped, nil
+}
+
 // ===========================================
 // JOB STATUS OPERATIONS
 // ===========================================
+
+// UpdateStatusByCompany updates all jobs for a company from one status to another
+func (r *jobRepository) UpdateStatusByCompany(ctx context.Context, companyID int64, fromStatus, toStatus string) error {
+	return r.db.WithContext(ctx).
+		Model(&job.Job{}).
+		Where("company_id = ? AND status = ?", companyID, fromStatus).
+		Update("status", toStatus).Error
+}
 
 // UpdateStatus updates job status
 func (r *jobRepository) UpdateStatus(ctx context.Context, id int64, status string) error {
@@ -352,6 +412,23 @@ func (r *jobRepository) UpdateStatus(ctx context.Context, id int64, status strin
 		Model(&job.Job{}).
 		Where("id = ?", id).
 		Update("status", status).Error
+}
+
+// UpdateStatusWithExpiry updates job status and optionally sets published_at and expired_at
+func (r *jobRepository) UpdateStatusWithExpiry(ctx context.Context, id int64, status string, publishedAt *time.Time, expiredAt *time.Time) error {
+	updates := map[string]interface{}{}
+	updates["status"] = status
+	if publishedAt != nil {
+		updates["published_at"] = *publishedAt
+	}
+	if expiredAt != nil {
+		updates["expired_at"] = *expiredAt
+	}
+
+	return r.db.WithContext(ctx).
+		Model(&job.Job{}).
+		Where("id = ?", id).
+		Updates(updates).Error
 }
 
 // PublishJob publishes a job
@@ -511,6 +588,7 @@ func (r *jobRepository) GetRecommendedJobs(ctx context.Context, userID int64, li
 		Order("published_at DESC").
 		Limit(limit).
 		Preload("Category").
+		Preload("CompanyAddress").
 		Preload("Locations").
 		Preload("Benefits").
 		Find(&jobs).Error
@@ -541,6 +619,7 @@ func (r *jobRepository) GetSimilarJobs(ctx context.Context, jobID int64, limit i
 		Order("published_at DESC").
 		Limit(limit).
 		Preload("Category").
+		Preload("CompanyAddress").
 		Preload("Locations").
 		Find(&jobs).Error
 
@@ -755,6 +834,8 @@ func (r *jobRepository) GetCategoryTree(ctx context.Context) ([]job.JobCategory,
 	var categories []job.JobCategory
 	err := r.db.WithContext(ctx).
 		Preload("Children").
+		Preload("Subcategories").
+		Preload("Children.Subcategories").
 		Where("parent_id IS NULL AND is_active = ?", true).
 		Order("name ASC").
 		Find(&categories).Error
@@ -1131,6 +1212,7 @@ func (r *jobRepository) GetTrendingJobs(ctx context.Context, limit int) ([]job.J
 		Order("views_count DESC, applications_count DESC").
 		Limit(limit).
 		Preload("Category").
+		Preload("CompanyAddress").
 		Preload("Locations").
 		Preload("Benefits").
 		Find(&jobs).Error
@@ -1193,6 +1275,7 @@ func (r *jobRepository) FindByIDWithMasterData(ctx context.Context, id int64) (*
 
 	err := r.db.WithContext(ctx).
 		Preload("Category").
+		Preload("CompanyAddress").
 		Preload("Skills.Skill").
 		Preload("Benefits").
 		Preload("Locations").

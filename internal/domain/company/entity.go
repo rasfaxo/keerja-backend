@@ -527,6 +527,31 @@ func (ci *CompanyInvitation) IsPending() bool {
 	return ci.Status == "pending"
 }
 
+// CompanyAddress represents a persistent address record for a company
+// These addresses are kept as separate records so users can reuse previously
+// created addresses even if they are soft-deleted from active lists.
+type CompanyAddress struct {
+	ID          int64      `gorm:"primaryKey;autoIncrement" json:"id"`
+	CompanyID   int64      `gorm:"not null;index" json:"company_id"`
+	FullAddress string     `gorm:"type:text;not null" json:"full_address"`
+	Latitude    *float64   `gorm:"type:numeric(10,6)" json:"latitude,omitempty"`
+	Longitude   *float64   `gorm:"type:numeric(10,6)" json:"longitude,omitempty"`
+	ProvinceID  *int64     `gorm:"type:bigint;index" json:"province_id,omitempty"`
+	CityID      *int64     `gorm:"type:bigint;index" json:"city_id,omitempty"`
+	DistrictID  *int64     `gorm:"type:bigint;index" json:"district_id,omitempty"`
+	CreatedAt   time.Time  `gorm:"type:timestamp;default:now()" json:"created_at"`
+	UpdatedAt   time.Time  `gorm:"type:timestamp;default:now()" json:"updated_at"`
+	DeletedAt   *time.Time `gorm:"index" json:"deleted_at,omitempty"`
+
+	// Relationships
+	Company *Company `gorm:"foreignKey:CompanyID" json:"-"`
+}
+
+// TableName specifies the table name for CompanyAddress
+func (CompanyAddress) TableName() string {
+	return "company_addresses"
+}
+
 // IsAccepted checks if invitation is accepted
 func (ci *CompanyInvitation) IsAccepted() bool {
 	return ci.Status == "accepted"

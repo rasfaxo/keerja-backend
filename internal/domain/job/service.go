@@ -21,8 +21,9 @@ type JobService interface {
 	SaveJobDraft(ctx context.Context, companyID int64, req *SaveJobDraftRequest) (*Job, error)
 
 	// Job status management
-	PublishJob(ctx context.Context, jobID int64, employerUserID int64) error
+	PublishJob(ctx context.Context, jobID int64, employerUserID int64, expiredAt *time.Time) error
 	UnpublishJob(ctx context.Context, jobID int64, employerUserID int64) error
+	InactivateJob(ctx context.Context, jobID int64, employerUserID int64) error
 	CloseJob(ctx context.Context, jobID int64, employerUserID int64) error
 	ReopenJob(ctx context.Context, jobID int64, employerUserID int64) error
 	SuspendJob(ctx context.Context, jobID int64, employerUserID int64, reason string) error
@@ -121,16 +122,28 @@ type CreateJobRequest struct {
 	Description    string `json:"description" validate:"required"`
 
 	// Master Data IDs (All Required)
-	JobTitleID         int64 `json:"job_title_id" validate:"required"`
-	JobTypeID          int64 `json:"job_type_id" validate:"required"`
-	WorkPolicyID       int64 `json:"work_policy_id" validate:"required"`
-	EducationLevelID   int64 `json:"education_level_id" validate:"required"`
-	ExperienceLevelID  int64 `json:"experience_level_id" validate:"required"`
-	GenderPreferenceID int64 `json:"gender_preference_id" validate:"required"`
+	JobTitleID         *int64 `json:"job_title_id" validate:"omitempty"`
+	JobTypeID          int64  `json:"job_type_id" validate:"required"`
+	WorkPolicyID       int64  `json:"work_policy_id" validate:"required"`
+	EducationLevelID   int64  `json:"education_level_id" validate:"required"`
+	ExperienceLevelID  int64  `json:"experience_level_id" validate:"required"`
+	GenderPreferenceID int64  `json:"gender_preference_id" validate:"required"`
 
 	// Salary Range (Required)
-	SalaryMin *float64 `json:"salary_min" validate:"required,min=0"`
-	SalaryMax *float64 `json:"salary_max" validate:"required,min=0"`
+	SalaryMin     *float64 `json:"salary_min" validate:"required,min=0"`
+	SalaryMax     *float64 `json:"salary_max" validate:"required,min=0"`
+	SalaryDisplay string   `json:"salary_display" validate:"required,oneof='range' 'min_only' 'max_only' 'negotiable' 'competitive' 'hidden'"`
+
+	// Category/Subcategory
+	JobCategoryID    int64 `json:"job_category_id" validate:"omitempty,min=1"`
+	JobSubcategoryID int64 `json:"job_subcategory_id" validate:"omitempty,min=1"`
+
+	// Age Requirements (Optional)
+	MinAge *int `json:"min_age" validate:"omitempty,min=17,max=65"`
+	MaxAge *int `json:"max_age" validate:"omitempty,min=17,max=65,gtefield=MinAge"`
+
+	// Company Address (Optional - for work location)
+	CompanyAddressID *int64 `json:"company_address_id" validate:"omitempty,min=1"`
 
 	// Skills (Required)
 	Skills []AddSkillRequest `json:"skills" validate:"required,min=1"`
@@ -151,28 +164,34 @@ type UpdateJobRequest struct {
 	GenderPreferenceID *int64 `json:"gender_preference_id,omitempty"`
 
 	// Other Fields (Optional)
-	Description string   `json:"description,omitempty"`
-	SalaryMin   *float64 `json:"salary_min,omitempty"`
-	SalaryMax   *float64 `json:"salary_max,omitempty"`
+	Description      string            `json:"description,omitempty"`
+	SalaryMin        *float64          `json:"salary_min,omitempty"`
+	SalaryMax        *float64          `json:"salary_max,omitempty"`
+	SalaryDisplay    *string           `json:"salary_display,omitempty" validate:"omitempty,oneof='range' 'min_only' 'max_only' 'negotiable' 'competitive' 'hidden'"`
+	MinAge           *int              `json:"min_age,omitempty" validate:"omitempty,min=17,max=65"`
+	MaxAge           *int              `json:"max_age,omitempty" validate:"omitempty,min=17,max=65,gtefield=MinAge"`
+	CompanyAddressID *int64            `json:"company_address_id,omitempty" validate:"omitempty,min=1"`
+	Skills           []AddSkillRequest `json:"skills,omitempty"`
 }
 
 // SaveJobDraftRequest represents request to save job draft (Phase 6)
 type SaveJobDraftRequest struct {
-	DraftID          *int64  `json:"draft_id"`          // Optional: for updating existing draft
-	JobTitleID       int64   `json:"job_title_id"`      // Master data: job title ID
-	JobCategoryID    int64   `json:"job_category_id"`   // Master data: job category ID
-	JobTypeID        int64   `json:"job_type_id"`       // Master data: job type ID (full-time, part-time, etc.)
-	WorkPolicyID     int64   `json:"work_policy_id"`    // Master data: work policy ID (onsite, remote, hybrid)
-	GajiMin          int     `json:"gaji_min"`          // Minimum salary
-	GajiMaks         int     `json:"gaji_maks"`         // Maximum salary
-	AdaBonus         bool    `json:"ada_bonus"`         // Has bonus?
-	GenderPreference string  `json:"gender_preference"` // Gender preference
-	UmurMin          *int    `json:"umur_min"`          // Minimum age (nullable)
-	UmurMaks         *int    `json:"umur_maks"`         // Maximum age (nullable)
-	SkillIDs         []int64 `json:"skill_ids"`         // Array of skill IDs
-	PendidikanID     int64   `json:"pendidikan_id"`     // Master data: education level ID
-	PengalamanID     int64   `json:"pengalaman_id"`     // Master data: experience level ID
-	Deskripsi        string  `json:"deskripsi"`         // Job description (will be sanitized for XSS)
+	DraftID          *int64  `json:"draft_id"`           // Optional: for updating existing draft
+	JobTitleID       *int64  `json:"job_title_id"`       // Master data: job title ID
+	JobCategoryID    int64   `json:"job_category_id"`    // Master data: job category ID
+	JobSubcategoryID int64   `json:"job_subcategory_id"` // Master data: job subcategory ID (optional)
+	JobTypeID        int64   `json:"job_type_id"`        // Master data: job type ID (full-time, part-time, etc.)
+	WorkPolicyID     int64   `json:"work_policy_id"`     // Master data: work policy ID (onsite, remote, hybrid)
+	GajiMin          int     `json:"gaji_min"`           // Minimum salary
+	GajiMaks         int     `json:"gaji_maks"`          // Maximum salary
+	AdaBonus         bool    `json:"ada_bonus"`          // Has bonus?
+	GenderPreference string  `json:"gender_preference"`  // Gender preference
+	UmurMin          *int    `json:"umur_min"`           // Minimum age (nullable)
+	UmurMaks         *int    `json:"umur_maks"`          // Maximum age (nullable)
+	SkillIDs         []int64 `json:"skill_ids"`          // Array of skill IDs
+	PendidikanID     int64   `json:"pendidikan_id"`      // Master data: education level ID
+	PengalamanID     int64   `json:"pengalaman_id"`      // Master data: experience level ID
+	Deskripsi        string  `json:"deskripsi"`          // Job description (will be sanitized for XSS)
 }
 
 // ApproveJobRequest represents request to approve a job (admin only)

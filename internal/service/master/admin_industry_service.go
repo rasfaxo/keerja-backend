@@ -236,4 +236,3 @@ func (s *adminIndustryServiceImpl) invalidateCache() {
 	// Also invalidate pattern-based keys (search, etc.)
 	// This is a simplified version - in production you might want to track all cache keys
 }
-

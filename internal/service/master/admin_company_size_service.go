@@ -208,4 +208,3 @@ func (s *adminCompanySizeServiceImpl) getMaxEmployeesPointer(size *master.Compan
 	result := int(size.MaxEmployees.Int32)
 	return &result
 }
-

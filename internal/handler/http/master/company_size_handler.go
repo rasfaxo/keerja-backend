@@ -29,7 +29,7 @@ func NewCompanySizeHandler(service master.CompanySizeService) *CompanySizeHandle
 // @Accept json
 // @Produce json
 // @Param active query boolean false "Filter by active status (true/false)"
-// @Success 200 {object} utils.Response{data=[]master.CompanySizeResponse}
+// @Success 200 {object} utils.Response
 // @Failure 400 {object} utils.Response
 // @Failure 500 {object} utils.Response
 // @Router /api/v1/meta/company-sizes [get]
@@ -65,7 +65,7 @@ func (h *CompanySizeHandler) GetAllCompanySizes(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Company Size ID"
-// @Success 200 {object} utils.Response{data=master.CompanySizeResponse}
+// @Success 200 {object} utils.Response
 // @Failure 400 {object} utils.Response
 // @Failure 404 {object} utils.Response
 // @Failure 500 {object} utils.Response

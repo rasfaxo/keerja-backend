@@ -3,12 +3,12 @@ package companyhandler
 import (
 	"strconv"
 
+	"github.com/gofiber/fiber/v2"
 	"keerja-backend/internal/domain/company"
 	"keerja-backend/internal/dto/mapper"
 	"keerja-backend/internal/dto/response"
-	"keerja-backend/internal/utils"
 	"keerja-backend/internal/handler/http"
-	"github.com/gofiber/fiber/v2"
+	"keerja-backend/internal/utils"
 )
 
 // CompanyStatsHandler handles company statistics and special queries

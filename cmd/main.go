@@ -1,5 +1,25 @@
 package main
 
+// @title Keerja Backend API
+// @version 1.0
+// @description Job platform backend API with authentication, job management, applications, companies, and push notifications
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.email support@keerja.com
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @host localhost:3000
+// @BasePath /
+// @schemes http https
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token
+
 import (
 	"fmt"
 	"log"
@@ -12,9 +32,9 @@ import (
 	"keerja-backend/internal/config"
 	"keerja-backend/internal/handler/http"
 	"keerja-backend/internal/handler/http/admin"
+	companyhandler "keerja-backend/internal/handler/http/company"
+	userhandler "keerja-backend/internal/handler/http/jobseeker"
 	"keerja-backend/internal/handler/http/master"
-	"keerja-backend/internal/handler/http/company"
-	"keerja-backend/internal/handler/http/jobseeker"
 	"keerja-backend/internal/jobs"
 	"keerja-backend/internal/middleware"
 	"keerja-backend/internal/repository/postgres"
@@ -190,6 +210,7 @@ func main() {
 		industryService,
 		companySizeService,
 		districtService,
+		jobRepo,
 	)
 
 	jobService := service.NewJobService(
@@ -230,7 +251,7 @@ func main() {
 
 	// Initialize job & application handlers
 	appLogger.Info("Initializing job & application handlers...")
-	jobHandler := http.NewJobHandler(jobService, companyService)
+	jobHandler := http.NewJobHandler(jobService, companyService, jobOptionsService, skillsMasterService)
 	applicationHandler := http.NewApplicationHandler(applicationService)
 
 	// Initialize admin handlers
@@ -269,7 +290,7 @@ func main() {
 	locationHandler := master.NewLocationHandler(provinceService, cityService, districtService)
 
 	// Initialize job master data handler (job titles & options)
-	masterDataHandler := http.NewMasterDataHandler(jobTitleService, jobOptionsService)
+	masterDataHandler := http.NewMasterDataHandler(jobTitleService, jobOptionsService, jobService, companyService, skillsMasterService)
 
 	masterDataHandlers := &routes.MasterDataHandlers{
 		IndustryHandler:    industryHandler,
@@ -333,9 +354,9 @@ func main() {
 		AdminAuthMiddleware: adminAuthMw,
 
 		// Job & Application handlers
-		JobHandler:         jobHandler,
-		ApplicationHandler: applicationHandler,
-		AdminHandler:       adminHandler,
+		JobHandler:             jobHandler,
+		ApplicationHandler:     applicationHandler,
+		AdminHandler:           adminHandler,
 		AdminMasterDataHandler: adminMasterDataHandler,
 
 		// Company handlers (split by domain)

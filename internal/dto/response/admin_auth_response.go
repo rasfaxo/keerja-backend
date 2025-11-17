@@ -4,20 +4,20 @@ import "time"
 
 // AdminAuthResponse represents admin authentication response
 type AdminAuthResponse struct {
-	AdminID         int64              `json:"admin_id"`
-	UUID            string             `json:"uuid"`
-	FullName        string             `json:"full_name"`
-	Email           string             `json:"email"`
-	Phone           string             `json:"phone,omitempty"`
-	Status          string             `json:"status"`
-	ProfileImageURL string             `json:"profile_image_url,omitempty"`
-	Role            *AdminRoleInfo     `json:"role,omitempty"`
-	AccessToken     string             `json:"access_token"`
-	RefreshToken    string             `json:"refresh_token,omitempty"`
-	TokenType       string             `json:"token_type"`
-	ExpiresIn       int64              `json:"expires_in"` // seconds
-	LastLogin       *time.Time         `json:"last_login,omitempty"`
-	CreatedAt       time.Time          `json:"created_at"`
+	AdminID         int64          `json:"admin_id"`
+	UUID            string         `json:"uuid"`
+	FullName        string         `json:"full_name"`
+	Email           string         `json:"email"`
+	Phone           string         `json:"phone,omitempty"`
+	Status          string         `json:"status"`
+	ProfileImageURL string         `json:"profile_image_url,omitempty"`
+	Role            *AdminRoleInfo `json:"role,omitempty"`
+	AccessToken     string         `json:"access_token"`
+	RefreshToken    string         `json:"refresh_token,omitempty"`
+	TokenType       string         `json:"token_type"`
+	ExpiresIn       int64          `json:"expires_in"` // seconds
+	LastLogin       *time.Time     `json:"last_login,omitempty"`
+	CreatedAt       time.Time      `json:"created_at"`
 }
 
 // AdminRoleInfo represents role information in auth response

@@ -6,11 +6,11 @@ import (
 
 // Response represents a standard API response
 type Response struct {
-	Success bool        `json:"success"`
-	Message string      `json:"message,omitempty"`
-	Data    any `json:"data,omitempty"`
-	Meta    any `json:"meta,omitempty"`
-	Errors  any `json:"errors,omitempty"`
+	Success bool   `json:"success"`
+	Message string `json:"message,omitempty"`
+	Data    any    `json:"data,omitempty"`
+	Meta    any    `json:"meta,omitempty"`
+	Errors  any    `json:"errors,omitempty"`
 }
 
 func SuccessResponse(c *fiber.Ctx, message string, data any) error {

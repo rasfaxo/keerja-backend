@@ -237,4 +237,3 @@ func (s *adminDistrictServiceImpl) mapToResponseWithFullLocation(district *maste
 
 	return &response
 }
-
