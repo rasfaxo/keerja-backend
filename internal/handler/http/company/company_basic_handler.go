@@ -445,13 +445,13 @@ func (h *CompanyBasicHandler) CreateCompany(c *fiber.Ctx) error {
 				lon = *a.Longitude
 			}
 			resp.CompanyAddresses[i] = response.CompanyAddressResponse{
-				ID:            a.ID,
-				AlamatLengkap: a.FullAddress,
-				Latitude:      lat,
-				Longitude:     lon,
-				ProvinceID:    a.ProvinceID,
-				CityID:        a.CityID,
-				DistrictID:    a.DistrictID,
+				ID:          a.ID,
+				FullAddress: a.FullAddress,
+				Latitude:    lat,
+				Longitude:   lon,
+				ProvinceID:  a.ProvinceID,
+				CityID:      a.CityID,
+				DistrictID:  a.DistrictID,
 			}
 		}
 	}
@@ -1040,13 +1040,13 @@ func (h *CompanyBasicHandler) GetMyCompanies(c *fiber.Ctx) error {
 					lon = *a.Longitude
 				}
 				detail.CompanyAddresses[i] = response.CompanyAddressResponse{
-					ID:            a.ID,
-					AlamatLengkap: a.FullAddress,
-					Latitude:      lat,
-					Longitude:     lon,
-					ProvinceID:    a.ProvinceID,
-					CityID:        a.CityID,
-					DistrictID:    a.DistrictID,
+					ID:          a.ID,
+					FullAddress: a.FullAddress,
+					Latitude:    lat,
+					Longitude:   lon,
+					ProvinceID:  a.ProvinceID,
+					CityID:      a.CityID,
+					DistrictID:  a.DistrictID,
 				}
 			}
 		}
@@ -1108,8 +1108,8 @@ func (h *CompanyBasicHandler) GetMyAddresses(c *fiber.Ctx) error {
 	responses := make([]interface{}, 0, len(addrs))
 	for _, a := range addrs {
 		addrResp := response.CompanyAddressResponse{
-			ID:            a.ID,
-			AlamatLengkap: a.FullAddress,
+			ID:          a.ID,
+			FullAddress: a.FullAddress,
 		}
 		if a.Latitude != nil {
 			addrResp.Latitude = *a.Latitude
@@ -1154,7 +1154,7 @@ func (h *CompanyBasicHandler) GetMyAddresses(c *fiber.Ctx) error {
 			}
 		}
 
-		// Append combined object (includes ids and nested objects)
+		// Append combined object (includes nested objects)
 		responses = append(responses, addrResp.WithLocations(provResp, cityResp, distResp))
 	}
 
@@ -1283,8 +1283,8 @@ func (h *CompanyBasicHandler) CreateMyAddress(c *fiber.Ctx) error {
 
 	// Build response
 	resp := response.CompanyAddressResponse{
-		ID:            addr.ID,
-		AlamatLengkap: addr.FullAddress,
+		ID:          addr.ID,
+		FullAddress: addr.FullAddress,
 	}
 	if addr.Latitude != nil {
 		resp.Latitude = *addr.Latitude
@@ -1382,8 +1382,8 @@ func (h *CompanyBasicHandler) UpdateMyAddress(c *fiber.Ctx) error {
 
 	// Build response
 	resp := response.CompanyAddressResponse{
-		ID:            updated.ID,
-		AlamatLengkap: updated.FullAddress,
+		ID:          updated.ID,
+		FullAddress: updated.FullAddress,
 	}
 	if updated.Latitude != nil {
 		resp.Latitude = *updated.Latitude

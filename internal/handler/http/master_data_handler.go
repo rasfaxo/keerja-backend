@@ -212,8 +212,8 @@ func (h *MasterDataHandler) GetJobPostingFormOptions(c *fiber.Ctx) error {
 			if err == nil && len(addrs) > 0 {
 				for _, a := range addrs {
 					addr := map[string]interface{}{
-						"id":             a.ID,
-						"alamat_lengkap": a.FullAddress,
+						"id":           a.ID,
+						"full_address": a.FullAddress,
 					}
 					if a.Latitude != nil {
 						addr["latitude"] = *a.Latitude
