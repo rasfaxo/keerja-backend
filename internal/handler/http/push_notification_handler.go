@@ -105,7 +105,7 @@ func (h *PushNotificationHandler) SendPushToUser(c *fiber.Ctx) error {
 	senderID := middleware.GetUserID(c)
 
 	// Parse user ID from URL
-	targetUserID, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	targetUserID, err := utils.ParseIDParam(c, "id")
 	if err != nil {
 		return utils.BadRequestResponse(c, "Invalid user ID")
 	}

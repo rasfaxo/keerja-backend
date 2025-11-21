@@ -291,8 +291,8 @@ func ToJobDetailResponse(j *job.Job) *response.JobDetailResponse {
 	// If job has a preloaded CompanyAddress relation (job-local type), map it
 	if j.CompanyAddress != nil {
 		resp.CompanyAddress = &response.CompanyAddressResponse{
-			ID:            j.CompanyAddress.ID,
-			AlamatLengkap: j.CompanyAddress.FullAddress,
+			ID:          j.CompanyAddress.ID,
+			FullAddress: j.CompanyAddress.FullAddress,
 		}
 		if j.CompanyAddress.Latitude != nil {
 			resp.CompanyAddress.Latitude = *j.CompanyAddress.Latitude
@@ -340,8 +340,8 @@ func ToJobDetailResponseWithCompany(j *job.Job, comp *company.Company, addr *com
 	// Add selected company address if provided
 	if addr != nil {
 		resp.CompanyAddress = &response.CompanyAddressResponse{
-			ID:            addr.ID,
-			AlamatLengkap: addr.FullAddress,
+			ID:          addr.ID,
+			FullAddress: addr.FullAddress,
 		}
 		if addr.Latitude != nil {
 			resp.CompanyAddress.Latitude = *addr.Latitude

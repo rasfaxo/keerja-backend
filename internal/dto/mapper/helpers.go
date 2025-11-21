@@ -69,3 +69,16 @@ func PtrToBool(b *bool) bool {
 func Float64ToString(f float64) string {
 	return fmt.Sprintf("%.2f", f)
 }
+
+// MapEntities maps a slice of entities to a slice of responses using
+// the provided mapping function. If the mapping function returns nil
+// for an item, that item is skipped.
+func MapEntities[T any, R any](items []T, fn func(*T) *R) []R {
+	out := make([]R, 0, len(items))
+	for i := range items {
+		if r := fn(&items[i]); r != nil {
+			out = append(out, *r)
+		}
+	}
+	return out
+}

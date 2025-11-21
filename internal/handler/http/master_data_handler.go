@@ -212,8 +212,8 @@ func (h *MasterDataHandler) GetJobPostingFormOptions(c *fiber.Ctx) error {
 			if err == nil && len(addrs) > 0 {
 				for _, a := range addrs {
 					addr := map[string]interface{}{
-						"id":             a.ID,
-						"alamat_lengkap": a.FullAddress,
+						"id":           a.ID,
+						"full_address": a.FullAddress,
 					}
 					if a.Latitude != nil {
 						addr["latitude"] = *a.Latitude
@@ -332,7 +332,7 @@ func (h *MasterDataHandler) CreateJobTitle(c *fiber.Ctx) error {
 // @Router /api/v1/admin/master/job-titles/{id} [put]
 func (h *MasterDataHandler) UpdateJobTitle(c *fiber.Ctx) error {
 	// Parse ID
-	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	id, err := utils.ParseIDParam(c, "id")
 	if err != nil {
 		return utils.BadRequestResponse(c, "Invalid job title ID")
 	}
@@ -374,7 +374,7 @@ func (h *MasterDataHandler) UpdateJobTitle(c *fiber.Ctx) error {
 // @Router /api/v1/admin/master/job-titles/{id} [delete]
 func (h *MasterDataHandler) DeleteJobTitle(c *fiber.Ctx) error {
 	// Parse ID
-	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	id, err := utils.ParseIDParam(c, "id")
 	if err != nil {
 		return utils.BadRequestResponse(c, "Invalid job title ID")
 	}
@@ -407,7 +407,7 @@ func (h *MasterDataHandler) DeleteJobTitle(c *fiber.Ctx) error {
 // @Router /api/v1/admin/master/job-titles/{id} [get]
 func (h *MasterDataHandler) GetJobTitleByID(c *fiber.Ctx) error {
 	// Parse ID
-	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	id, err := utils.ParseIDParam(c, "id")
 	if err != nil {
 		return utils.BadRequestResponse(c, "Invalid job title ID")
 	}

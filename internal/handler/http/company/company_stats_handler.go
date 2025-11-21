@@ -3,12 +3,13 @@ package companyhandler
 import (
 	"strconv"
 
-	"github.com/gofiber/fiber/v2"
 	"keerja-backend/internal/domain/company"
 	"keerja-backend/internal/dto/mapper"
 	"keerja-backend/internal/dto/response"
 	"keerja-backend/internal/handler/http"
 	"keerja-backend/internal/utils"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 // CompanyStatsHandler handles company statistics and special queries
@@ -43,13 +44,9 @@ func (h *CompanyStatsHandler) GetVerifiedCompanies(c *fiber.Ctx) error {
 		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
 	}
 
-	respList := make([]response.CompanyResponse, 0, len(companies))
-	for _, comp := range companies {
-		cr := mapper.ToCompanyResponse(&comp)
-		if cr != nil {
-			respList = append(respList, *cr)
-		}
-	}
+	respList := mapper.MapEntities[company.Company, response.CompanyResponse](companies, func(comp *company.Company) *response.CompanyResponse {
+		return mapper.ToCompanyResponse(comp)
+	})
 	meta := utils.GetPaginationMeta(page, limit, total)
 	payload := response.CompanyListResponse{Companies: respList}
 	return utils.SuccessResponseWithMeta(c, http.MsgFetchedSuccess, payload, meta)
@@ -76,13 +73,9 @@ func (h *CompanyStatsHandler) GetTopRatedCompanies(c *fiber.Ctx) error {
 		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
 	}
 
-	respList := make([]response.CompanyResponse, 0, len(companies))
-	for _, comp := range companies {
-		cr := mapper.ToCompanyResponse(&comp)
-		if cr != nil {
-			respList = append(respList, *cr)
-		}
-	}
+	respList := mapper.MapEntities[company.Company, response.CompanyResponse](companies, func(comp *company.Company) *response.CompanyResponse {
+		return mapper.ToCompanyResponse(comp)
+	})
 	payload := response.CompanyListResponse{Companies: respList}
 	return utils.SuccessResponse(c, http.MsgFetchedSuccess, payload)
 }

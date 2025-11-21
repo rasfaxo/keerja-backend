@@ -2,14 +2,13 @@ package userhandler
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"keerja-backend/internal/domain/user"
 	"keerja-backend/internal/dto/mapper"
 	"keerja-backend/internal/dto/request"
-	"keerja-backend/internal/dto/response"
 	"keerja-backend/internal/handler/http"
+	"keerja-backend/internal/helpers"
 	"keerja-backend/internal/middleware"
 	"keerja-backend/internal/utils"
 
@@ -105,34 +104,13 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 	}
 
 	// Sanitize text input fields
-	if req.FullName != nil {
-		sanitized := utils.SanitizeString(*req.FullName)
-		req.FullName = &sanitized
-	}
-	if req.Headline != nil {
-		sanitized := utils.SanitizeString(*req.Headline)
-		req.Headline = &sanitized
-	}
-	if req.Bio != nil {
-		sanitized := utils.SanitizeString(*req.Bio)
-		req.Bio = &sanitized
-	}
-	if req.LocationCity != nil {
-		sanitized := utils.SanitizeString(*req.LocationCity)
-		req.LocationCity = &sanitized
-	}
-	if req.LocationCountry != nil {
-		sanitized := utils.SanitizeString(*req.LocationCountry)
-		req.LocationCountry = &sanitized
-	}
-	if req.DesiredPosition != nil {
-		sanitized := utils.SanitizeString(*req.DesiredPosition)
-		req.DesiredPosition = &sanitized
-	}
-	if req.IndustryInterest != nil {
-		sanitized := utils.SanitizeString(*req.IndustryInterest)
-		req.IndustryInterest = &sanitized
-	}
+	req.FullName = utils.SanitizePtr(req.FullName)
+	req.Headline = utils.SanitizePtr(req.Headline)
+	req.Bio = utils.SanitizePtr(req.Bio)
+	req.LocationCity = utils.SanitizePtr(req.LocationCity)
+	req.LocationCountry = utils.SanitizePtr(req.LocationCountry)
+	req.DesiredPosition = utils.SanitizePtr(req.DesiredPosition)
+	req.IndustryInterest = utils.SanitizePtr(req.IndustryInterest)
 
 	// Convert to domain request
 	domainReq := &user.UpdateProfileRequest{
@@ -179,21 +157,12 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 // @Failure 500 {object} utils.Response
 // @Router /users/me/educations [get]
 func (h *UserHandler) GetEducations(c *fiber.Ctx) error {
-	ctx := c.Context()
-	userID := middleware.GetUserID(c)
-
-	usr, err := h.userService.GetProfile(ctx, userID)
+	usr, err := helpers.GetProfile(c, h.userService)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, http.ErrFailedOperation, err.Error())
 	}
 
-	educations := make([]response.UserEducationResponse, 0, len(usr.Educations))
-	for _, edu := range usr.Educations {
-		if mapped := mapper.ToUserEducationResponse(&edu); mapped != nil {
-			educations = append(educations, *mapped)
-		}
-	}
-
+	educations := mapper.MapEntities(usr.Educations, mapper.ToUserEducationResponse)
 	return utils.SuccessResponse(c, http.MsgOperationSuccess, educations)
 }
 
@@ -209,21 +178,12 @@ func (h *UserHandler) GetEducations(c *fiber.Ctx) error {
 // @Failure 500 {object} utils.Response
 // @Router /users/me/experiences [get]
 func (h *UserHandler) GetExperiences(c *fiber.Ctx) error {
-	ctx := c.Context()
-	userID := middleware.GetUserID(c)
-
-	usr, err := h.userService.GetProfile(ctx, userID)
+	usr, err := helpers.GetProfile(c, h.userService)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, http.ErrFailedOperation, err.Error())
 	}
 
-	experiences := make([]response.UserExperienceResponse, 0, len(usr.Experiences))
-	for _, exp := range usr.Experiences {
-		if mapped := mapper.ToUserExperienceResponse(&exp); mapped != nil {
-			experiences = append(experiences, *mapped)
-		}
-	}
-
+	experiences := mapper.MapEntities(usr.Experiences, mapper.ToUserExperienceResponse)
 	return utils.SuccessResponse(c, http.MsgOperationSuccess, experiences)
 }
 
@@ -239,21 +199,12 @@ func (h *UserHandler) GetExperiences(c *fiber.Ctx) error {
 // @Failure 500 {object} utils.Response
 // @Router /users/me/skills [get]
 func (h *UserHandler) GetSkills(c *fiber.Ctx) error {
-	ctx := c.Context()
-	userID := middleware.GetUserID(c)
-
-	usr, err := h.userService.GetProfile(ctx, userID)
+	usr, err := helpers.GetProfile(c, h.userService)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, http.ErrFailedOperation, err.Error())
 	}
 
-	skills := make([]response.UserSkillResponse, 0, len(usr.Skills))
-	for _, skill := range usr.Skills {
-		if mapped := mapper.ToUserSkillResponse(&skill); mapped != nil {
-			skills = append(skills, *mapped)
-		}
-	}
-
+	skills := mapper.MapEntities(usr.Skills, mapper.ToUserSkillResponse)
 	return utils.SuccessResponse(c, http.MsgOperationSuccess, skills)
 }
 
@@ -269,21 +220,12 @@ func (h *UserHandler) GetSkills(c *fiber.Ctx) error {
 // @Failure 500 {object} utils.Response
 // @Router /users/me/certifications [get]
 func (h *UserHandler) GetCertifications(c *fiber.Ctx) error {
-	ctx := c.Context()
-	userID := middleware.GetUserID(c)
-
-	usr, err := h.userService.GetProfile(ctx, userID)
+	usr, err := helpers.GetProfile(c, h.userService)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, http.ErrFailedOperation, err.Error())
 	}
 
-	certifications := make([]response.UserCertificationResponse, 0, len(usr.Certifications))
-	for _, cert := range usr.Certifications {
-		if mapped := mapper.ToUserCertificationResponse(&cert); mapped != nil {
-			certifications = append(certifications, *mapped)
-		}
-	}
-
+	certifications := mapper.MapEntities(usr.Certifications, mapper.ToUserCertificationResponse)
 	return utils.SuccessResponse(c, http.MsgOperationSuccess, certifications)
 }
 
@@ -299,21 +241,12 @@ func (h *UserHandler) GetCertifications(c *fiber.Ctx) error {
 // @Failure 500 {object} utils.Response
 // @Router /users/me/languages [get]
 func (h *UserHandler) GetLanguages(c *fiber.Ctx) error {
-	ctx := c.Context()
-	userID := middleware.GetUserID(c)
-
-	usr, err := h.userService.GetProfile(ctx, userID)
+	usr, err := helpers.GetProfile(c, h.userService)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, http.ErrFailedOperation, err.Error())
 	}
 
-	languages := make([]response.UserLanguageResponse, 0, len(usr.Languages))
-	for _, lang := range usr.Languages {
-		if mapped := mapper.ToUserLanguageResponse(&lang); mapped != nil {
-			languages = append(languages, *mapped)
-		}
-	}
-
+	languages := mapper.MapEntities(usr.Languages, mapper.ToUserLanguageResponse)
 	return utils.SuccessResponse(c, http.MsgOperationSuccess, languages)
 }
 
@@ -329,21 +262,12 @@ func (h *UserHandler) GetLanguages(c *fiber.Ctx) error {
 // @Failure 500 {object} utils.Response
 // @Router /users/me/projects [get]
 func (h *UserHandler) GetProjects(c *fiber.Ctx) error {
-	ctx := c.Context()
-	userID := middleware.GetUserID(c)
-
-	usr, err := h.userService.GetProfile(ctx, userID)
+	usr, err := helpers.GetProfile(c, h.userService)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, http.ErrFailedOperation, err.Error())
 	}
 
-	projects := make([]response.UserProjectResponse, 0, len(usr.Projects))
-	for _, proj := range usr.Projects {
-		if mapped := mapper.ToUserProjectResponse(&proj); mapped != nil {
-			projects = append(projects, *mapped)
-		}
-	}
-
+	projects := mapper.MapEntities(usr.Projects, mapper.ToUserProjectResponse)
 	return utils.SuccessResponse(c, http.MsgOperationSuccess, projects)
 }
 
@@ -359,21 +283,12 @@ func (h *UserHandler) GetProjects(c *fiber.Ctx) error {
 // @Failure 500 {object} utils.Response
 // @Router /users/me/documents [get]
 func (h *UserHandler) GetDocuments(c *fiber.Ctx) error {
-	ctx := c.Context()
-	userID := middleware.GetUserID(c)
-
-	usr, err := h.userService.GetProfile(ctx, userID)
+	usr, err := helpers.GetProfile(c, h.userService)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, http.ErrFailedOperation, err.Error())
 	}
 
-	documents := make([]response.UserDocumentResponse, 0, len(usr.Documents))
-	for _, doc := range usr.Documents {
-		if mapped := mapper.ToUserDocumentResponse(&doc); mapped != nil {
-			documents = append(documents, *mapped)
-		}
-	}
-
+	documents := mapper.MapEntities(usr.Documents, mapper.ToUserDocumentResponse)
 	return utils.SuccessResponse(c, http.MsgOperationSuccess, documents)
 }
 
@@ -405,23 +320,11 @@ func (h *UserHandler) AddEducation(c *fiber.Ctx) error {
 	}
 
 	// Sanitize text input fields
-	req.InstitutionName = utils.SanitizeString(req.InstitutionName)
-	if req.Major != nil {
-		sanitized := utils.SanitizeString(*req.Major)
-		req.Major = &sanitized
-	}
-	if req.DegreeLevel != nil {
-		sanitized := utils.SanitizeString(*req.DegreeLevel)
-		req.DegreeLevel = &sanitized
-	}
-	if req.Activities != nil {
-		sanitized := utils.SanitizeString(*req.Activities)
-		req.Activities = &sanitized
-	}
-	if req.Description != nil {
-		sanitized := utils.SanitizeString(*req.Description)
-		req.Description = &sanitized
-	}
+	req.InstitutionName = utils.SanitizeIfNonEmpty(req.InstitutionName)
+	req.Major = utils.SanitizePtr(req.Major)
+	req.DegreeLevel = utils.SanitizePtr(req.DegreeLevel)
+	req.Activities = utils.SanitizePtr(req.Activities)
+	req.Description = utils.SanitizePtr(req.Description)
 
 	// Convert to domain request
 	domainReq := &user.AddEducationRequest{
@@ -464,7 +367,7 @@ func (h *UserHandler) UpdateEducation(c *fiber.Ctx) error {
 	ctx := c.Context()
 	userID := middleware.GetUserID(c)
 
-	educationID, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	educationID, err := utils.ParseIDParam(c, "id")
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, http.ErrInvalidRequest, err.Error())
 	}
@@ -480,26 +383,11 @@ func (h *UserHandler) UpdateEducation(c *fiber.Ctx) error {
 	}
 
 	// Sanitize text input fields
-	if req.InstitutionName != nil {
-		sanitized := utils.SanitizeString(*req.InstitutionName)
-		req.InstitutionName = &sanitized
-	}
-	if req.Major != nil {
-		sanitized := utils.SanitizeString(*req.Major)
-		req.Major = &sanitized
-	}
-	if req.DegreeLevel != nil {
-		sanitized := utils.SanitizeString(*req.DegreeLevel)
-		req.DegreeLevel = &sanitized
-	}
-	if req.Activities != nil {
-		sanitized := utils.SanitizeString(*req.Activities)
-		req.Activities = &sanitized
-	}
-	if req.Description != nil {
-		sanitized := utils.SanitizeString(*req.Description)
-		req.Description = &sanitized
-	}
+	req.InstitutionName = utils.SanitizePtr(req.InstitutionName)
+	req.Major = utils.SanitizePtr(req.Major)
+	req.DegreeLevel = utils.SanitizePtr(req.DegreeLevel)
+	req.Activities = utils.SanitizePtr(req.Activities)
+	req.Description = utils.SanitizePtr(req.Description)
 
 	// Convert to domain request
 	domainReq := &user.UpdateEducationRequest{
@@ -539,7 +427,7 @@ func (h *UserHandler) DeleteEducation(c *fiber.Ctx) error {
 	ctx := c.Context()
 	userID := middleware.GetUserID(c)
 
-	educationID, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	educationID, err := utils.ParseIDParam(c, "id")
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid education ID", err.Error())
 	}
@@ -579,32 +467,14 @@ func (h *UserHandler) AddExperience(c *fiber.Ctx) error {
 	}
 
 	// Sanitize text input fields
-	req.CompanyName = utils.SanitizeString(req.CompanyName)
-	req.PositionTitle = utils.SanitizeString(req.PositionTitle)
-	if req.Industry != nil {
-		sanitized := utils.SanitizeString(*req.Industry)
-		req.Industry = &sanitized
-	}
-	if req.EmploymentType != nil {
-		sanitized := utils.SanitizeString(*req.EmploymentType)
-		req.EmploymentType = &sanitized
-	}
-	if req.Description != nil {
-		sanitized := utils.SanitizeString(*req.Description)
-		req.Description = &sanitized
-	}
-	if req.Achievements != nil {
-		sanitized := utils.SanitizeString(*req.Achievements)
-		req.Achievements = &sanitized
-	}
-	if req.LocationCity != nil {
-		sanitized := utils.SanitizeString(*req.LocationCity)
-		req.LocationCity = &sanitized
-	}
-	if req.LocationCountry != nil {
-		sanitized := utils.SanitizeString(*req.LocationCountry)
-		req.LocationCountry = &sanitized
-	}
+	req.CompanyName = utils.SanitizeIfNonEmpty(req.CompanyName)
+	req.PositionTitle = utils.SanitizeIfNonEmpty(req.PositionTitle)
+	req.Industry = utils.SanitizePtr(req.Industry)
+	req.EmploymentType = utils.SanitizePtr(req.EmploymentType)
+	req.Description = utils.SanitizePtr(req.Description)
+	req.Achievements = utils.SanitizePtr(req.Achievements)
+	req.LocationCity = utils.SanitizePtr(req.LocationCity)
+	req.LocationCountry = utils.SanitizePtr(req.LocationCountry)
 
 	// Convert to domain request
 	domainReq := &user.AddExperienceRequest{
@@ -649,7 +519,7 @@ func (h *UserHandler) UpdateExperience(c *fiber.Ctx) error {
 	ctx := c.Context()
 	userID := middleware.GetUserID(c)
 
-	experienceID, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	experienceID, err := utils.ParseIDParam(c, "id")
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid experience ID", err.Error())
 	}
@@ -665,38 +535,14 @@ func (h *UserHandler) UpdateExperience(c *fiber.Ctx) error {
 	}
 
 	// Sanitize text input fields
-	if req.CompanyName != nil {
-		sanitized := utils.SanitizeString(*req.CompanyName)
-		req.CompanyName = &sanitized
-	}
-	if req.PositionTitle != nil {
-		sanitized := utils.SanitizeString(*req.PositionTitle)
-		req.PositionTitle = &sanitized
-	}
-	if req.Industry != nil {
-		sanitized := utils.SanitizeString(*req.Industry)
-		req.Industry = &sanitized
-	}
-	if req.EmploymentType != nil {
-		sanitized := utils.SanitizeString(*req.EmploymentType)
-		req.EmploymentType = &sanitized
-	}
-	if req.Description != nil {
-		sanitized := utils.SanitizeString(*req.Description)
-		req.Description = &sanitized
-	}
-	if req.Achievements != nil {
-		sanitized := utils.SanitizeString(*req.Achievements)
-		req.Achievements = &sanitized
-	}
-	if req.LocationCity != nil {
-		sanitized := utils.SanitizeString(*req.LocationCity)
-		req.LocationCity = &sanitized
-	}
-	if req.LocationCountry != nil {
-		sanitized := utils.SanitizeString(*req.LocationCountry)
-		req.LocationCountry = &sanitized
-	}
+	req.CompanyName = utils.SanitizePtr(req.CompanyName)
+	req.PositionTitle = utils.SanitizePtr(req.PositionTitle)
+	req.Industry = utils.SanitizePtr(req.Industry)
+	req.EmploymentType = utils.SanitizePtr(req.EmploymentType)
+	req.Description = utils.SanitizePtr(req.Description)
+	req.Achievements = utils.SanitizePtr(req.Achievements)
+	req.LocationCity = utils.SanitizePtr(req.LocationCity)
+	req.LocationCountry = utils.SanitizePtr(req.LocationCountry)
 
 	// Convert to domain request
 	domainReq := &user.UpdateExperienceRequest{
@@ -738,7 +584,7 @@ func (h *UserHandler) DeleteExperience(c *fiber.Ctx) error {
 	ctx := c.Context()
 	userID := middleware.GetUserID(c)
 
-	experienceID, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	experienceID, err := utils.ParseIDParam(c, "id")
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid experience ID", err.Error())
 	}
@@ -841,7 +687,7 @@ func (h *UserHandler) DeleteSkill(c *fiber.Ctx) error {
 	ctx := c.Context()
 	userID := middleware.GetUserID(c)
 
-	skillID, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	skillID, err := utils.ParseIDParam(c, "id")
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid skill ID", err.Error())
 	}
@@ -892,10 +738,10 @@ func (h *UserHandler) UploadDocument(c *fiber.Ctx) error {
 	description := c.FormValue("description")
 
 	// Sanitize text input fields
-	documentType = utils.SanitizeString(documentType)
-	documentName = utils.SanitizeString(documentName)
+	documentType = utils.SanitizeIfNonEmpty(documentType)
+	documentName = utils.SanitizeIfNonEmpty(documentName)
 	if description != "" {
-		description = utils.SanitizeString(description)
+		description = utils.SanitizeIfNonEmpty(description)
 	}
 
 	// Convert to domain request

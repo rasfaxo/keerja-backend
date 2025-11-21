@@ -1,8 +1,6 @@
 package http
 
 import (
-	"strconv"
-
 	"keerja-backend/internal/domain/notification"
 	"keerja-backend/internal/dto/mapper"
 	"keerja-backend/internal/dto/request"
@@ -94,8 +92,7 @@ func (h *NotificationHandler) GetUnreadCount(c *fiber.Ctx) error {
 func (h *NotificationHandler) GetNotificationByID(c *fiber.Ctx) error {
 	ctx := c.Context()
 	userID := middleware.GetUserID(c)
-
-	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	id, err := utils.ParseIDParam(c, "id")
 	if err != nil {
 		return utils.BadRequestResponse(c, "Invalid notification ID")
 	}
@@ -114,7 +111,7 @@ func (h *NotificationHandler) MarkAsRead(c *fiber.Ctx) error {
 	ctx := c.Context()
 	userID := middleware.GetUserID(c)
 
-	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	id, err := utils.ParseIDParam(c, "id")
 	if err != nil {
 		return utils.BadRequestResponse(c, "Invalid notification ID")
 	}
@@ -131,7 +128,7 @@ func (h *NotificationHandler) MarkAsUnread(c *fiber.Ctx) error {
 	ctx := c.Context()
 	userID := middleware.GetUserID(c)
 
-	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	id, err := utils.ParseIDParam(c, "id")
 	if err != nil {
 		return utils.BadRequestResponse(c, "Invalid notification ID")
 	}
@@ -160,7 +157,7 @@ func (h *NotificationHandler) DeleteNotification(c *fiber.Ctx) error {
 	ctx := c.Context()
 	userID := middleware.GetUserID(c)
 
-	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	id, err := utils.ParseIDParam(c, "id")
 	if err != nil {
 		return utils.BadRequestResponse(c, "Invalid notification ID")
 	}

@@ -285,13 +285,13 @@ type DistrictResponse struct {
 
 // CompanyAddressResponse represents company address for job posting
 type CompanyAddressResponse struct {
-	ID            int64   `json:"id"`
-	AlamatLengkap string  `json:"alamat_lengkap"` // Full address text
-	Latitude      float64 `json:"latitude,omitempty"`
-	Longitude     float64 `json:"longitude,omitempty"`
-	ProvinceID    *int64  `json:"province_id,omitempty"`
-	CityID        *int64  `json:"city_id,omitempty"`
-	DistrictID    *int64  `json:"district_id,omitempty"`
+	ID          int64   `json:"id"`
+	FullAddress string  `json:"full_address"`
+	Latitude    float64 `json:"latitude,omitempty"`
+	Longitude   float64 `json:"longitude,omitempty"`
+	ProvinceID  *int64  `json:"province_id,omitempty"`
+	CityID      *int64  `json:"city_id,omitempty"`
+	DistrictID  *int64  `json:"district_id,omitempty"`
 }
 
 // Extended nested location fields for address responses
@@ -306,21 +306,21 @@ type CompanyAddressLocationResponse struct {
 func (r *CompanyAddressResponse) WithLocations(prov *ProvinceResponse, city *CityResponse, dist *DistrictResponse) interface{} {
 	// Use a struct to preserve JSON field order when marshalled
 	out := struct {
-		ID            int64             `json:"id"`
-		AlamatLengkap string            `json:"alamat_lengkap"`
-		City          *CityResponse     `json:"city,omitempty"`
-		District      *DistrictResponse `json:"district,omitempty"`
-		Province      *ProvinceResponse `json:"province,omitempty"`
-		Latitude      float64           `json:"latitude,omitempty"`
-		Longitude     float64           `json:"longitude,omitempty"`
+		ID          int64             `json:"id"`
+		FullAddress string            `json:"full_address"`
+		City        *CityResponse     `json:"city,omitempty"`
+		District    *DistrictResponse `json:"district,omitempty"`
+		Province    *ProvinceResponse `json:"province,omitempty"`
+		Latitude    float64           `json:"latitude,omitempty"`
+		Longitude   float64           `json:"longitude,omitempty"`
 	}{
-		ID:            r.ID,
-		AlamatLengkap: r.AlamatLengkap,
-		City:          city,
-		District:      dist,
-		Province:      prov,
-		Latitude:      r.Latitude,
-		Longitude:     r.Longitude,
+		ID:          r.ID,
+		FullAddress: r.FullAddress,
+		City:        city,
+		District:    dist,
+		Province:    prov,
+		Latitude:    r.Latitude,
+		Longitude:   r.Longitude,
 	}
 
 	return out
