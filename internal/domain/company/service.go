@@ -3,6 +3,7 @@ package company
 import (
 	"context"
 	"keerja-backend/internal/domain/job"
+	"keerja-backend/internal/domain/user"
 	"mime/multipart"
 )
 
@@ -82,6 +83,10 @@ type CompanyService interface {
 	GetEmployerUser(ctx context.Context, userID, companyID int64) (*EmployerUser, error)
 	GetEmployerUserID(ctx context.Context, userID, companyID int64) (int64, error)
 	UpdateEmployerRole(ctx context.Context, employerUserID int64, newRole string) error
+	// UpdateEmployerUser updates fields of the employer_user record for the given user and company
+	UpdateEmployerUser(ctx context.Context, userID, companyID int64, req *UpdateEmployerUserRequest) error
+	// UpdateEmployerUserWithProfile updates both the user profile (global) and employer_user (company-scoped) atomically
+	UpdateEmployerUserWithProfile(ctx context.Context, userID, companyID int64, userReq *user.UpdateProfileRequest, req *UpdateEmployerUserRequest) error
 	RemoveEmployerUser(ctx context.Context, employerUserID, companyID int64) error
 	GetEmployerUsers(ctx context.Context, companyID int64) ([]EmployerUser, error)
 	GetUserCompanies(ctx context.Context, userID int64) ([]Company, error)
@@ -298,6 +303,14 @@ type InviteEmployerRequest struct {
 	Role          string
 	PositionTitle *string
 	Department    *string
+}
+
+// UpdateEmployerUserRequest represents fields allowed to be updated on the employer_user record
+type UpdateEmployerUserRequest struct {
+	PositionTitle *string
+	Department    *string
+	EmailCompany  *string
+	PhoneCompany  *string
 }
 
 type CreateIndustryRequest struct {

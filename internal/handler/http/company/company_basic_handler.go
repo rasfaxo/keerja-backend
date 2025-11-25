@@ -8,6 +8,7 @@ import (
 
 	"keerja-backend/internal/domain/company"
 	"keerja-backend/internal/domain/master"
+	"keerja-backend/internal/domain/user"
 	"keerja-backend/internal/dto/mapper"
 	"keerja-backend/internal/dto/request"
 	"keerja-backend/internal/dto/response"
@@ -24,6 +25,7 @@ import (
 // and managing company images (logo and banner).
 type CompanyBasicHandler struct {
 	companyService  company.CompanyService
+	userService     user.UserService
 	industryRepo    master.IndustryRepository
 	companySizeRepo master.CompanySizeRepository
 	provinceRepo    master.ProvinceRepository
@@ -34,6 +36,7 @@ type CompanyBasicHandler struct {
 // NewCompanyBasicHandler creates a new instance of CompanyBasicHandler
 func NewCompanyBasicHandler(
 	companyService company.CompanyService,
+	userService user.UserService,
 	industryRepo master.IndustryRepository,
 	companySizeRepo master.CompanySizeRepository,
 	provinceRepo master.ProvinceRepository,
@@ -42,6 +45,7 @@ func NewCompanyBasicHandler(
 ) *CompanyBasicHandler {
 	return &CompanyBasicHandler{
 		companyService:  companyService,
+		userService:     userService,
 		industryRepo:    industryRepo,
 		companySizeRepo: companySizeRepo,
 		provinceRepo:    provinceRepo,
@@ -1402,6 +1406,250 @@ func (h *CompanyBasicHandler) UpdateMyAddress(c *fiber.Ctx) error {
 	}
 
 	return utils.SuccessResponse(c, http.MsgUpdatedSuccess, resp)
+}
+
+// UpdateMyEmployerProfile godoc
+// @Summary Update my employer profile (company-side)
+// @Description Update fields on the authenticated employer user's profile for their company
+// @Tags companies
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body request.UpdateEmployerUserRequest true "Update employer user request"
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 403 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /companies/me/employer [put]
+func (h *CompanyBasicHandler) UpdateMyEmployerProfile(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	userID := middleware.GetUserID(c)
+	if userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, http.ErrUnauthorized, "userID not found in context")
+	}
+
+	// Parse request
+	var req request.UpdateEmployerUserRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.BadRequestResponse(c, http.ErrInvalidBody)
+	}
+	if err := utils.ValidateStruct(&req); err != nil {
+		errs := utils.FormatValidationErrors(err)
+		return utils.ValidationErrorResponse(c, http.ErrValidationFailed, errs)
+	}
+
+	// Get user's companies
+	companies, err := h.companyService.GetUserCompanies(ctx, userID)
+	if err != nil {
+		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
+	}
+	if len(companies) == 0 {
+		return utils.ErrorResponse(c, fiber.StatusNotFound, http.ErrCompanyNotFound, "User is not affiliated with any company")
+	}
+
+	companyID := companies[0].ID
+
+	// Ensure user is an employer of this company
+	_, err = h.companyService.GetEmployerUser(ctx, userID, companyID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusForbidden, http.ErrForbidden, "You are not an employer of this company")
+	}
+
+	// Map to domain request for employer_user updates
+	domainReq := &company.UpdateEmployerUserRequest{}
+	if req.PositionTitle != nil {
+		domainReq.PositionTitle = req.PositionTitle
+	}
+
+	// Build user-level update request if provided
+	var userReq *user.UpdateProfileRequest
+	if req.Name != nil || req.ProvinceID != nil || req.CityID != nil || req.DistrictID != nil {
+		userReq = &user.UpdateProfileRequest{}
+		if req.Name != nil {
+			userReq.FullName = req.Name
+		}
+		if req.ProvinceID != nil {
+			userReq.ProvinceID = req.ProvinceID
+		}
+		if req.CityID != nil {
+			userReq.CityID = req.CityID
+		}
+		if req.DistrictID != nil {
+			userReq.DistrictID = req.DistrictID
+		}
+	}
+
+	// Perform both updates atomically
+	if err := h.companyService.UpdateEmployerUserWithProfile(ctx, userID, companyID, userReq, domainReq); err != nil {
+		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
+	}
+
+	// Fetch updated employer user to return
+	updated, err := h.companyService.GetEmployerUser(ctx, userID, companyID)
+	if err != nil || updated == nil {
+		return utils.SuccessResponse(c, http.MsgUpdatedSuccess, nil)
+	}
+
+	// Fetch canonical user profile to include promoted fields and nested locations
+	usr, _ := h.userService.GetProfile(ctx, userID)
+
+	// Build nested user object with only location objects
+	var userObj interface{}
+	if usr != nil && usr.Profile != nil {
+		loc := fiber.Map{}
+		if usr.Profile.ProvinceID != nil {
+			if p, err := h.provinceRepo.GetByID(ctx, *usr.Profile.ProvinceID); err == nil && p != nil {
+				loc["province"] = fiber.Map{"id": p.ID, "code": p.Code, "name": p.Name}
+			}
+		}
+		if usr.Profile.CityID != nil {
+			if cObj, err := h.cityRepo.GetByID(ctx, *usr.Profile.CityID); err == nil && cObj != nil {
+				loc["city"] = fiber.Map{"id": cObj.ID, "code": cObj.Code, "name": cObj.Name, "type": cObj.Type, "province_id": cObj.ProvinceID}
+			}
+		}
+		if usr.Profile.DistrictID != nil {
+			if d, err := h.districtRepo.GetByID(ctx, *usr.Profile.DistrictID); err == nil && d != nil {
+				loc["district"] = fiber.Map{"id": d.ID, "code": d.Code, "name": d.Name, "city_id": d.CityID}
+			}
+		}
+		// only include nested object if any location present
+		if len(loc) > 0 {
+			userObj = loc
+		}
+	}
+
+	// Use a struct to enforce JSON ordering: id, full_name, employer_user_id, company_id, role, position_title, user
+	type employerResp struct {
+		ID             int64   `json:"id"`
+		EmployerUserID int64   `json:"employer_user_id"`
+		CompanyID      int64   `json:"company_id"`
+		Role           string  `json:"role"`
+		PositionTitle  *string `json:"position_title,omitempty"`
+		FullName       string  `json:"full_name,omitempty"`
+		User           any     `json:"user,omitempty"`
+	}
+
+	fullName := ""
+	if usr != nil {
+		fullName = usr.FullName
+	}
+
+	resp := employerResp{
+		ID:             updated.UserID,
+		EmployerUserID: updated.ID,
+		CompanyID:      updated.CompanyID,
+		Role:           updated.Role,
+		PositionTitle:  updated.PositionTitle,
+		FullName:       fullName,
+		User:           userObj,
+	}
+
+	return utils.SuccessResponse(c, http.MsgUpdatedSuccess, resp)
+}
+
+// GetMyEmployerProfile godoc
+// @Summary Get my employer profile (company-side)
+// @Description Retrieve the authenticated employer user's profile within their company
+// @Tags companies
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 404 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /companies/me/employer [get]
+func (h *CompanyBasicHandler) GetMyEmployerProfile(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	userID := middleware.GetUserID(c)
+	if userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, http.ErrUnauthorized, "userID not found in context")
+	}
+
+	// Get user's companies
+	companies, err := h.companyService.GetUserCompanies(ctx, userID)
+	if err != nil {
+		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
+	}
+	if len(companies) == 0 {
+		return utils.ErrorResponse(c, fiber.StatusNotFound, http.ErrCompanyNotFound, "User is not affiliated with any company")
+	}
+
+	companyID := companies[0].ID
+
+	// Ensure user is an employer of this company and fetch the record
+	employerUser, err := h.companyService.GetEmployerUser(ctx, userID, companyID)
+	if err != nil || employerUser == nil {
+		return utils.ErrorResponse(c, fiber.StatusForbidden, http.ErrForbidden, "You are not an employer of this company")
+	}
+
+	// Fetch user profile for display name and location
+	usr, err := h.userService.GetProfile(ctx, userID)
+	if err != nil || usr == nil {
+		// still return employer_user minimal info if user profile not found
+		resp := fiber.Map{
+			"user_id":          employerUser.UserID,
+			"employer_user_id": employerUser.ID,
+			"company_id":       employerUser.CompanyID,
+			"role":             employerUser.Role,
+			"position_title":   employerUser.PositionTitle,
+		}
+		return utils.SuccessResponse(c, http.MsgFetchedSuccess, resp)
+	}
+
+	// Extract full name and build nested user sub-object with only location objects
+	fullName := ""
+	var userObj interface{}
+	if usr != nil {
+		fullName = usr.FullName
+		if usr.Profile != nil {
+			loc := fiber.Map{}
+			if usr.Profile.ProvinceID != nil {
+				if p, err := h.provinceRepo.GetByID(ctx, *usr.Profile.ProvinceID); err == nil && p != nil {
+					loc["province"] = fiber.Map{"id": p.ID, "code": p.Code, "name": p.Name}
+				}
+			}
+			if usr.Profile.CityID != nil {
+				if cObj, err := h.cityRepo.GetByID(ctx, *usr.Profile.CityID); err == nil && cObj != nil {
+					loc["city"] = fiber.Map{"id": cObj.ID, "code": cObj.Code, "name": cObj.Name, "type": cObj.Type, "province_id": cObj.ProvinceID}
+				}
+			}
+			if usr.Profile.DistrictID != nil {
+				if d, err := h.districtRepo.GetByID(ctx, *usr.Profile.DistrictID); err == nil && d != nil {
+					loc["district"] = fiber.Map{"id": d.ID, "code": d.Code, "name": d.Name, "city_id": d.CityID}
+				}
+			}
+			if len(loc) > 0 {
+				userObj = loc
+			}
+		}
+	}
+
+	// Use a struct to enforce JSON ordering: id, full_name, employer_user_id, company_id, role, position_title, user
+	type employerResp struct {
+		ID             int64   `json:"id"`
+		EmployerUserID int64   `json:"employer_user_id"`
+		CompanyID      int64   `json:"company_id"`
+		Role           string  `json:"role"`
+		PositionTitle  *string `json:"position_title,omitempty"`
+		FullName       string  `json:"full_name,omitempty"`
+		User           any     `json:"user,omitempty"`
+	}
+
+	resp := employerResp{
+		ID:             employerUser.UserID,
+		EmployerUserID: employerUser.ID,
+		CompanyID:      employerUser.CompanyID,
+		Role:           employerUser.Role,
+		PositionTitle:  employerUser.PositionTitle,
+		FullName:       fullName,
+		User:           userObj,
+	}
+
+	return utils.SuccessResponse(c, http.MsgFetchedSuccess, resp)
 }
 
 // RequestVerification godoc

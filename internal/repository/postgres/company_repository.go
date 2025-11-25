@@ -888,6 +888,11 @@ func (r *companyRepository) UpdateEmployerUser(ctx context.Context, employerUser
 	return r.db.WithContext(ctx).Save(employerUser).Error
 }
 
+// UpdateEmployerUserTx updates an employer_user record using the provided transaction.
+func (r *companyRepository) UpdateEmployerUserTx(ctx context.Context, tx *gorm.DB, employerUser *company.EmployerUser) error {
+	return tx.WithContext(ctx).Save(employerUser).Error
+}
+
 // DeleteEmployerUser soft deletes an employer user
 func (r *companyRepository) DeleteEmployerUser(ctx context.Context, id int64) error {
 	return r.db.WithContext(ctx).Delete(&company.EmployerUser{}, id).Error

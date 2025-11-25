@@ -225,6 +225,11 @@ func (r *userRepository) UpdateProfile(ctx context.Context, profile *user.UserPr
 	return r.db.WithContext(ctx).Save(profile).Error
 }
 
+// UpdateProfileTx updates a user profile using the provided transaction.
+func (r *userRepository) UpdateProfileTx(ctx context.Context, tx *gorm.DB, profile *user.UserProfile) error {
+	return tx.WithContext(ctx).Save(profile).Error
+}
+
 // ===========================================
 // PREFERENCE OPERATIONS
 // ===========================================

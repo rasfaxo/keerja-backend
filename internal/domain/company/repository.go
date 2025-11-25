@@ -2,6 +2,8 @@ package company
 
 import (
 	"context"
+
+	"gorm.io/gorm"
 )
 
 // CompanyRepository defines the interface for company data access
@@ -64,6 +66,7 @@ type CompanyRepository interface {
 	// Employer User operations
 	CreateEmployerUser(ctx context.Context, employerUser *EmployerUser) error
 	UpdateEmployerUser(ctx context.Context, employerUser *EmployerUser) error
+	UpdateEmployerUserTx(ctx context.Context, tx *gorm.DB, employerUser *EmployerUser) error
 	DeleteEmployerUser(ctx context.Context, id int64) error
 	FindEmployerUserByID(ctx context.Context, id int64) (*EmployerUser, error)
 	FindEmployerUserByUserAndCompany(ctx context.Context, userID, companyID int64) (*EmployerUser, error)
