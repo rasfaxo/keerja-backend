@@ -10,6 +10,7 @@ import (
 	"keerja-backend/internal/domain/company"
 	"keerja-backend/internal/domain/job"
 	"keerja-backend/internal/domain/master"
+	"keerja-backend/internal/domain/user"
 	"keerja-backend/internal/utils"
 
 	"gorm.io/gorm"
@@ -37,6 +38,8 @@ type companyService struct {
 	companySizeService master.CompanySizeService
 	districtService    master.DistrictService
 	jobRepo            job.JobRepository
+	userService        user.UserService
+	userRepo           user.UserRepository
 }
 
 // GetJobsGroupedByStatus implements CompanyService interface for job status grouping
@@ -55,6 +58,8 @@ func NewCompanyService(
 	companySizeService master.CompanySizeService,
 	districtService master.DistrictService,
 	jobRepo job.JobRepository,
+	userService user.UserService,
+	userRepo user.UserRepository,
 ) company.CompanyService {
 	return &companyService{
 		companyRepo:        companyRepo,
@@ -65,6 +70,8 @@ func NewCompanyService(
 		companySizeService: companySizeService,
 		districtService:    districtService,
 		jobRepo:            jobRepo,
+		userService:        userService,
+		userRepo:           userRepo,
 	}
 }
 
@@ -1597,6 +1604,139 @@ func (s *companyService) UpdateEmployerRole(ctx context.Context, employerUserID 
 	s.cache.Delete(cache.GenerateCacheKey("user", "companies", employerUser.UserID))
 
 	return nil
+}
+
+// UpdateEmployerUser updates fields of the employer_user record for the authenticated user within a company
+func (s *companyService) UpdateEmployerUser(ctx context.Context, userID, companyID int64, req *company.UpdateEmployerUserRequest) error {
+	// Find employer user by user and company
+	employerUser, err := s.companyRepo.FindEmployerUserByUserAndCompany(ctx, userID, companyID)
+	if err != nil {
+		return fmt.Errorf("failed to find employer user: %w", err)
+	}
+	if employerUser == nil {
+		return fmt.Errorf("employer user not found for this company")
+	}
+
+	// Apply updates only for provided fields
+	if req.PositionTitle != nil {
+		employerUser.PositionTitle = req.PositionTitle
+	}
+	if req.Department != nil {
+		employerUser.Department = req.Department
+	}
+	if req.EmailCompany != nil {
+		employerUser.EmailCompany = req.EmailCompany
+	}
+	if req.PhoneCompany != nil {
+		employerUser.PhoneCompany = req.PhoneCompany
+	}
+
+	employerUser.UpdatedAt = time.Now()
+
+	if err := s.companyRepo.UpdateEmployerUser(ctx, employerUser); err != nil {
+		return fmt.Errorf("failed to update employer user: %w", err)
+	}
+
+	// Invalidate caches related to company employers and user companies
+	s.cache.Delete(cache.GenerateCacheKey("company", "employers", employerUser.CompanyID))
+	s.cache.Delete(cache.GenerateCacheKey("user", "companies", employerUser.UserID))
+
+	return nil
+}
+
+// UpdateEmployerUserWithProfile updates both the global user profile and the
+// company-scoped employer_user record inside a single database transaction.
+func (s *companyService) UpdateEmployerUserWithProfile(ctx context.Context, userID, companyID int64, userReq *user.UpdateProfileRequest, req *company.UpdateEmployerUserRequest) error {
+	// Run everything inside a transaction to ensure atomicity
+	return s.db.Transaction(func(tx *gorm.DB) error {
+		// 1) Load employer_user using transaction
+		var emp company.EmployerUser
+		if err := tx.WithContext(ctx).
+			Where("user_id = ? AND company_id = ?", userID, companyID).
+			First(&emp).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return fmt.Errorf("employer user not found")
+			}
+			return fmt.Errorf("failed to find employer user: %w", err)
+		}
+
+		// Apply employer_user updates if provided
+		if req != nil {
+			if req.PositionTitle != nil {
+				emp.PositionTitle = req.PositionTitle
+			}
+			if req.Department != nil {
+				emp.Department = req.Department
+			}
+			if req.EmailCompany != nil {
+				emp.EmailCompany = req.EmailCompany
+			}
+			if req.PhoneCompany != nil {
+				emp.PhoneCompany = req.PhoneCompany
+			}
+			emp.UpdatedAt = time.Now()
+
+			// Use tx-aware repository method for employer_user update
+			if err := s.companyRepo.UpdateEmployerUserTx(ctx, tx, &emp); err != nil {
+				return fmt.Errorf("failed to update employer user: %w", err)
+			}
+		}
+
+		// 2) Update user and profile if requested
+		if userReq != nil {
+			var u user.User
+			if err := tx.WithContext(ctx).Preload("Profile").First(&u, userID).Error; err != nil {
+				return fmt.Errorf("failed to find user: %w", err)
+			}
+
+			// Update user-level fields
+			if userReq.FullName != nil {
+				u.FullName = *userReq.FullName
+			}
+
+			// Persist user using transaction (direct tx save to keep atomicity)
+			if err := tx.WithContext(ctx).Save(&u).Error; err != nil {
+				return fmt.Errorf("failed to update user: %w", err)
+			}
+
+			// Update or create profile
+			if userReq.ProvinceID != nil || userReq.CityID != nil || userReq.DistrictID != nil {
+				now := time.Now()
+				if u.Profile == nil {
+					profile := &user.UserProfile{
+						UserID:     u.ID,
+						ProvinceID: userReq.ProvinceID,
+						CityID:     userReq.CityID,
+						DistrictID: userReq.DistrictID,
+						CreatedAt:  now,
+						UpdatedAt:  now,
+					}
+					// Create profile within transaction
+					if err := tx.WithContext(ctx).Create(profile).Error; err != nil {
+						return fmt.Errorf("failed to create user profile: %w", err)
+					}
+				} else {
+					if userReq.ProvinceID != nil {
+						u.Profile.ProvinceID = userReq.ProvinceID
+					}
+					if userReq.CityID != nil {
+						u.Profile.CityID = userReq.CityID
+					}
+					if userReq.DistrictID != nil {
+						u.Profile.DistrictID = userReq.DistrictID
+					}
+					u.Profile.UpdatedAt = now
+
+					// Use tx-aware repository method for profile update
+					if err := s.userRepo.UpdateProfileTx(ctx, tx, u.Profile); err != nil {
+						return fmt.Errorf("failed to update user profile: %w", err)
+					}
+				}
+			}
+		}
+
+		return nil
+	})
 }
 
 // RemoveEmployerUser removes an employer user

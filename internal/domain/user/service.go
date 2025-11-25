@@ -93,17 +93,21 @@ type RegisterRequest struct {
 }
 
 type UpdateProfileRequest struct {
-	FullName           *string
-	Phone              *string
-	Headline           *string
-	Bio                *string
-	Gender             *string
-	BirthDate          *string
-	Nationality        *string
-	Address            *string
-	LocationCity       *string
-	LocationState      *string
-	LocationCountry    *string
+	FullName        *string
+	Phone           *string
+	Headline        *string
+	Bio             *string
+	Gender          *string
+	BirthDate       *string
+	Nationality     *string
+	Address         *string
+	LocationCity    *string
+	LocationState   *string
+	LocationCountry *string
+	// Master data location IDs
+	ProvinceID         *int64
+	CityID             *int64
+	DistrictID         *int64
 	PostalCode         *string
 	LinkedinURL        *string
 	PortfolioURL       *string

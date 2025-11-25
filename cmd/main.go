@@ -211,6 +211,8 @@ func main() {
 		companySizeService,
 		districtService,
 		jobRepo,
+		userService,
+		userRepo,
 	)
 
 	jobService := service.NewJobService(
@@ -238,6 +240,7 @@ func main() {
 	appLogger.Info("Initializing company handlers...")
 	companyBasicHandler := companyhandler.NewCompanyBasicHandler(
 		companyService,
+		userService,
 		industryRepo,
 		companySizeRepo,
 		provinceRepo,

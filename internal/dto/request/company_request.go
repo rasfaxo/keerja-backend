@@ -184,3 +184,12 @@ type UpdateCompanyAddressRequest struct {
 	CityID      *int64   `json:"city_id" validate:"omitempty"`
 	DistrictID  *int64   `json:"district_id" validate:"omitempty"`
 }
+
+// UpdateEmployerUserRequest represents fields an employer user can update on their company-side profile
+type UpdateEmployerUserRequest struct {
+	Name          *string `json:"name" validate:"omitempty,min=1,max=150"`
+	PositionTitle *string `json:"position_title" validate:"omitempty,max=100"`
+	ProvinceID    *int64  `json:"province_id" validate:"omitempty"`
+	CityID        *int64  `json:"city_id" validate:"omitempty"`
+	DistrictID    *int64  `json:"district_id" validate:"omitempty"`
+}

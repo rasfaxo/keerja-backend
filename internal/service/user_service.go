@@ -159,6 +159,16 @@ func (s *userService) UpdateProfile(ctx context.Context, userID int64, req *user
 	if req.LocationCountry != nil {
 		profile.LocationCountry = req.LocationCountry
 	}
+	// Master-data location IDs (province, city, district)
+	if req.ProvinceID != nil {
+		profile.ProvinceID = req.ProvinceID
+	}
+	if req.CityID != nil {
+		profile.CityID = req.CityID
+	}
+	if req.DistrictID != nil {
+		profile.DistrictID = req.DistrictID
+	}
 	if req.PostalCode != nil {
 		profile.PostalCode = req.PostalCode
 	}

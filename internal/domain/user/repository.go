@@ -2,6 +2,8 @@ package user
 
 import (
 	"context"
+
+	"gorm.io/gorm"
 )
 
 // UserRepository defines the interface for user data access
@@ -20,6 +22,7 @@ type UserRepository interface {
 	FindProfileByUserID(ctx context.Context, userID int64) (*UserProfile, error)
 	FindProfileBySlug(ctx context.Context, slug string) (*UserProfile, error)
 	UpdateProfile(ctx context.Context, profile *UserProfile) error
+	UpdateProfileTx(ctx context.Context, tx *gorm.DB, profile *UserProfile) error
 
 	// Preference operations
 	CreatePreference(ctx context.Context, preference *UserPreference) error

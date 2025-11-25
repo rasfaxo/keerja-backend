@@ -13,6 +13,9 @@ type UpdateProfileRequest struct {
 	LocationCity       *string  `json:"location_city" validate:"omitempty,max=100"`
 	LocationState      *string  `json:"location_state" validate:"omitempty,max=100"`
 	LocationCountry    *string  `json:"location_country" validate:"omitempty,max=100"`
+	ProvinceID         *int64   `json:"province_id" validate:"omitempty"`
+	CityID             *int64   `json:"city_id" validate:"omitempty"`
+	DistrictID         *int64   `json:"district_id" validate:"omitempty"`
 	PostalCode         *string  `json:"postal_code" validate:"omitempty,max=10"`
 	LinkedinURL        *string  `json:"linkedin_url" validate:"omitempty,url"`
 	PortfolioURL       *string  `json:"portfolio_url" validate:"omitempty,url"`

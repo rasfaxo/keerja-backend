@@ -132,6 +132,16 @@ func SetupCompanyRoutes(api fiber.Router, deps *Dependencies, authMw *middleware
 		deps.CompanyBasicHandler.CreateMyAddress,
 	)
 
+	// Update authenticated employer user's company profile (position, department, company contact)
+	protected.Put("/me/employer",
+		deps.CompanyBasicHandler.UpdateMyEmployerProfile,
+	)
+
+	// Get authenticated employer user's company profile
+	protected.Get("/me/employer",
+		deps.CompanyBasicHandler.GetMyEmployerProfile,
+	)
+
 	// Update a company address (persisted)
 	protected.Put("/me/addresses/:id",
 		deps.CompanyBasicHandler.UpdateMyAddress,
