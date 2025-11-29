@@ -70,6 +70,18 @@ func main() {
 	db := config.GetDB()
 	appLogger.Info(" Database connected successfully")
 
+	// Initialize Redis
+	appLogger.Info("Initializing Redis connection...")
+	redisClient, err := config.InitRedis(cfg)
+	if err != nil {
+		appLogger.WithError(err).Fatal("Failed to initialize Redis")
+	}
+	defer func() {
+		if cerr := config.CloseRedis(); cerr != nil {
+			appLogger.WithError(cerr).Warn("Failed to close Redis connection")
+		}
+	}()
+
 	// Initialize validator
 	utils.InitValidator()
 
@@ -156,12 +168,15 @@ func main() {
 		ClientSecret: cfg.GoogleClientSecret,
 		RedirectURI:  cfg.GoogleRedirectURI,
 	}
+	stateStore := service.NewRedisOAuthStateStore(redisClient)
 	oauthService := service.NewOAuthService(
 		oauthRepo,
 		userRepo,
 		googleConfig,
 		cfg.JWTSecret,
 		time.Duration(cfg.JWTExpirationHours)*time.Hour,
+		stateStore,
+		cfg.AllowedMobileRedirectURIs,
 	)
 
 	// Create registration service (for OTP-based registration)

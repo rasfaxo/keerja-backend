@@ -99,6 +99,14 @@ func SetupAuthRoutes(api fiber.Router, deps *Dependencies, authMw *middleware.Au
 		deps.AuthHandler.HandleGoogleCallback,
 	)
 
+	oauth.Post("/google/exchange",
+		deps.AuthHandler.ExchangeGoogleOAuthCode,
+	)
+
+	oauth.Post("/google/exchange-one-time",
+		deps.AuthHandler.ExchangeOneTimeCode,
+	)
+
 	// ===========================================
 	// Protected Routes - Device Management
 	// ===========================================

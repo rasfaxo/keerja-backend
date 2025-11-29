@@ -485,7 +485,21 @@ func ToUserPreferenceResponse(p *user.UserPreference) *response.UserPreferenceRe
 	// Determine IsOpenToWork (based on ShowOnlineStatus and AllowDirectMessages)
 	isOpenToWork := p.ShowOnlineStatus && p.AllowDirectMessages
 
+	// Map nullable/string fields that we expanded in the response
+	var themePref *string
+	if p.ThemePreference != "" {
+		themePref = &p.ThemePreference
+	}
+
+	var prefJobType *string
+	if p.PreferredJobType != "" {
+		prefJobType = &p.PreferredJobType
+	}
+
 	return &response.UserPreferenceResponse{
+		LanguagePreference: p.LanguagePreference,
+		ThemePreference:    themePref,
+		PreferredJobType:   prefJobType,
 		ID:                 p.ID,
 		ExpectedSalaryMin:  salaryMin,
 		ExpectedSalaryMax:  salaryMax,

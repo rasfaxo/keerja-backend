@@ -1,10 +1,12 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -52,6 +54,7 @@ type Config struct {
 	RedisPort     string
 	RedisPassword string
 	RedisDB       int
+	RedisURL      string
 
 	// Rate Limiting
 	RateLimitEnabled bool
@@ -82,11 +85,16 @@ type Config struct {
 	GoogleClientID     string
 	GoogleClientSecret string
 	GoogleRedirectURI  string
+	// Optional credentials JSON file path (downloaded from Google Console) for local dev
+	GoogleCredentialsFile string
+    
 
 	// FCM Configuration
 	FCMEnabled         bool
 	FCMProjectID       string
 	FCMCredentialsFile string
+	// Allowed mobile redirect URIs (used for mobile deep-link / one-time code flows)
+	AllowedMobileRedirectURIs []string
 	FCMTimeout         time.Duration
 	FCMBatchSize       int
 	FCMMaxRetries      int
@@ -144,6 +152,7 @@ func LoadConfig() *Config {
 		RedisPort:     getEnv("REDIS_PORT", "6379"),
 		RedisPassword: getEnv("REDIS_PASSWORD", ""),
 		RedisDB:       getEnvAsInt("REDIS_DB", 0),
+		RedisURL:      getEnv("REDIS_URL", ""),
 
 		// Rate Limiting
 		RateLimitEnabled: getEnvAsBool("RATE_LIMIT_ENABLED", true),
@@ -152,6 +161,7 @@ func LoadConfig() *Config {
 
 		// CORS Configuration
 		AllowedOrigins: getEnvAsSlice("ALLOWED_ORIGINS", []string{"http://localhost:3000", "http://localhost:5173"}),
+
 
 		// Pagination
 		DefaultPageSize: getEnvAsInt("DEFAULT_PAGE_SIZE", 10),
@@ -173,7 +183,12 @@ func LoadConfig() *Config {
 		// OAuth Configuration
 		GoogleClientID:     getEnv("GOOGLE_CLIENT_ID", ""),
 		GoogleClientSecret: getEnv("GOOGLE_CLIENT_SECRET", ""),
-		GoogleRedirectURI:  getEnv("GOOGLE_REDIRECT_URI", "http://localhost:8080/api/auth/oauth/google/callback"),
+		// Ensure default redirect matches the API v1 routes used in this project
+		GoogleRedirectURI:  getEnv("GOOGLE_REDIRECT_URI", "http://localhost:8080/api/v1/auth/oauth/google/callback"),
+		GoogleCredentialsFile: getEnv("GOOGLE_CREDENTIALS_FILE", ""),
+
+		// Mobile redirect whitelist for OAuth
+		AllowedMobileRedirectURIs: getEnvAsSlice("ALLOWED_MOBILE_REDIRECT_URIS", []string{}),
 
 		// FCM Configuration
 		FCMEnabled:         getEnvAsBool("FCM_ENABLED", false),
@@ -184,6 +199,32 @@ func LoadConfig() *Config {
 		FCMMaxRetries:      getEnvAsInt("FCM_MAX_RETRIES", 3),
 		PushDefaultSound:   getEnv("PUSH_DEFAULT_SOUND", "default"),
 		PushDefaultTTL:     getEnvAsInt("PUSH_DEFAULT_TTL", 86400), // 24 hours
+	}
+
+	// If a credentials JSON file is provided (downloaded from Google Console), prefer values from it when env vars are empty
+	if config.GoogleCredentialsFile != "" {
+		if _, err := os.Stat(config.GoogleCredentialsFile); err == nil {
+			if b, err := os.ReadFile(config.GoogleCredentialsFile); err == nil {
+				var file struct {
+					Web struct {
+						ClientID     string   `json:"client_id"`
+						ClientSecret string   `json:"client_secret"`
+						RedirectURIs []string `json:"redirect_uris"`
+					} `json:"web"`
+				}
+				if err := json.Unmarshal(b, &file); err == nil {
+					if config.GoogleClientID == "" && file.Web.ClientID != "" {
+						config.GoogleClientID = file.Web.ClientID
+					}
+					if config.GoogleClientSecret == "" && file.Web.ClientSecret != "" {
+						config.GoogleClientSecret = file.Web.ClientSecret
+					}
+					if config.GoogleRedirectURI == "" && len(file.Web.RedirectURIs) > 0 {
+						config.GoogleRedirectURI = file.Web.RedirectURIs[0]
+					}
+				}
+			}
+		}
 	}
 
 	// Validate required configurations
@@ -309,15 +350,15 @@ func getEnvAsSlice(key string, defaultValue []string) []string {
 	if valueStr == "" {
 		return defaultValue
 	}
-	// Simple implementation - split by comma
-	// kalo mau complex parsing, bisa pake proper CSV parser
+	// Split by comma and trim spaces
 	var result []string
-	for _, v := range defaultValue {
-		if valueStr != "" {
-			result = append(result, valueStr)
-			break
+	for _, part := range strings.Split(valueStr, ",") {
+		if t := strings.TrimSpace(part); t != "" {
+			result = append(result, t)
 		}
-		result = append(result, v)
+	}
+	if len(result) == 0 {
+		return defaultValue
 	}
 	return result
 }

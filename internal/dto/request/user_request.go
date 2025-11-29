@@ -184,6 +184,25 @@ type UpdatePreferenceRequest struct {
 	ProfileVisibility   *string  `json:"profile_visibility" validate:"omitempty,oneof=public private recruiter_only"`
 }
 
+// UpdateUserPreferencesRequest represents API request to update user's preferences
+type UpdateUserPreferencesRequest struct {
+	LanguagePreference  *string  `json:"language_preference" validate:"omitempty,max=10"`
+	ThemePreference     *string  `json:"theme_preference" validate:"omitempty,oneof=light dark"`
+	PreferredJobType    *string  `json:"preferred_job_type" validate:"omitempty,max=50"`
+	PreferredIndustry   *string  `json:"preferred_industry" validate:"omitempty,max=100"`
+	PreferredLocation   *string  `json:"preferred_location" validate:"omitempty,max=100"`
+	PreferredSalaryMin  *float64 `json:"preferred_salary_min" validate:"omitempty,gte=0"`
+	PreferredSalaryMax  *float64 `json:"preferred_salary_max" validate:"omitempty,gte=0"`
+	EmailNotifications  *bool    `json:"email_notifications"`
+	SMSNotifications    *bool    `json:"sms_notifications"`
+	PushNotifications   *bool    `json:"push_notifications"`
+	EmailMarketing      *bool    `json:"email_marketing"`
+	ProfileVisibility   *string  `json:"profile_visibility" validate:"omitempty,oneof=public private recruiter-only"`
+	ShowOnlineStatus    *bool    `json:"show_online_status"`
+	AllowDirectMessages *bool    `json:"allow_direct_messages"`
+	DataSharingConsent  *bool    `json:"data_sharing_consent"`
+}
+
 // UserSearchRequest represents user search request
 type UserSearchRequest struct {
 	Query      string  `json:"query" query:"q" validate:"omitempty"`

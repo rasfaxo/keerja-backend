@@ -61,6 +61,7 @@ func ToUserBasic(u *user.User) *response.UserBasic {
 		UserType:   u.UserType,
 		IsVerified: u.IsVerified,
 		Status:     u.Status,
+		Preference: ToUserPreferenceResponse(u.Preference),
 	}
 }
 

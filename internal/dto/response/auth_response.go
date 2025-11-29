@@ -20,6 +20,7 @@ type UserBasic struct {
 	UserType   string `json:"user_type"`
 	IsVerified bool   `json:"is_verified"`
 	Status     string `json:"status"`
+	Preference *UserPreferenceResponse `json:"preference,omitempty"`
 }
 
 // CompanyBasic represents basic company info in auth response (for employer only)

@@ -145,6 +145,98 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, http.MsgOperationSuccess, nil)
 }
 
+// GetPreferences godoc
+// @Summary Get user preferences
+// @Description Get authenticated user's preferences
+// @Tags users
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /users/me/preferences [get]
+func (h *UserHandler) GetPreferences(c *fiber.Ctx) error {
+	ctx := c.Context()
+	userID := middleware.GetUserID(c)
+
+	prefs, err := h.userService.GetPreferences(ctx, userID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to retrieve user preferences", err.Error())
+	}
+
+	response := mapper.ToUserPreferenceResponse(prefs)
+	return utils.SuccessResponse(c, "User preferences retrieved successfully", response)
+}
+
+// UpdatePreferences godoc
+// @Summary Update user preferences
+// @Description Update authenticated user's preferences
+// @Tags users
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body request.UpdateUserPreferencesRequest true "Update preferences request"
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.Response
+// @Failure 401 {object} utils.Response
+// @Failure 500 {object} utils.Response
+// @Router /users/me/preferences [put]
+func (h *UserHandler) UpdatePreferences(c *fiber.Ctx) error {
+	ctx := c.Context()
+	userID := middleware.GetUserID(c)
+
+	var req request.UpdateUserPreferencesRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, http.ErrInvalidRequest, err.Error())
+	}
+
+	if err := utils.ValidateStruct(&req); err != nil {
+		errors := utils.FormatValidationErrors(err)
+		return utils.ValidationErrorResponse(c, http.ErrValidationFailed, errors)
+	}
+
+	// Sanitize pointers
+	req.LanguagePreference = utils.SanitizePtr(req.LanguagePreference)
+	req.ThemePreference = utils.SanitizePtr(req.ThemePreference)
+	req.PreferredJobType = utils.SanitizePtr(req.PreferredJobType)
+	req.PreferredIndustry = utils.SanitizePtr(req.PreferredIndustry)
+	req.PreferredLocation = utils.SanitizePtr(req.PreferredLocation)
+	req.ProfileVisibility = utils.SanitizePtr(req.ProfileVisibility)
+
+	// Map to domain request
+	domainReq := &user.UpdatePreferenceRequest{
+		LanguagePreference:  req.LanguagePreference,
+		ThemePreference:     req.ThemePreference,
+		PreferredJobType:    req.PreferredJobType,
+		PreferredIndustry:   req.PreferredIndustry,
+		PreferredLocation:   req.PreferredLocation,
+		PreferredSalaryMin:  req.PreferredSalaryMin,
+		PreferredSalaryMax:  req.PreferredSalaryMax,
+		EmailNotifications:  req.EmailNotifications,
+		SMSNotifications:    req.SMSNotifications,
+		PushNotifications:   req.PushNotifications,
+		EmailMarketing:      req.EmailMarketing,
+		ProfileVisibility:   req.ProfileVisibility,
+		ShowOnlineStatus:    req.ShowOnlineStatus,
+		AllowDirectMessages: req.AllowDirectMessages,
+		DataSharingConsent:  req.DataSharingConsent,
+	}
+
+	if err := h.userService.UpdatePreferences(ctx, userID, domainReq); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, http.ErrFailedOperation, err.Error())
+	}
+
+	// Retrieve updated preferences
+	updated, err := h.userService.GetPreferences(ctx, userID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to retrieve updated preferences", err.Error())
+	}
+
+	resp := mapper.ToUserPreferenceResponse(updated)
+	return utils.SuccessResponse(c, http.MsgOperationSuccess, resp)
+}
+
 // GetEducations godoc
 // @Summary Get user educations
 // @Description Get list of user's educations

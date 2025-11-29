@@ -17,9 +17,11 @@ func SetupUserRoutes(api fiber.Router, deps *Dependencies, authMw *middleware.Au
 	// Profile routes
 	users.Get("/me", deps.UserHandler.GetProfile) // Support ?include=all or ?include=educations,skills
 	users.Put("/me", deps.UserHandler.UpdateProfile)
+	users.Put("/me/preferences", deps.UserHandler.UpdatePreferences)
 
 	// Dedicated section GET routes (for granular access)
 	users.Get("/me/educations", deps.UserHandler.GetEducations)
+	users.Get("/me/preferences", deps.UserHandler.GetPreferences)
 	users.Get("/me/experiences", deps.UserHandler.GetExperiences)
 	users.Get("/me/skills", deps.UserHandler.GetSkills)
 	users.Get("/me/certifications", deps.UserHandler.GetCertifications)

@@ -1,4 +1,4 @@
-package config
+ package config
 
 // Environment variable constants
 const (
@@ -42,6 +42,13 @@ const (
 	EnvRedisPort     = "REDIS_PORT"
 	EnvRedisPassword = "REDIS_PASSWORD"
 	EnvRedisDB       = "REDIS_DB"
+	EnvRedisURL      = "REDIS_URL"
+
+	// Google credentials file for local development (JSON downloaded from Google Console)
+	EnvGoogleCredentialsFile = "GOOGLE_CREDENTIALS_FILE"
+
+	// Mobile redirect whitelist for OAuth mobile deep-link or backend exchange (comma-separated)
+	EnvAllowedMobileRedirects = "ALLOWED_MOBILE_REDIRECT_URIS"
 
 	// Rate Limiting
 	EnvRateLimitEnabled       = "RATE_LIMIT_ENABLED"
@@ -81,6 +88,7 @@ const (
 	DefaultRedisHost = "localhost"
 	DefaultRedisPort = "6379"
 	DefaultRedisDB   = 0
+	DefaultRedisURL  = ""
 
 	DefaultRateLimitMax           = 100
 	DefaultRateLimitWindowSeconds = 60

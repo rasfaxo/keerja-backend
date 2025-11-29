@@ -1,6 +1,6 @@
 # Authentication Endpoints
 
-**Last Updated**: 2025-10-24  
+**Last Updated**: 2025-11-19  
 **Base URL**: `http://localhost:8080/api/v1`
 
 ---
@@ -14,7 +14,7 @@
 
 ---
 
-## 🆕 NEW ENDPOINTS (14)
+## 🆕 NEW ENDPOINTS (15)
 
 ### OTP Registration
 
@@ -298,19 +298,27 @@ Authorization: Bearer <JWT_TOKEN>
 #### 11. Get Google OAuth URL
 
 ```http
-GET /auth/oauth/google 🔓
+GET /auth/oauth/google?client=mobile&redirect_uri=myapp://oauth-callback&code_challenge=<S256> 🔓
+
+Query Params:
+- `client` (optional): `web` (default) or `mobile`
+- `redirect_uri` (optional for web): must exist in `ALLOWED_MOBILE_REDIRECT_URIS` when `client=mobile`
+- `post_login_redirect_uri` (optional): Deep-link to receive JWT via fragment (`myapp://oauth#token=...`)
+- `code_challenge` + `code_challenge_method` (optional): PKCE S256 for mobile flows
 
 → 200 OK
 {
   "success": true,
   "message": "Google auth URL generated",
   "data": {
-    "auth_url": "https://accounts.google.com/o/oauth2/v2/auth?client_id=..."
+    "auth_url": "https://accounts.google.com/o/oauth2/v2/auth?...",
+    "state": "J2lQJd9iXo...",
+    "expires_in": 300
   }
 }
 ```
 
-**Usage**: Redirect user to `auth_url`
+**Usage**: Redirect/launch browser to `auth_url`, persist the returned `state`.
 
 ---
 
@@ -333,11 +341,75 @@ GET /auth/oauth/google/callback?code=4/0AY0e-g6XXX&state=abc123 🔓
 ```
 
 ⚠️ **Note**: Automatically called by Google after user login  
-💡 **Auto-create**: New user created if email doesn't exist
+💡 **Auto-create**: New user created if email doesn't exist  
+📱 **Deep-link mode**: when `post_login_redirect_uri` was provided, backend redirects to `myapp://oauth-callback#token=<APP_JWT>` instead of returning JSON.
 
 ---
 
-#### 13. List Connected Providers
+#### 13. Exchange Google Authorization Code (Mobile PKCE)
+
+Used by Flutter once it receives the Google `code` via app deep-link.
+
+```http
+POST /auth/oauth/google/exchange 🔓
+Content-Type: application/json
+
+{
+  "code": "4/0AY0e-g6XXX",
+  "code_verifier": "generated-by-app",
+  "state": "J2lQJd9iXo...",
+  "redirect_uri": "myapp://oauth-callback"
+}
+
+→ 200 OK
+{
+  "success": true,
+  "message": "Google authentication successful",
+  "data": {
+    "access_token": "<APP_JWT>",
+    "token_type": "Bearer",
+    "expires_in": 3600
+  }
+}
+```
+
+✅ **Flow summary**:
+1. Mobile fetches auth URL with PKCE (`code_challenge`) and allowed `redirect_uri`.
+2. Google redirects to the app with `code` + original `state`.
+3. Mobile POSTs to `/auth/oauth/google/exchange` with `code_verifier`.
+4. Backend talks to Google, upserts user, stores refresh token, returns Keerja JWT.
+
+**Optional — preferred mobile deep-link (one-time code)**
+
+When the backend uses a safer one-time code (single-use) in the deep-link instead of embedding the JWT, mobile apps should POST that one-time code to the exchange-one-time endpoint to obtain the app JWT:
+
+```http
+POST /auth/oauth/google/exchange-one-time 🔓
+Content-Type: application/json
+
+{
+  "code": "v1_onetime_AbCdEf..."
+}
+
+→ 200 OK
+{
+  "success": true,
+  "message": "Token exchange successful",
+  "data": {
+    "access_token": "<APP_JWT>",
+    "token_type": "Bearer",
+    "expires_in": 3600
+  }
+}
+```
+
+Notes:
+- One-time codes are single-use and short-lived (default TTL 2 minutes).
+- Backend generates the code and redirects mobile apps to `myapp://oauth-callback?code=<ONE_TIME_CODE>`.
+
+---
+
+#### 14. List Connected Providers
 
 ```http
 GET /auth/oauth/connected 🔒
@@ -363,7 +435,7 @@ Authorization: Bearer <JWT_TOKEN>
 
 ---
 
-#### 14. Disconnect OAuth Provider
+#### 15. Disconnect OAuth Provider
 
 ```http
 DELETE /auth/oauth/google 🔒

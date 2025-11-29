@@ -2,6 +2,9 @@ package http
 
 import (
 	"context"
+	"fmt"
+	"net/url"
+
 	"keerja-backend/internal/domain/auth"
 	"keerja-backend/internal/domain/company"
 	"keerja-backend/internal/domain/user"
@@ -920,14 +923,24 @@ func (h *AuthHandler) LogoutAllDevices(c *fiber.Ctx) error {
 func (h *AuthHandler) InitiateGoogleLogin(c *fiber.Ctx) error {
 	ctx := c.Context()
 
+	req := service.GoogleAuthURLRequest{
+		ClientType:           c.Query("client"),
+		RedirectURI:          c.Query("redirect_uri"),
+		PostLoginRedirectURI: c.Query("post_login_redirect_uri"),
+		CodeChallenge:        c.Query("code_challenge"),
+		CodeChallengeMethod:  c.Query("code_challenge_method"),
+	}
+
 	// Get Google auth URL
-	authURL, err := h.oauthService.GetGoogleAuthURL(ctx)
+	authResp, err := h.oauthService.GetGoogleAuthURL(ctx, req)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to generate auth URL", err.Error())
 	}
 
 	return utils.SuccessResponse(c, "Google auth URL generated", fiber.Map{
-		"auth_url": authURL,
+		"auth_url":   authResp.AuthURL,
+		"state":      authResp.State,
+		"expires_in": authResp.ExpiresIn,
 	})
 }
 
@@ -954,8 +967,8 @@ func (h *AuthHandler) HandleGoogleCallback(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Missing authorization code", "")
 	}
 
-	// Authenticate with Google (returns JWT token)
-	accessToken, err := h.oauthService.HandleGoogleCallback(ctx, code, state)
+	// Authenticate with Google (returns JWT token + metadata)
+	result, err := h.oauthService.HandleGoogleCallback(ctx, code, state)
 	if err != nil {
 		// Check for known service errors
 		if err.Error() == "invalid state" {
@@ -964,10 +977,84 @@ func (h *AuthHandler) HandleGoogleCallback(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to authenticate with Google", err.Error())
 	}
 
+	// Deep-link redirect for mobile - prefer one-time code for security, fallback to fragment if Redis unavailable
+	if result.PostLoginRedirectURI != "" {
+		// try to create a one-time code (requires Redis-backed state store)
+		if code, err := h.oauthService.CreateOneTimeCode(ctx, result.AccessToken, 0); err == nil {
+			// redirect with single-use code in query param
+			deepLink := fmt.Sprintf("%s?code=%s", result.PostLoginRedirectURI, url.QueryEscape(code))
+			return c.Redirect(deepLink, fiber.StatusFound)
+		}
+
+		// fallback: include token in fragment (less secure)
+		deepLink := result.PostLoginRedirectURI
+		fragment := url.QueryEscape(result.AccessToken)
+		if fragment != "" {
+			deepLink = fmt.Sprintf("%s#token=%s", result.PostLoginRedirectURI, fragment)
+		}
+		return c.Redirect(deepLink, fiber.StatusFound)
+	}
+
 	// Return token response (no refresh token in basic OAuth flow)
-	response := mapper.ToTokenResponse(accessToken, "")
+	response := mapper.ToTokenResponse(result.AccessToken, "")
 
 	return utils.SuccessResponse(c, "Google authentication successful", response)
+}
+
+// ExchangeGoogleOAuthCode handles PKCE exchange for mobile clients.
+func (h *AuthHandler) ExchangeGoogleOAuthCode(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	var req request.GoogleOAuthExchangeRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body", err.Error())
+	}
+
+	if err := utils.ValidateStruct(&req); err != nil {
+		errors := utils.FormatValidationErrors(err)
+		return utils.ValidationErrorResponse(c, "Validation failed", errors)
+	}
+
+	exchangeResp, err := h.oauthService.ExchangeGoogleCode(ctx, service.GoogleExchangeRequest{
+		Code:         req.Code,
+		CodeVerifier: req.CodeVerifier,
+		State:        req.State,
+		RedirectURI:  req.RedirectURI,
+	})
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to exchange authorization code", err.Error())
+	}
+
+	return utils.SuccessResponse(c, "Google authentication successful", exchangeResp)
+}
+
+// ExchangeOneTimeCode exchanges a one-time code (from mobile deep-link) for an app JWT
+func (h *AuthHandler) ExchangeOneTimeCode(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	var req request.OneTimeCodeExchangeRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid request body", err.Error())
+	}
+
+	if err := utils.ValidateStruct(&req); err != nil {
+		errors := utils.FormatValidationErrors(err)
+		return utils.ValidationErrorResponse(c, "Validation failed", errors)
+	}
+
+	// Consume the one-time code and return stored JWT
+	jwtToken, err := h.oauthService.ConsumeOneTimeCode(ctx, req.Code)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid or expired one-time code", err.Error())
+	}
+
+	expiresIn := h.oauthService.JWTExpirySeconds()
+
+	return utils.SuccessResponse(c, "Token exchange successful", map[string]interface{}{
+		"access_token": jwtToken,
+		"token_type":   "Bearer",
+		"expires_in":   expiresIn,
+	})
 }
 
 // GetConnectedProviders godoc
