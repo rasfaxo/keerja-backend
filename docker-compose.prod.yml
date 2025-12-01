@@ -1,0 +1,92 @@
+# ============================================================
+# Keerja Backend - Production Docker Compose Override
+# ============================================================
+#
+# Usage:
+#   docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# This file contains production-specific configurations
+# ============================================================
+
+version: '3.8'
+
+services:
+  # ==========================================
+  # PostgreSQL - Production Settings
+  # ==========================================
+  postgres:
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_MIGRATOR_PASSWORD: ${DB_MIGRATOR_PASSWORD:?DB_MIGRATOR_PASSWORD is required}
+      POSTGRES_APP_PASSWORD: ${DB_APP_PASSWORD:?DB_APP_PASSWORD is required}
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '2'
+        reservations:
+          memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+
+  # ==========================================
+  # Redis - Production Settings  
+  # ==========================================
+  redis:
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  # ==========================================
+  # Keerja API - Production Settings
+  # ==========================================
+  api:
+    environment:
+      APP_ENV: production
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      DB_PASSWORD: ${DB_APP_PASSWORD:?DB_APP_PASSWORD is required}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+      DB_SSLMODE: require
+      RATE_LIMIT_ENABLED: "true"
+      RATE_LIMIT_MAX: "60"
+    deploy:
+      mode: replicated
+      replicas: 2
+      resources:
+        limits:
+          memory: 1G
+          cpus: '2'
+        reservations:
+          memory: 256M
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "10"
+    profiles:
+      - app
+      - full

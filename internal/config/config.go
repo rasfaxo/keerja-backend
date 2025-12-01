@@ -19,6 +19,7 @@ type Config struct {
 	ServerHost string
 	AppEnv     string
 	AppName    string
+	AppVersion string
 
 	// Database Configuration
 	DBHost     string
@@ -87,7 +88,6 @@ type Config struct {
 	GoogleRedirectURI  string
 	// Optional credentials JSON file path (downloaded from Google Console) for local dev
 	GoogleCredentialsFile string
-    
 
 	// FCM Configuration
 	FCMEnabled         bool
@@ -95,11 +95,11 @@ type Config struct {
 	FCMCredentialsFile string
 	// Allowed mobile redirect URIs (used for mobile deep-link / one-time code flows)
 	AllowedMobileRedirectURIs []string
-	FCMTimeout         time.Duration
-	FCMBatchSize       int
-	FCMMaxRetries      int
-	PushDefaultSound   string
-	PushDefaultTTL     int
+	FCMTimeout                time.Duration
+	FCMBatchSize              int
+	FCMMaxRetries             int
+	PushDefaultSound          string
+	PushDefaultTTL            int
 }
 
 var globalConfig *Config
@@ -117,6 +117,7 @@ func LoadConfig() *Config {
 		ServerHost: getEnv("SERVER_HOST", "0.0.0.0"),
 		AppEnv:     getEnv("APP_ENV", "development"),
 		AppName:    getEnv("APP_NAME", "Keerja API"),
+		AppVersion: getEnv("APP_VERSION", "1.0.0"),
 
 		// Database Configuration
 		DBHost:     getEnv("DB_HOST", "localhost"),
@@ -162,7 +163,6 @@ func LoadConfig() *Config {
 		// CORS Configuration
 		AllowedOrigins: getEnvAsSlice("ALLOWED_ORIGINS", []string{"http://localhost:3000", "http://localhost:5173"}),
 
-
 		// Pagination
 		DefaultPageSize: getEnvAsInt("DEFAULT_PAGE_SIZE", 10),
 		MaxPageSize:     getEnvAsInt("MAX_PAGE_SIZE", 100),
@@ -184,7 +184,7 @@ func LoadConfig() *Config {
 		GoogleClientID:     getEnv("GOOGLE_CLIENT_ID", ""),
 		GoogleClientSecret: getEnv("GOOGLE_CLIENT_SECRET", ""),
 		// Ensure default redirect matches the API v1 routes used in this project
-		GoogleRedirectURI:  getEnv("GOOGLE_REDIRECT_URI", "http://localhost:8080/api/v1/auth/oauth/google/callback"),
+		GoogleRedirectURI:     getEnv("GOOGLE_REDIRECT_URI", "http://localhost:8080/api/v1/auth/oauth/google/callback"),
 		GoogleCredentialsFile: getEnv("GOOGLE_CREDENTIALS_FILE", ""),
 
 		// Mobile redirect whitelist for OAuth
@@ -314,6 +314,9 @@ func (c *Config) IsProduction() bool {
 
 // GetDSN returns the database connection string
 func (c *Config) GetDSN() string {
+	if dbURL := os.Getenv("DATABASE_URL"); dbURL != "" {
+		return dbURL
+	}
 	return fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
 		c.DBHost, c.DBUser, c.DBPassword, c.DBName, c.DBPort, c.DBSSLMode,

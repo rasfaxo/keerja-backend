@@ -116,11 +116,11 @@ func (UserProfile) TableName() string {
 
 // UserPreference represents user preferences and settings
 type UserPreference struct {
-	ID                 int64  `gorm:"primaryKey;autoIncrement" json:"id"`
-	UserID             int64  `gorm:"not null;uniqueIndex" json:"user_id"`
+	ID                 int64   `gorm:"primaryKey;autoIncrement" json:"id"`
+	UserID             int64   `gorm:"not null;uniqueIndex" json:"user_id"`
 	LanguagePreference *string `gorm:"type:varchar(10)" json:"language_preference"`
-	ThemePreference    string `gorm:"type:varchar(10);default:'light'" json:"theme_preference"`
-	PreferredJobType   string `gorm:"type:varchar(50);default:'onsite'" json:"preferred_job_type"`
+	ThemePreference    string  `gorm:"type:varchar(10);default:'light'" json:"theme_preference"`
+	PreferredJobType   string  `gorm:"type:varchar(50);default:'onsite'" json:"preferred_job_type"`
 
 	// Master Data Preferred Industries - Support multiple industries
 	PreferredIndustryIDs []int64 `gorm:"-" json:"preferred_industry_ids,omitempty"` // Virtual field, stored in junction table

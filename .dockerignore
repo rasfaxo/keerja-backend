@@ -1,3 +1,7 @@
+# ================================
+# Keerja Backend - Docker Ignore
+# ================================
+
 # Git
 .git
 .gitignore
@@ -5,9 +9,8 @@
 
 # Documentation
 *.md
+!README.md
 docs/
-SETUP_PROGRESS.md
-DATABASE_FIX_REPORT.md
 
 # Development
 .vscode/
@@ -15,6 +18,7 @@ DATABASE_FIX_REPORT.md
 *.swp
 *.swo
 *~
+.air.toml
 
 # Testing
 tests/
@@ -28,23 +32,25 @@ coverage.html
 *.dll
 *.so
 *.dylib
-main
-keerja-backend
+bin/
+tmp/
 
 # Logs
 logs/
 *.log
 
-# Uploads
+# Uploads (mount as volume instead)
 uploads/
 
-# Environment
+# Environment (use docker env vars)
+.env
 .env.local
 .env.*.local
+.env.docker
 
-# Docker
-Dockerfile
-docker-compose.yml
+# Docker files (not needed inside container)
+Dockerfile*
+docker-compose*.yml
 .dockerignore
 
 # Temporary

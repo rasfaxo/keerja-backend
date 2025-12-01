@@ -19,9 +19,9 @@ type CreateJobRequest struct {
 	ExperienceLevelID  int64  `json:"experience_level_id" validate:"required,min=1"`
 	GenderPreferenceID int64  `json:"gender_preference_id" validate:"required,min=1"`
 
-	// Salary Range (Required)
+	// Salary Range (Required - validation depends on salary_display mode)
 	SalaryMin     *float64 `json:"salary_min" validate:"required,min=0"`
-	SalaryMax     *float64 `json:"salary_max" validate:"required,min=0,gtefield=SalaryMin"`
+	SalaryMax     *float64 `json:"salary_max" validate:"required,min=0"`
 	SalaryDisplay string   `json:"salary_display" validate:"required,oneof='range' 'min_only' 'max_only' 'negotiable' 'competitive' 'hidden'"`
 
 	// Age Requirements (Optional)

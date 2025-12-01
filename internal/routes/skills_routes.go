@@ -3,11 +3,11 @@ package routes
 import (
 	"github.com/gofiber/fiber/v2"
 
-	"keerja-backend/internal/handler/http"
+	"keerja-backend/internal/handler/http/master"
 )
 
 // SetupSkillsRoutes sets up routes for skills master data
-func SetupSkillsRoutes(api fiber.Router, handler *http.SkillsMasterHandler) {
+func SetupSkillsRoutes(api fiber.Router, handler *master.SkillsMasterHandler) {
 	skills := api.Group("/skills")
 
 	// Public endpoints - no authentication required for mobile app to fetch skills

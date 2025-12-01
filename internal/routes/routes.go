@@ -3,10 +3,14 @@ package routes
 import (
 	"keerja-backend/internal/config"
 	"keerja-backend/internal/domain/company"
-	"keerja-backend/internal/handler/http"
 	"keerja-backend/internal/handler/http/admin"
+	applicationhandler "keerja-backend/internal/handler/http/application"
+	authhandler "keerja-backend/internal/handler/http/auth"
 	companyhandler "keerja-backend/internal/handler/http/company"
+	jobhandler "keerja-backend/internal/handler/http/job"
 	userhandler "keerja-backend/internal/handler/http/jobseeker"
+	"keerja-backend/internal/handler/http/master"
+	notificationhandler "keerja-backend/internal/handler/http/notification"
 	"keerja-backend/internal/middleware"
 
 	"github.com/gofiber/fiber/v2"
@@ -15,32 +19,43 @@ import (
 // Dependencies holds all handler dependencies
 type Dependencies struct {
 	Config                 *config.Config
-	AuthHandler            *http.AuthHandler
-	UserHandler            *userhandler.UserHandler
-	JobHandler             *http.JobHandler              // Job management (9 endpoints)
-	ApplicationHandler     *http.ApplicationHandler      // Application management (21 endpoints)
-	AdminHandler           *http.AdminHandler            // Admin moderation & job approval
-	AdminMasterDataHandler *admin.AdminMasterDataHandler // Admin master data CRUD
+	AuthHandler            *authhandler.AuthHandler
+	JobHandler             *jobhandler.JobHandler                 // Job management (10 endpoints)
+	ApplicationHandler     *applicationhandler.ApplicationHandler // Application management (21 endpoints)
+	AdminJobHandler        *admin.AdminJobHandler                 // Admin moderation & job approval
+	AdminMasterDataHandler *admin.AdminMasterDataHandler          // Admin master data CRUD
 
 	// Admin handlers
-	AdminAuthHandler    *http.AdminAuthHandler          // Admin authentication
+	AdminAuthHandler    *admin.AdminAuthHandler         // Admin authentication
 	AdminCompanyHandler *admin.CompanyHandler           // Company moderation
 	AdminAuthMiddleware *middleware.AdminAuthMiddleware // Admin auth middleware
 
+	// User handlers (split by domain for better organization)
+	UserProfileHandler    *userhandler.UserProfileHandler    // Profile & preferences (5 endpoints)
+	UserEducationHandler  *userhandler.UserEducationHandler  // Education CRUD (4 endpoints)
+	UserExperienceHandler *userhandler.UserExperienceHandler // Experience CRUD (4 endpoints)
+	UserSkillHandler      *userhandler.UserSkillHandler      // Skills management (3 endpoints)
+	UserDocumentHandler   *userhandler.UserDocumentHandler   // Document upload (2 endpoints)
+	UserMiscHandler       *userhandler.UserMiscHandler       // Certifications, languages, projects (3 endpoints)
+
 	// Company handlers (split by domain for better organization)
-	CompanyBasicHandler   *companyhandler.CompanyBasicHandler   // CRUD operations (10 endpoints)
-	CompanyProfileHandler *companyhandler.CompanyProfileHandler // Profile & social features (8 endpoints)
-	CompanyReviewHandler  *companyhandler.CompanyReviewHandler  // Review system (5 endpoints)
-	CompanyStatsHandler   *companyhandler.CompanyStatsHandler   // Statistics & queries (3 endpoints)
-	CompanyInviteHandler  *companyhandler.CompanyInviteHandler  // Employee invitation (5 endpoints)
+	CompanyBasicHandler        *companyhandler.CompanyBasicHandler        // CRUD operations (7 endpoints)
+	CompanyImageHandler        *companyhandler.CompanyImageHandler        // Image upload/delete (4 endpoints)
+	CompanyAddressHandler      *companyhandler.CompanyAddressHandler      // Address CRUD (4 endpoints)
+	CompanyEmployerHandler     *companyhandler.CompanyEmployerHandler     // Employer profile (2 endpoints)
+	CompanyVerificationHandler *companyhandler.CompanyVerificationHandler // Verification (3 endpoints)
+	CompanyProfileHandler      *companyhandler.CompanyProfileHandler      // Profile & social features (8 endpoints)
+	CompanyReviewHandler       *companyhandler.CompanyReviewHandler       // Review system (5 endpoints)
+	CompanyStatsHandler        *companyhandler.CompanyStatsHandler        // Statistics & queries (3 endpoints)
+	CompanyInviteHandler       *companyhandler.CompanyInviteHandler       // Employee invitation (5 endpoints)
 	// Master data handlers
-	SkillsMasterHandler *http.SkillsMasterHandler // Skills master data (8 endpoints)
-	MasterDataHandlers  *MasterDataHandlers       // Industry, company size, location (10 endpoints)
-	MasterDataHandler   *http.MasterDataHandler   // Job titles & options (Phase 1-4)
+	SkillsMasterHandler *master.SkillsMasterHandler // Skills master data (8 endpoints)
+	MasterDataHandlers  *MasterDataHandlers         // Industry, company size, location (10 endpoints)
+	MasterDataHandler   *master.MasterDataHandler   // Job titles & options (Phase 1-4)
 
 	// FCM Notification handlers (Firebase Cloud Messaging)
-	DeviceTokenHandler      *http.DeviceTokenHandler      // Device token management (6 endpoints)
-	PushNotificationHandler *http.PushNotificationHandler // Push notifications (5 endpoints)
+	DeviceTokenHandler      *notificationhandler.DeviceTokenHandler      // Device token management (6 endpoints)
+	PushNotificationHandler *notificationhandler.PushNotificationHandler // Push notifications (5 endpoints)
 
 	// Services (for middlewares)
 	CompanyService company.CompanyService
@@ -60,14 +75,6 @@ func SetupRoutes(app *fiber.App, deps *Dependencies) {
 
 	// API v1 group
 	api := app.Group("/api/v1")
-
-	// Health check endpoint
-	api.Get("/health", func(c *fiber.Ctx) error {
-		return c.JSON(fiber.Map{
-			"status":  "ok",
-			"message": "Keerja API is running",
-		})
-	})
 
 	// Setup route groups (each in separate file)
 	SetupAuthRoutes(api, deps, authMw)               // auth_routes.go

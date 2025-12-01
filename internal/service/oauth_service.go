@@ -11,9 +11,10 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
-	"github.com/redis/go-redis/v9"
 	"sync"
+	"time"
+
+	"github.com/redis/go-redis/v9"
 
 	"keerja-backend/internal/domain/auth"
 	"keerja-backend/internal/domain/user"
@@ -108,13 +109,13 @@ type OAuthCallbackResult struct {
 
 // OAuthService handles OAuth authentication business logic
 type OAuthService struct {
-	oauthRepo    auth.OAuthRepository
-	userRepo     user.UserRepository
-	googleConfig OAuthConfig
-	jwtSecret    string
-	jwtDuration  time.Duration
-	stateStore   OAuthStateStore
-	stateTTL     time.Duration
+	oauthRepo              auth.OAuthRepository
+	userRepo               user.UserRepository
+	googleConfig           OAuthConfig
+	jwtSecret              string
+	jwtDuration            time.Duration
+	stateStore             OAuthStateStore
+	stateTTL               time.Duration
 	allowedMobileRedirects map[string]struct{}
 
 	// fallback in-memory one-time-code store (used when Redis not available)
@@ -142,8 +143,7 @@ func NewOAuthService(
 	}
 
 	return &OAuthService{
-		oauthRepo:              oauthRepo,
-    
+		oauthRepo: oauthRepo,
 
 		userRepo:               userRepo,
 		googleConfig:           googleConfig,

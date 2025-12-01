@@ -14,36 +14,31 @@ func SetupUserRoutes(api fiber.Router, deps *Dependencies, authMw *middleware.Au
 	// Protected routes - require authentication
 	users.Use(authMw.AuthRequired())
 
-	// Profile routes
-	users.Get("/me", deps.UserHandler.GetProfile) // Support ?include=all or ?include=educations,skills
-	users.Put("/me", deps.UserHandler.UpdateProfile)
-	users.Put("/me/preferences", deps.UserHandler.UpdatePreferences)
+	// Profile routes (UserProfileHandler)
+	users.Get("/me", deps.UserProfileHandler.GetProfile) // Support ?include=all or ?include=educations,skills
+	users.Put("/me", deps.UserProfileHandler.UpdateProfile)
+	users.Put("/me/preferences", deps.UserProfileHandler.UpdatePreferences)
+	users.Get("/me/preferences", deps.UserProfileHandler.GetPreferences)
 
-	// Dedicated section GET routes (for granular access)
-	users.Get("/me/educations", deps.UserHandler.GetEducations)
-	users.Get("/me/preferences", deps.UserHandler.GetPreferences)
-	users.Get("/me/experiences", deps.UserHandler.GetExperiences)
-	users.Get("/me/skills", deps.UserHandler.GetSkills)
-	users.Get("/me/certifications", deps.UserHandler.GetCertifications)
-	users.Get("/me/languages", deps.UserHandler.GetLanguages)
-	users.Get("/me/projects", deps.UserHandler.GetProjects)
-	users.Get("/me/documents", deps.UserHandler.GetDocuments)
+	// Education routes (UserEducationHandler)
+	users.Get("/me/educations", deps.UserEducationHandler.GetEducations)
+	users.Post("/me/education", deps.UserEducationHandler.AddEducation)
+	users.Put("/me/education/:id", deps.UserEducationHandler.UpdateEducation)
+	users.Delete("/me/education/:id", deps.UserEducationHandler.DeleteEducation)
 
-	// Education routes
-	users.Post("/me/education", deps.UserHandler.AddEducation)
-	users.Put("/me/education/:id", deps.UserHandler.UpdateEducation)
-	users.Delete("/me/education/:id", deps.UserHandler.DeleteEducation)
+	// Experience routes (UserExperienceHandler)
+	users.Get("/me/experiences", deps.UserExperienceHandler.GetExperiences)
+	users.Post("/me/experience", deps.UserExperienceHandler.AddExperience)
+	users.Put("/me/experience/:id", deps.UserExperienceHandler.UpdateExperience)
+	users.Delete("/me/experience/:id", deps.UserExperienceHandler.DeleteExperience)
 
-	// Experience routes
-	users.Post("/me/experience", deps.UserHandler.AddExperience)
-	users.Put("/me/experience/:id", deps.UserHandler.UpdateExperience)
-	users.Delete("/me/experience/:id", deps.UserHandler.DeleteExperience)
+	// Skills routes (UserSkillHandler)
+	users.Get("/me/skills", deps.UserSkillHandler.GetSkills)
+	users.Post("/me/skills/batch", deps.UserSkillHandler.AddSkills) // Multiple skills
+	users.Delete("/me/skills/:id", deps.UserSkillHandler.DeleteSkill)
 
-	// Skills routes
-	users.Post("/me/skills/batch", deps.UserHandler.AddSkills) // Multiple skills
-	users.Delete("/me/skills/:id", deps.UserHandler.DeleteSkill)
-
-	// Document upload routes
+	// Document routes (UserDocumentHandler)
+	users.Get("/me/documents", deps.UserDocumentHandler.GetDocuments)
 	users.Post("/me/documents",
 		middleware.UploadRateLimiter(),
 		middleware.ValidateFileUpload(middleware.FileUploadConfig{
@@ -59,10 +54,15 @@ func SetupUserRoutes(api fiber.Router, deps *Dependencies, authMw *middleware.Au
 			Required:          true,
 			FieldName:         "file",
 		}),
-		deps.UserHandler.UploadDocument,
+		deps.UserDocumentHandler.UploadDocument,
 	)
 
-	// Profile photo upload route
+	// Misc routes - certifications, languages, projects (UserMiscHandler)
+	users.Get("/me/certifications", deps.UserMiscHandler.GetCertifications)
+	users.Get("/me/languages", deps.UserMiscHandler.GetLanguages)
+	users.Get("/me/projects", deps.UserMiscHandler.GetProjects)
+
+	// Profile photo upload route (UserProfileHandler)
 	users.Post("/profile-photo",
 		middleware.UploadRateLimiter(),
 		middleware.ValidateFileUpload(middleware.FileUploadConfig{
@@ -72,6 +72,6 @@ func SetupUserRoutes(api fiber.Router, deps *Dependencies, authMw *middleware.Au
 			Required:          true,
 			FieldName:         "file",
 		}),
-		deps.UserHandler.UploadProfilePhoto,
+		deps.UserProfileHandler.UploadProfilePhoto,
 	)
 }

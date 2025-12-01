@@ -1,23 +1,43 @@
 version: '3.8'
 
+# ============================================================
+# Keerja Backend - Docker Compose Configuration
+# ============================================================
+# 
+# Usage:
+#   Development:  docker-compose up -d
+#   Production:   docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#   With app:     docker-compose --profile app up -d
+#
+# Profiles:
+#   - (default): postgres, redis only
+#   - dev:       + mailhog, adminer, api-dev (hot reload)
+#   - app:       + api (production build)
+#   - storage:   + minio
+#   - full:      all services
+#
+# ============================================================
+
 services:
+  # ==========================================
   # PostgreSQL Database
+  # ==========================================
   postgres:
     image: postgres:17-alpine
     container_name: keerja-postgres
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres_admin_pass
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres_admin_pass}
       POSTGRES_DB: keerja
       POSTGRES_INITDB_ARGS: "-E UTF8 --locale=C"
-      # Custom roles (untuk docker-init-db.sh)
+      # Custom roles (for docker-init-db.sh)
       POSTGRES_MIGRATOR_USER: kustan
       POSTGRES_MIGRATOR_PASSWORD: ${DB_MIGRATOR_PASSWORD:-kustan_dev_pass_123}
       POSTGRES_APP_USER: bekerja
       POSTGRES_APP_PASSWORD: ${DB_APP_PASSWORD:-bekerja_dev_pass_123}
       TZ: Asia/Jakarta
     ports:
-      - "5434:5432"
+      - "${DB_PORT:-5434}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker-init-db.sh:/docker-entrypoint-initdb.d/00-init-roles.sh
@@ -25,18 +45,26 @@ services:
     networks:
       - keerja-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d keerja"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
+  # ==========================================
   # Redis Cache
+  # ==========================================
   redis:
     image: redis:7-alpine
     container_name: keerja-redis
+    command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     networks:
@@ -47,8 +75,14 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
-  # MailHog for email testing
+  # ==========================================
+  # MailHog - Email Testing (Development)
+  # ==========================================
   mailhog:
     image: mailhog/mailhog:latest
     container_name: keerja-mailhog
@@ -58,8 +92,13 @@ services:
     networks:
       - keerja-network
     restart: unless-stopped
+    profiles:
+      - dev
+      - full
 
-  # MinIO Object Storage (optional, untuk file uploads)
+  # ==========================================
+  # MinIO Object Storage (Optional)
+  # ==========================================
   minio:
     image: minio/minio:latest
     container_name: keerja-minio
@@ -76,25 +115,167 @@ services:
       - keerja-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: ["CMD", "mc", "ready", "local"]
       interval: 30s
       timeout: 10s
       retries: 3
+    profiles:
+      - storage
+      - full
 
-  # Adminer for database management (development only)
+  # ==========================================
+  # Adminer - Database Admin UI (Development)
+  # ==========================================
   adminer:
     image: adminer:latest
     container_name: keerja-adminer
     ports:
       - "8081:8080"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - keerja-network
     restart: unless-stopped
     environment:
       ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: dracula
+    profiles:
+      - dev
+      - full
 
+  # ==========================================
+  # Keerja Backend API (Production)
+  # ==========================================
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+      args:
+        APP_VERSION: ${APP_VERSION:-1.0.0}
+        BUILD_TIME: ${BUILD_TIME:-}
+        GIT_COMMIT: ${GIT_COMMIT:-}
+    container_name: keerja-api
+    environment:
+      # Server
+      APP_ENV: ${APP_ENV:-production}
+      APP_NAME: ${APP_NAME:-Keerja API}
+      APP_VERSION: ${APP_VERSION:-1.0.0}
+      SERVER_PORT: 8080
+      SERVER_HOST: 0.0.0.0
+      
+      # Database
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-bekerja}
+      DB_PASSWORD: ${DB_APP_PASSWORD:-bekerja_dev_pass_123}
+      DB_NAME: ${DB_NAME:-keerja}
+      DB_SSLMODE: ${DB_SSLMODE:-disable}
+      
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_DB: ${REDIS_DB:-0}
+      
+      # JWT
+      JWT_SECRET: ${JWT_SECRET:-change-this-in-production}
+      JWT_EXPIRATION_HOURS: ${JWT_EXPIRATION_HOURS:-24}
+      
+      # Email (MailHog for dev)
+      SMTP_HOST: ${SMTP_HOST:-mailhog}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-noreply@keerja.com}
+      
+      # FCM (optional)
+      FCM_ENABLED: ${FCM_ENABLED:-false}
+      FCM_PROJECT_ID: ${FCM_PROJECT_ID:-}
+      FCM_CREDENTIALS_FILE: ${FCM_CREDENTIALS_FILE:-/app/config/firebase-service-account.json}
+      
+      # Cache
+      CACHE_ENABLED: ${CACHE_ENABLED:-true}
+      
+      # Rate Limiting
+      RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-true}
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}
+      
+      TZ: Asia/Jakarta
+    ports:
+      - "${API_PORT:-8080}:8080"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+      - ./config:/app/config:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - keerja-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1'
+    profiles:
+      - app
+      - full
+
+  # ==========================================
+  # Keerja Backend API - Development Mode
+  # ==========================================
+  api-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: keerja-api-dev
+    environment:
+      APP_ENV: development
+      APP_NAME: Keerja API Dev
+      SERVER_PORT: 8080
+      SERVER_HOST: 0.0.0.0
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: bekerja
+      DB_PASSWORD: ${DB_APP_PASSWORD:-bekerja_dev_pass_123}
+      DB_NAME: keerja
+      DB_SSLMODE: disable
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: dev-secret-key
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+      TZ: Asia/Jakarta
+    ports:
+      - "${API_PORT:-8080}:8080"
+    volumes:
+      - .:/app
+      - go_modules:/go/pkg/mod
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - keerja-network
+    profiles:
+      - dev
+
+# ==========================================
+# Volumes
+# ==========================================
 volumes:
   postgres_data:
     driver: local
@@ -102,7 +283,15 @@ volumes:
     driver: local
   minio_data:
     driver: local
+  go_modules:
+    driver: local
 
+# ==========================================
+# Networks
+# ==========================================
 networks:
   keerja-network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

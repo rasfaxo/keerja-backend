@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"crypto/md5"
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"sort"
@@ -271,8 +271,8 @@ func GenerateFilterHash(filters map[string]interface{}) string {
 		filterStr += fmt.Sprintf("%s:%v:", k, filters[k])
 	}
 
-	// Hash the filter string
-	hash := md5.Sum([]byte(filterStr))
+	// Hash the filter string using SHA256
+	hash := sha256.Sum256([]byte(filterStr))
 	return hex.EncodeToString(hash[:8]) // Use first 8 bytes
 }
 

@@ -12,14 +12,14 @@ type AuthResponse struct {
 
 // UserBasic represents basic user info in auth response
 type UserBasic struct {
-	ID         int64  `json:"id"`
-	UUID       string `json:"uuid"`
-	FullName   string `json:"full_name"`
-	Email      string `json:"email"`
-	Phone      string `json:"phone,omitempty"`
-	UserType   string `json:"user_type"`
-	IsVerified bool   `json:"is_verified"`
-	Status     string `json:"status"`
+	ID         int64                   `json:"id"`
+	UUID       string                  `json:"uuid"`
+	FullName   string                  `json:"full_name"`
+	Email      string                  `json:"email"`
+	Phone      string                  `json:"phone,omitempty"`
+	UserType   string                  `json:"user_type"`
+	IsVerified bool                    `json:"is_verified"`
+	Status     string                  `json:"status"`
 	Preference *UserPreferenceResponse `json:"preference,omitempty"`
 }
 

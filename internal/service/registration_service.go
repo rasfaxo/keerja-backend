@@ -2,11 +2,12 @@ package service
 
 import (
 	"context"
+	cryptoRand "crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
-	mathRand "math/rand"
+	"math/big"
 	"time"
 
 	"keerja-backend/internal/domain/auth"
@@ -63,11 +64,17 @@ func NewRegistrationService(
 	}
 }
 
-// generateOTPCode generates a random 6-digit OTP code
+// generateOTPCode generates a cryptographically secure random 6-digit OTP code
 func (s *RegistrationService) generateOTPCode() string {
-	rnd := mathRand.New(mathRand.NewSource(time.Now().UnixNano()))
-	code := rnd.Intn(1000000)
-	return fmt.Sprintf("%06d", code)
+	// Use crypto/rand for secure random number generation
+	var max big.Int
+	max.SetInt64(1000000)
+	n, err := cryptoRand.Int(cryptoRand.Reader, &max)
+	if err != nil {
+		// Fallback to timestamp-based code in case of error
+		return fmt.Sprintf("%06d", time.Now().UnixNano()%1000000)
+	}
+	return fmt.Sprintf("%06d", n.Int64())
 }
 
 // hashOTPCode creates a SHA256 hash of the OTP code
