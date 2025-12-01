@@ -1,7 +1,7 @@
 # ================================
 # STAGE 1: Build
 # ================================
-FROM golang:1.24-alpine AS builder
+FROM golang:1.25-alpine AS builder
 
 # Build arguments
 ARG APP_VERSION=1.0.0
@@ -75,7 +75,7 @@ ENTRYPOINT ["./main"]
 # ================================
 # STAGE 3: Development (with hot reload)
 # ================================
-FROM golang:1.24-alpine AS development
+FROM golang:1.25-alpine AS development
 
 # Install development tools
 RUN apk add --no-cache git make curl
