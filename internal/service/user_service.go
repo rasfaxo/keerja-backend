@@ -338,15 +338,24 @@ func (s *userService) GetPreferences(ctx context.Context, userID int64) (*user.U
 
 // UpdatePreferences updates user preferences
 func (s *userService) UpdatePreferences(ctx context.Context, userID int64, req *user.UpdatePreferenceRequest) error {
-	// Get existing preferences
+	// Get existing preferences or create a new record if missing
 	pref, err := s.userRepo.FindPreferenceByUserID(ctx, userID)
 	if err != nil {
-		return fmt.Errorf("preferences not found: %w", err)
+		return fmt.Errorf("failed to retrieve preferences: %w", err)
+	}
+
+	if pref == nil {
+		// Create default preferences (language left nil so DB will store NULL)
+		pref = &user.UserPreference{UserID: userID}
+		if err := s.userRepo.CreatePreference(ctx, pref); err != nil {
+			return fmt.Errorf("failed to create preferences: %w", err)
+		}
 	}
 
 	// Update fields if provided
 	if req.LanguagePreference != nil {
-		pref.LanguagePreference = *req.LanguagePreference
+		// preference.LanguagePreference is now nullable (pointer) in the domain model
+		pref.LanguagePreference = req.LanguagePreference
 	}
 	if req.ThemePreference != nil {
 		pref.ThemePreference = *req.ThemePreference

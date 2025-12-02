@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"keerja-backend/internal/handler/http"
+	notificationhandler "keerja-backend/internal/handler/http/notification"
 	"keerja-backend/internal/middleware"
 
 	"github.com/gofiber/fiber/v2"
@@ -18,7 +18,7 @@ import (
 //   - POST   /test                  Send test notification
 //
 // Total: 5 endpoints
-func SetupPushNotificationRoutes(api fiber.Router, handler *http.PushNotificationHandler, authMw *middleware.AuthMiddleware) {
+func SetupPushNotificationRoutes(api fiber.Router, handler *notificationhandler.PushNotificationHandler, authMw *middleware.AuthMiddleware) {
 	// Push Notification routes group
 	push := api.Group("/push")
 

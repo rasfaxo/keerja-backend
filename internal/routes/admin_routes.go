@@ -80,11 +80,11 @@ func SetupAdminRoutes(api fiber.Router, deps *Dependencies, adminAuthMw *middlew
 	})
 
 	admin.Patch("/jobs/:id/approve",
-		deps.AdminHandler.ApproveJob,
+		deps.AdminJobHandler.ApproveJob,
 	)
 
 	admin.Patch("/jobs/:id/reject",
-		deps.AdminHandler.RejectJob,
+		deps.AdminJobHandler.RejectJob,
 	)
 
 	admin.Put("/jobs/:id/status", func(c *fiber.Ctx) error {

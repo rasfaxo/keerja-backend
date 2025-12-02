@@ -166,6 +166,9 @@ type UserDocumentResponse struct {
 // UserPreferenceResponse represents user preference response
 type UserPreferenceResponse struct {
 	ID                  int64     `json:"id"`
+	LanguagePreference  *string   `json:"language_preference,omitempty"`
+	ThemePreference     *string   `json:"theme_preference,omitempty"`
+	PreferredJobType    *string   `json:"preferred_job_type,omitempty"`
 	JobTypes            []string  `json:"job_types,omitempty"`
 	PreferredLocations  []string  `json:"preferred_locations,omitempty"`
 	ExpectedSalaryMin   *int64    `json:"expected_salary_min,omitempty"`

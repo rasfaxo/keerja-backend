@@ -1,25 +1,5 @@
 package main
 
-// @title Keerja Backend API
-// @version 1.0
-// @description Job platform backend API with authentication, job management, applications, companies, and push notifications
-// @termsOfService http://swagger.io/terms/
-
-// @contact.name API Support
-// @contact.email support@keerja.com
-
-// @license.name MIT
-// @license.url https://opensource.org/licenses/MIT
-
-// @host localhost:3000
-// @BasePath /
-// @schemes http https
-
-// @securityDefinitions.apikey BearerAuth
-// @in header
-// @name Authorization
-// @description Type "Bearer" followed by a space and JWT token
-
 import (
 	"fmt"
 	"log"
@@ -30,11 +10,15 @@ import (
 
 	"keerja-backend/internal/cache"
 	"keerja-backend/internal/config"
-	"keerja-backend/internal/handler/http"
 	"keerja-backend/internal/handler/http/admin"
+	applicationhandler "keerja-backend/internal/handler/http/application"
+	authhandler "keerja-backend/internal/handler/http/auth"
 	companyhandler "keerja-backend/internal/handler/http/company"
+	"keerja-backend/internal/handler/http/health"
+	jobhandler "keerja-backend/internal/handler/http/job"
 	userhandler "keerja-backend/internal/handler/http/jobseeker"
 	"keerja-backend/internal/handler/http/master"
+	notificationhandler "keerja-backend/internal/handler/http/notification"
 	"keerja-backend/internal/jobs"
 	"keerja-backend/internal/middleware"
 	"keerja-backend/internal/repository/postgres"
@@ -69,6 +53,18 @@ func main() {
 	defer config.CloseDatabase()
 	db := config.GetDB()
 	appLogger.Info(" Database connected successfully")
+
+	// Initialize Redis
+	appLogger.Info("Initializing Redis connection...")
+	redisClient, err := config.InitRedis(cfg)
+	if err != nil {
+		appLogger.WithError(err).Fatal("Failed to initialize Redis")
+	}
+	defer func() {
+		if cerr := config.CloseRedis(); cerr != nil {
+			appLogger.WithError(cerr).Warn("Failed to close Redis connection")
+		}
+	}()
 
 	// Initialize validator
 	utils.InitValidator()
@@ -156,12 +152,15 @@ func main() {
 		ClientSecret: cfg.GoogleClientSecret,
 		RedirectURI:  cfg.GoogleRedirectURI,
 	}
+	stateStore := service.NewRedisOAuthStateStore(redisClient)
 	oauthService := service.NewOAuthService(
 		oauthRepo,
 		userRepo,
 		googleConfig,
 		cfg.JWTSecret,
 		time.Duration(cfg.JWTExpirationHours)*time.Hour,
+		stateStore,
+		cfg.AllowedMobileRedirectURIs,
 	)
 
 	// Create registration service (for OTP-based registration)
@@ -233,20 +232,42 @@ func main() {
 
 	// Initialize handlers
 	appLogger.Info("Initializing handlers...")
-	authHandler := http.NewAuthHandler(authService, oauthService, registrationService, refreshTokenService, userRepo, companyRepo)
-	userHandler := userhandler.NewUserHandler(userService)
+	authHandler := authhandler.NewAuthHandler(authService, oauthService, registrationService, refreshTokenService, userRepo, companyRepo)
+
+	// Initialize user handlers (split by domain)
+	appLogger.Info("Initializing user handlers...")
+	userProfileHandler := userhandler.NewUserProfileHandler(userService)
+	userEducationHandler := userhandler.NewUserEducationHandler(userService)
+	userExperienceHandler := userhandler.NewUserExperienceHandler(userService)
+	userSkillHandler := userhandler.NewUserSkillHandler(userService)
+	userDocumentHandler := userhandler.NewUserDocumentHandler(userService)
+	userMiscHandler := userhandler.NewUserMiscHandler(userService)
 
 	// Initialize company handlers (split by domain)
 	appLogger.Info("Initializing company handlers...")
 	companyBasicHandler := companyhandler.NewCompanyBasicHandler(
 		companyService,
-		userService,
 		industryRepo,
 		companySizeRepo,
 		provinceRepo,
 		cityRepo,
 		districtRepo,
 	)
+	companyImageHandler := companyhandler.NewCompanyImageHandler(companyService)
+	companyAddressHandler := companyhandler.NewCompanyAddressHandler(
+		companyService,
+		provinceRepo,
+		cityRepo,
+		districtRepo,
+	)
+	companyEmployerHandler := companyhandler.NewCompanyEmployerHandler(
+		companyService,
+		userService,
+		provinceRepo,
+		cityRepo,
+		districtRepo,
+	)
+	companyVerificationHandler := companyhandler.NewCompanyVerificationHandler(companyService)
 	companyProfileHandler := companyhandler.NewCompanyProfileHandler(companyService)
 	companyReviewHandler := companyhandler.NewCompanyReviewHandler(companyService)
 	companyStatsHandler := companyhandler.NewCompanyStatsHandler(companyService)
@@ -254,13 +275,13 @@ func main() {
 
 	// Initialize job & application handlers
 	appLogger.Info("Initializing job & application handlers...")
-	jobHandler := http.NewJobHandler(jobService, companyService, jobOptionsService, skillsMasterService)
-	applicationHandler := http.NewApplicationHandler(applicationService)
+	jobHandler := jobhandler.NewJobHandler(jobService, companyService, jobOptionsService, skillsMasterService)
+	applicationHandler := applicationhandler.NewApplicationHandler(applicationService)
 
 	// Initialize admin handlers
 	appLogger.Info("Initializing admin handlers...")
-	adminHandler := http.NewAdminHandler(adminJobService)
-	adminAuthHandler := http.NewAdminAuthHandler(adminAuthService)
+	adminJobHandler := admin.NewAdminJobHandler(adminJobService)
+	adminAuthHandler := admin.NewAdminAuthHandler(adminAuthService)
 	adminCompanyHandler := admin.NewCompanyHandler(adminCompanyService)
 
 	// Initialize admin master data services
@@ -285,7 +306,7 @@ func main() {
 
 	// Initialize master data handlers
 	appLogger.Info("Initializing master data handlers...")
-	skillsMasterHandler := http.NewSkillsMasterHandler(skillsMasterService)
+	skillsMasterHandler := master.NewSkillsMasterHandler(skillsMasterService)
 
 	// Initialize master data handlers (industries, company sizes, locations)
 	industryHandler := master.NewIndustryHandler(industryService)
@@ -293,7 +314,7 @@ func main() {
 	locationHandler := master.NewLocationHandler(provinceService, cityService, districtService)
 
 	// Initialize job master data handler (job titles & options)
-	masterDataHandler := http.NewMasterDataHandler(jobTitleService, jobOptionsService, jobService, companyService, skillsMasterService)
+	masterDataHandler := master.NewMasterDataHandler(jobTitleService, jobOptionsService, jobService, companyService, skillsMasterService)
 
 	masterDataHandlers := &routes.MasterDataHandlers{
 		IndustryHandler:    industryHandler,
@@ -304,9 +325,14 @@ func main() {
 
 	// Initialize FCM notification handlers
 	appLogger.Info("Initializing FCM notification handlers...")
-	deviceTokenHandler := http.NewDeviceTokenHandler(deviceTokenRepo, fcmService, appLogger)
-	pushNotificationHandler := http.NewPushNotificationHandler(fcmService, appLogger)
+	deviceTokenHandler := notificationhandler.NewDeviceTokenHandler(deviceTokenRepo, fcmService, appLogger)
+	pushNotificationHandler := notificationhandler.NewPushNotificationHandler(fcmService, appLogger)
 	appLogger.Info("FCM handlers initialized successfully")
+
+	// Initialize health check handler
+	appLogger.Info("Initializing health check handler...")
+	healthHandler := health.NewHealthHandler(db, redisClient, cfg.AppVersion)
+	appLogger.Info("✓ Health check handler initialized")
 
 	// Setup Fiber app
 	app := fiber.New(fiber.Config{
@@ -345,11 +371,22 @@ func main() {
 
 	// Setup routes
 	appLogger.Info("Setting up routes...")
+
+	// Setup health check routes (before auth middleware)
+	routes.SetupHealthRoutes(app, healthHandler)
+
 	adminAuthMw := middleware.NewAdminAuthMiddleware(cfg, adminUserRepo)
 	deps := &routes.Dependencies{
 		Config:      cfg,
 		AuthHandler: authHandler,
-		UserHandler: userHandler,
+
+		// User handlers (split by domain)
+		UserProfileHandler:    userProfileHandler,
+		UserEducationHandler:  userEducationHandler,
+		UserExperienceHandler: userExperienceHandler,
+		UserSkillHandler:      userSkillHandler,
+		UserDocumentHandler:   userDocumentHandler,
+		UserMiscHandler:       userMiscHandler,
 
 		// Admin handlers
 		AdminAuthHandler:    adminAuthHandler,
@@ -359,15 +396,19 @@ func main() {
 		// Job & Application handlers
 		JobHandler:             jobHandler,
 		ApplicationHandler:     applicationHandler,
-		AdminHandler:           adminHandler,
+		AdminJobHandler:        adminJobHandler,
 		AdminMasterDataHandler: adminMasterDataHandler,
 
 		// Company handlers (split by domain)
-		CompanyBasicHandler:   companyBasicHandler,
-		CompanyProfileHandler: companyProfileHandler,
-		CompanyReviewHandler:  companyReviewHandler,
-		CompanyStatsHandler:   companyStatsHandler,
-		CompanyInviteHandler:  companyInviteHandler,
+		CompanyBasicHandler:        companyBasicHandler,
+		CompanyImageHandler:        companyImageHandler,
+		CompanyAddressHandler:      companyAddressHandler,
+		CompanyEmployerHandler:     companyEmployerHandler,
+		CompanyVerificationHandler: companyVerificationHandler,
+		CompanyProfileHandler:      companyProfileHandler,
+		CompanyReviewHandler:       companyReviewHandler,
+		CompanyStatsHandler:        companyStatsHandler,
+		CompanyInviteHandler:       companyInviteHandler,
 
 		// Master data handlers
 		SkillsMasterHandler: skillsMasterHandler,

@@ -9,8 +9,9 @@ import (
 	"path/filepath"
 	"sort"
 
-	_ "github.com/lib/pq"
 	"keerja-backend/internal/config"
+
+	_ "github.com/lib/pq"
 )
 
 // simple migrator: runs all .up.sql files (or .down.sql) in database/migrations

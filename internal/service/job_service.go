@@ -1957,10 +1957,37 @@ func (s *jobService) ValidateJob(ctx context.Context, j *job.Job) error {
 		return errors.New("company ID is required")
 	}
 
-	// Validate salary range
-	if j.SalaryMin != nil && j.SalaryMax != nil {
+	// Validate salary based on salary_display mode
+	switch j.SalaryDisplay {
+	case "range":
+		// Both salary_min and salary_max must be provided and valid
+		if j.SalaryMin == nil || *j.SalaryMin <= 0 {
+			return errors.New("salary_min is required and must be greater than 0 when salary_display is 'range'")
+		}
+		if j.SalaryMax == nil || *j.SalaryMax <= 0 {
+			return errors.New("salary_max is required and must be greater than 0 when salary_display is 'range'")
+		}
 		if *j.SalaryMin > *j.SalaryMax {
-			return errors.New("minimum salary cannot be greater than maximum salary")
+			return errors.New("salary_min cannot be greater than salary_max when salary_display is 'range'")
+		}
+	case "min_only":
+		// Only salary_min must be provided and valid
+		if j.SalaryMin == nil || *j.SalaryMin <= 0 {
+			return errors.New("salary_min is required and must be greater than 0 when salary_display is 'min_only'")
+		}
+	case "max_only":
+		// Only salary_max must be provided and valid
+		if j.SalaryMax == nil || *j.SalaryMax <= 0 {
+			return errors.New("salary_max is required and must be greater than 0 when salary_display is 'max_only'")
+		}
+	case "negotiable", "competitive", "hidden":
+		// No salary requirements - both can be 0 or nil
+	default:
+		// For backwards compatibility, validate if both are provided
+		if j.SalaryMin != nil && j.SalaryMax != nil && *j.SalaryMin > 0 && *j.SalaryMax > 0 {
+			if *j.SalaryMin > *j.SalaryMax {
+				return errors.New("minimum salary cannot be greater than maximum salary")
+			}
 		}
 	}
 

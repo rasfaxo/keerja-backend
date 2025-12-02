@@ -77,25 +77,6 @@ func CloseDB() error {
 	return nil
 }
 
-// AutoMigrate runs auto migration for all models
-func AutoMigrate(db *gorm.DB) error {
-	// Import all domain models here when they're created
-	// Example:
-	// err := db.AutoMigrate(
-	// 	&user.User{},
-	// 	&user.UserProfile{},
-	// 	&company.Company{},
-	// 	&job.Job{},
-	// 	// ... other models
-	// )
-	// if err != nil {
-	// 	return fmt.Errorf("failed to run auto migration: %w", err)
-	// }
-
-	log.Println("Auto migration completed (Note: Add models when they're created)")
-	return nil
-}
-
 // GetDB returns the global database instance
 func GetDB() *gorm.DB {
 	if DB == nil {

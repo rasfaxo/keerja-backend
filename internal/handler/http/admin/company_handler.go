@@ -29,33 +29,6 @@ func NewCompanyHandler(adminCompanyService admin.AdminCompanyService) *CompanyHa
 // GET /api/v1/admin/companies
 // =============================================================================
 
-// ListCompanies retrieves paginated list of companies with filters
-// @Summary List companies for moderation
-// @Description Get paginated list of companies with search, filter, and sort
-// @Tags Admin - Company
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param page query int false "Page number" default(1)
-// @Param limit query int false "Items per page" default(20)
-// @Param search query string false "Search by company name, email, legal name"
-// @Param status query string false "Filter by verification status"
-// @Param verified query boolean false "Filter by verified status"
-// @Param is_active query boolean false "Filter by active status"
-// @Param industry_id query int false "Filter by industry ID"
-// @Param company_size_id query int false "Filter by company size ID"
-// @Param province_id query int false "Filter by province ID"
-// @Param city_id query int false "Filter by city ID"
-// @Param created_from query string false "Filter by created date from (YYYY-MM-DD)"
-// @Param created_to query string false "Filter by created date to (YYYY-MM-DD)"
-// @Param sort_by query string false "Sort by field" Enums(company_name, created_at, verified_at, updated_at)
-// @Param sort_order query string false "Sort order" Enums(asc, desc)
-// @Success 200 {object} response.AdminCompaniesListResponse
-// @Failure 400 {object} utils.Response
-// @Failure 401 {object} utils.Response
-// @Failure 403 {object} utils.Response
-// @Failure 500 {object} utils.Response
-// @Router /api/v1/admin/companies [get]
 func (h *CompanyHandler) ListCompanies(c *fiber.Ctx) error {
 	// Parse query parameters
 	var req request.AdminGetCompaniesRequest
@@ -133,21 +106,6 @@ func (h *CompanyHandler) ListCompanies(c *fiber.Ctx) error {
 // GET /api/v1/admin/companies/:id
 // =============================================================================
 
-// GetCompanyDetail retrieves full company details for moderation
-// @Summary Get company detail
-// @Description Get full company details including verification, documents, and stats
-// @Tags Admin - Company
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param id path int true "Company ID"
-// @Success 200 {object} response.AdminCompanyDetailResponse
-// @Failure 400 {object} utils.Response
-// @Failure 401 {object} utils.Response
-// @Failure 403 {object} utils.Response
-// @Failure 404 {object} utils.Response
-// @Failure 500 {object} utils.Response
-// @Router /api/v1/admin/companies/{id} [get]
 func (h *CompanyHandler) GetCompanyDetail(c *fiber.Ctx) error {
 	// Parse company ID
 	companyID, err := strconv.ParseInt(c.Params("id"), 10, 64)
@@ -172,22 +130,6 @@ func (h *CompanyHandler) GetCompanyDetail(c *fiber.Ctx) error {
 // PATCH /api/v1/admin/companies/:id/status
 // =============================================================================
 
-// UpdateCompanyStatus updates company verification status
-// @Summary Update company status
-// @Description Approve, reject, suspend, or blacklist a company
-// @Tags Admin - Company
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param id path int true "Company ID"
-// @Param request body request.AdminUpdateCompanyStatusRequest true "Status update request"
-// @Success 200 {object} response.AdminCompanyStatusUpdateResponse
-// @Failure 400 {object} utils.Response
-// @Failure 401 {object} utils.Response
-// @Failure 403 {object} utils.Response
-// @Failure 404 {object} utils.Response
-// @Failure 500 {object} utils.Response
-// @Router /api/v1/admin/companies/{id}/status [patch]
 func (h *CompanyHandler) UpdateCompanyStatus(c *fiber.Ctx) error {
 	// Parse company ID
 	companyID, err := strconv.ParseInt(c.Params("id"), 10, 64)
@@ -242,22 +184,6 @@ func (h *CompanyHandler) UpdateCompanyStatus(c *fiber.Ctx) error {
 // PUT /api/v1/admin/companies/:id
 // =============================================================================
 
-// UpdateCompany updates company details (admin support)
-// @Summary Update company details
-// @Description Admin can edit company information to fix errors or typos
-// @Tags Admin - Company
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param id path int true "Company ID"
-// @Param request body request.AdminUpdateCompanyRequest true "Company update request"
-// @Success 200 {object} utils.Response
-// @Failure 400 {object} utils.Response
-// @Failure 401 {object} utils.Response
-// @Failure 403 {object} utils.Response
-// @Failure 404 {object} utils.Response
-// @Failure 500 {object} utils.Response
-// @Router /api/v1/admin/companies/{id} [put]
 func (h *CompanyHandler) UpdateCompany(c *fiber.Ctx) error {
 	// Parse company ID
 	companyID, err := strconv.ParseInt(c.Params("id"), 10, 64)
@@ -315,23 +241,6 @@ func (h *CompanyHandler) UpdateCompany(c *fiber.Ctx) error {
 // DELETE /api/v1/admin/companies/:id
 // =============================================================================
 
-// DeleteCompany deletes a company (with validation)
-// @Summary Delete company
-// @Description Delete company with validation. Cannot delete if has active jobs unless force flag is used.
-// @Tags Admin - Company
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param id path int true "Company ID"
-// @Param force query boolean false "Force delete even with active jobs"
-// @Param request body request.AdminDeleteCompanyRequest true "Delete request with reason"
-// @Success 200 {object} response.AdminCompanyDeleteResponse
-// @Failure 400 {object} utils.Response
-// @Failure 401 {object} utils.Response
-// @Failure 403 {object} utils.Response
-// @Failure 404 {object} utils.Response
-// @Failure 500 {object} utils.Response
-// @Router /api/v1/admin/companies/{id} [delete]
 func (h *CompanyHandler) DeleteCompany(c *fiber.Ctx) error {
 	// Parse company ID
 	companyID, err := strconv.ParseInt(c.Params("id"), 10, 64)

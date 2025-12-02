@@ -33,18 +33,6 @@ func NewLocationHandler(
 // PROVINCE ENDPOINTS
 // ========================================
 
-// GetAllProvinces godoc
-// @Summary Get all provinces
-// @Description Retrieve all provinces with optional filtering by active status and search query
-// @Tags Master Data - Locations
-// @Accept json
-// @Produce json
-// @Param active query boolean false "Filter by active status (true/false)"
-// @Param search query string false "Search provinces by name (min 2 characters)"
-// @Success 200 {object} utils.Response
-// @Failure 400 {object} utils.Response
-// @Failure 500 {object} utils.Response
-// @Router /api/v1/meta/locations/provinces [get]
 func (h *LocationHandler) GetAllProvinces(c *fiber.Ctx) error {
 	ctx := c.Context()
 
@@ -71,18 +59,6 @@ func (h *LocationHandler) GetAllProvinces(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, "Provinces retrieved successfully", provinces)
 }
 
-// GetProvinceByID godoc
-// @Summary Get province by ID
-// @Description Retrieve a single province by its ID
-// @Tags Master Data - Locations
-// @Accept json
-// @Produce json
-// @Param id path int true "Province ID"
-// @Success 200 {object} utils.Response
-// @Failure 400 {object} utils.Response
-// @Failure 404 {object} utils.Response
-// @Failure 500 {object} utils.Response
-// @Router /api/v1/meta/locations/provinces/{id} [get]
 func (h *LocationHandler) GetProvinceByID(c *fiber.Ctx) error {
 	ctx := c.Context()
 
@@ -109,20 +85,6 @@ func (h *LocationHandler) GetProvinceByID(c *fiber.Ctx) error {
 // CITY ENDPOINTS
 // ========================================
 
-// GetCities godoc
-// @Summary Get cities by province
-// @Description Retrieve cities with optional filtering by province, active status, and search query
-// @Tags Master Data - Locations
-// @Accept json
-// @Produce json
-// @Param province_id query int true "Province ID to filter cities"
-// @Param active query boolean false "Filter by active status (true/false)"
-// @Param search query string false "Search cities by name (min 2 characters)"
-// @Success 200 {object} utils.Response
-// @Failure 400 {object} utils.Response
-// @Failure 404 {object} utils.Response
-// @Failure 500 {object} utils.Response
-// @Router /api/v1/meta/locations/cities [get]
 func (h *LocationHandler) GetCities(c *fiber.Ctx) error {
 	ctx := c.Context()
 
@@ -159,18 +121,6 @@ func (h *LocationHandler) GetCities(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, "Cities retrieved successfully", cities)
 }
 
-// GetCityByID godoc
-// @Summary Get city by ID
-// @Description Retrieve a single city by its ID with province information
-// @Tags Master Data - Locations
-// @Accept json
-// @Produce json
-// @Param id path int true "City ID"
-// @Success 200 {object} utils.Response
-// @Failure 400 {object} utils.Response
-// @Failure 404 {object} utils.Response
-// @Failure 500 {object} utils.Response
-// @Router /api/v1/meta/locations/cities/{id} [get]
 func (h *LocationHandler) GetCityByID(c *fiber.Ctx) error {
 	ctx := c.Context()
 
@@ -197,20 +147,6 @@ func (h *LocationHandler) GetCityByID(c *fiber.Ctx) error {
 // DISTRICT ENDPOINTS
 // ========================================
 
-// GetDistricts godoc
-// @Summary Get districts by city
-// @Description Retrieve districts with optional filtering by city, active status, and search query
-// @Tags Master Data - Locations
-// @Accept json
-// @Produce json
-// @Param city_id query int true "City ID to filter districts"
-// @Param active query boolean false "Filter by active status (true/false)"
-// @Param search query string false "Search districts by name (min 2 characters)"
-// @Success 200 {object} utils.Response
-// @Failure 400 {object} utils.Response
-// @Failure 404 {object} utils.Response
-// @Failure 500 {object} utils.Response
-// @Router /api/v1/meta/locations/districts [get]
 func (h *LocationHandler) GetDistricts(c *fiber.Ctx) error {
 	ctx := c.Context()
 
@@ -247,18 +183,6 @@ func (h *LocationHandler) GetDistricts(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, "Districts retrieved successfully", districts)
 }
 
-// GetDistrictByID godoc
-// @Summary Get district by ID
-// @Description Retrieve a single district by its ID with full location hierarchy (city and province)
-// @Tags Master Data - Locations
-// @Accept json
-// @Produce json
-// @Param id path int true "District ID"
-// @Success 200 {object} utils.Response
-// @Failure 400 {object} utils.Response
-// @Failure 404 {object} utils.Response
-// @Failure 500 {object} utils.Response
-// @Router /api/v1/meta/locations/districts/{id} [get]
 func (h *LocationHandler) GetDistrictByID(c *fiber.Ctx) error {
 	ctx := c.Context()
 

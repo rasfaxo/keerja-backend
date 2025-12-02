@@ -6,7 +6,7 @@ import (
 	"keerja-backend/internal/domain/company"
 	"keerja-backend/internal/dto/mapper"
 	"keerja-backend/internal/dto/response"
-	"keerja-backend/internal/handler/http"
+	"keerja-backend/internal/handler/http/common"
 	"keerja-backend/internal/utils"
 
 	"github.com/gofiber/fiber/v2"
@@ -23,16 +23,6 @@ func NewCompanyStatsHandler(companyService company.CompanyService) *CompanyStats
 	return &CompanyStatsHandler{companyService: companyService}
 }
 
-// GetVerifiedCompanies godoc
-// @Summary Get verified companies
-// @Tags companies
-// @Produce json
-// @Param page query int false "Page number"
-// @Param limit query int false "Page size"
-// @Success 200 {object} utils.Response{data=response.CompanyListResponse}
-// @Failure 400 {object} utils.Response
-// @Failure 500 {object} utils.Response
-// @Router /companies/verified [get]
 func (h *CompanyStatsHandler) GetVerifiedCompanies(c *fiber.Ctx) error {
 	ctx := c.Context()
 	page := c.QueryInt("page", 1)
@@ -41,7 +31,7 @@ func (h *CompanyStatsHandler) GetVerifiedCompanies(c *fiber.Ctx) error {
 
 	companies, total, err := h.companyService.GetVerifiedCompanies(ctx, page, limit)
 	if err != nil {
-		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
+		return utils.InternalServerErrorResponse(c, common.ErrFailedOperation)
 	}
 
 	respList := mapper.MapEntities[company.Company, response.CompanyResponse](companies, func(comp *company.Company) *response.CompanyResponse {
@@ -49,18 +39,9 @@ func (h *CompanyStatsHandler) GetVerifiedCompanies(c *fiber.Ctx) error {
 	})
 	meta := utils.GetPaginationMeta(page, limit, total)
 	payload := response.CompanyListResponse{Companies: respList}
-	return utils.SuccessResponseWithMeta(c, http.MsgFetchedSuccess, payload, meta)
+	return utils.SuccessResponseWithMeta(c, common.MsgFetchedSuccess, payload, meta)
 }
 
-// GetTopRatedCompanies godoc
-// @Summary Get top-rated companies
-// @Tags companies
-// @Produce json
-// @Param limit query int false "Max companies to return"
-// @Success 200 {object} utils.Response{data=response.CompanyListResponse}
-// @Failure 400 {object} utils.Response
-// @Failure 500 {object} utils.Response
-// @Router /companies/top-rated [get]
 func (h *CompanyStatsHandler) GetTopRatedCompanies(c *fiber.Ctx) error {
 	ctx := c.Context()
 	limit := c.QueryInt("limit", 10)
@@ -70,35 +51,26 @@ func (h *CompanyStatsHandler) GetTopRatedCompanies(c *fiber.Ctx) error {
 
 	companies, err := h.companyService.GetTopRatedCompanies(ctx, limit)
 	if err != nil {
-		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
+		return utils.InternalServerErrorResponse(c, common.ErrFailedOperation)
 	}
 
 	respList := mapper.MapEntities[company.Company, response.CompanyResponse](companies, func(comp *company.Company) *response.CompanyResponse {
 		return mapper.ToCompanyResponse(comp)
 	})
 	payload := response.CompanyListResponse{Companies: respList}
-	return utils.SuccessResponse(c, http.MsgFetchedSuccess, payload)
+	return utils.SuccessResponse(c, common.MsgFetchedSuccess, payload)
 }
 
-// GetCompanyStats godoc
-// @Summary Get company statistics (jobs, applications, followers, reviews, etc.)
-// @Tags companies
-// @Produce json
-// @Param id path int true "Company ID"
-// @Success 200 {object} utils.Response{data=response.CompanyStatsResponse}
-// @Failure 400 {object} utils.Response
-// @Failure 500 {object} utils.Response
-// @Router /companies/{id}/stats [get]
 func (h *CompanyStatsHandler) GetCompanyStats(c *fiber.Ctx) error {
 	ctx := c.Context()
 	companyID, err := strconv.Atoi(c.Params("id"))
 	if err != nil || companyID <= 0 {
-		return utils.BadRequestResponse(c, http.ErrInvalidID)
+		return utils.BadRequestResponse(c, common.ErrInvalidID)
 	}
 
 	stats, err := h.companyService.GetCompanyStats(ctx, int64(companyID))
 	if err != nil {
-		return utils.InternalServerErrorResponse(c, http.ErrFailedOperation)
+		return utils.InternalServerErrorResponse(c, common.ErrFailedOperation)
 	}
-	return utils.SuccessResponse(c, http.MsgFetchedSuccess, stats)
+	return utils.SuccessResponse(c, common.MsgFetchedSuccess, stats)
 }

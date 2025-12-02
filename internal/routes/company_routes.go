@@ -10,12 +10,16 @@ import (
 // Routes: /api/v1/companies/*
 //
 // Route Organization:
-// - Basic CRUD: CompanyBasicHandler (11 endpoints)
+// - Basic CRUD: CompanyBasicHandler (7 endpoints)
+// - Image: CompanyImageHandler (4 endpoints)
+// - Address: CompanyAddressHandler (4 endpoints)
+// - Employer Profile: CompanyEmployerHandler (2 endpoints)
+// - Verification: CompanyVerificationHandler (3 endpoints)
 // - Profile & Social: CompanyProfileHandler (8 endpoints)
 // - Reviews & Ratings: CompanyReviewHandler (5 endpoints)
 // - Statistics & Queries: CompanyStatsHandler (3 endpoints)
 // - Invitations: CompanyInviteHandler (5 endpoints)
-// Total: 32 endpoints
+// Total: 41 endpoints
 func SetupCompanyRoutes(api fiber.Router, deps *Dependencies, authMw *middleware.AuthMiddleware, permMw *middleware.PermissionMiddleware) {
 	companies := api.Group("/companies")
 
@@ -32,13 +36,13 @@ func SetupCompanyRoutes(api fiber.Router, deps *Dependencies, authMw *middleware
 	// Get my company addresses (for job posting)
 	companies.Get("/me/addresses",
 		authMw.AuthRequired(),
-		deps.CompanyBasicHandler.GetMyAddresses,
+		deps.CompanyAddressHandler.GetMyAddresses,
 	)
 
 	// Get my company verification status (authenticated user's company)
 	companies.Get("/me/verification-status",
 		authMw.AuthRequired(),
-		deps.CompanyBasicHandler.GetMyCompanyVerificationStatus,
+		deps.CompanyVerificationHandler.GetMyCompanyVerificationStatus,
 	)
 
 	// NOTE: address creation/listing/deletion require authentication and admin permission.
@@ -71,7 +75,7 @@ func SetupCompanyRoutes(api fiber.Router, deps *Dependencies, authMw *middleware
 
 	// Get company verification status
 	companies.Get("/:id/verification-status",
-		deps.CompanyBasicHandler.GetCompanyVerificationStatus,
+		deps.CompanyVerificationHandler.GetCompanyVerificationStatus,
 	)
 
 	// ==========================================
@@ -129,27 +133,27 @@ func SetupCompanyRoutes(api fiber.Router, deps *Dependencies, authMw *middleware
 
 	// Create a new company address (persisted)
 	protected.Post("/me/addresses",
-		deps.CompanyBasicHandler.CreateMyAddress,
+		deps.CompanyAddressHandler.CreateMyAddress,
 	)
 
 	// Update authenticated employer user's company profile (position, department, company contact)
 	protected.Put("/me/employer",
-		deps.CompanyBasicHandler.UpdateMyEmployerProfile,
+		deps.CompanyEmployerHandler.UpdateMyEmployerProfile,
 	)
 
 	// Get authenticated employer user's company profile
 	protected.Get("/me/employer",
-		deps.CompanyBasicHandler.GetMyEmployerProfile,
+		deps.CompanyEmployerHandler.GetMyEmployerProfile,
 	)
 
 	// Update a company address (persisted)
 	protected.Put("/me/addresses/:id",
-		deps.CompanyBasicHandler.UpdateMyAddress,
+		deps.CompanyAddressHandler.UpdateMyAddress,
 	)
 
 	// Delete a company address (soft-delete)
 	protected.Delete("/me/addresses/:id",
-		deps.CompanyBasicHandler.DeleteMyAddress,
+		deps.CompanyAddressHandler.DeleteMyAddress,
 	)
 
 	// ------------------------------------------
@@ -176,25 +180,25 @@ func SetupCompanyRoutes(api fiber.Router, deps *Dependencies, authMw *middleware
 	// Upload company logo (admin only)
 	protected.Post("/:id/logo",
 		permMw.RequireAdmin(),
-		deps.CompanyBasicHandler.UploadLogo,
+		deps.CompanyImageHandler.UploadLogo,
 	)
 
 	// Delete company logo (admin only)
 	protected.Delete("/:id/logo",
 		permMw.RequireAdmin(),
-		deps.CompanyBasicHandler.DeleteLogo,
+		deps.CompanyImageHandler.DeleteLogo,
 	)
 
 	// Upload company banner (admin only)
 	protected.Post("/:id/banner",
 		permMw.RequireAdmin(),
-		deps.CompanyBasicHandler.UploadBanner,
+		deps.CompanyImageHandler.UploadBanner,
 	)
 
 	// Delete company banner (admin only)
 	protected.Delete("/:id/banner",
 		permMw.RequireAdmin(),
-		deps.CompanyBasicHandler.DeleteBanner,
+		deps.CompanyImageHandler.DeleteBanner,
 	)
 
 	// ------------------------------------------
@@ -292,6 +296,6 @@ func SetupCompanyRoutes(api fiber.Router, deps *Dependencies, authMw *middleware
 	protected.Post("/:id/verify",
 		middleware.APIRateLimiter(), // Rate limit verification requests
 		permMw.RequireAdmin(),       // Only company admin/owner can request
-		deps.CompanyBasicHandler.RequestVerification,
+		deps.CompanyVerificationHandler.RequestVerification,
 	)
 }

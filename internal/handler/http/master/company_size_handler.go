@@ -22,17 +22,6 @@ func NewCompanySizeHandler(service master.CompanySizeService) *CompanySizeHandle
 	}
 }
 
-// GetAllCompanySizes godoc
-// @Summary Get all company sizes
-// @Description Retrieve all company size categories with optional filtering by active status
-// @Tags Master Data - Company Sizes
-// @Accept json
-// @Produce json
-// @Param active query boolean false "Filter by active status (true/false)"
-// @Success 200 {object} utils.Response
-// @Failure 400 {object} utils.Response
-// @Failure 500 {object} utils.Response
-// @Router /api/v1/meta/company-sizes [get]
 func (h *CompanySizeHandler) GetAllCompanySizes(c *fiber.Ctx) error {
 	ctx := c.Context()
 
@@ -58,18 +47,6 @@ func (h *CompanySizeHandler) GetAllCompanySizes(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, "Company sizes retrieved successfully", companySizes)
 }
 
-// GetCompanySizeByID godoc
-// @Summary Get company size by ID
-// @Description Retrieve a single company size category by its ID
-// @Tags Master Data - Company Sizes
-// @Accept json
-// @Produce json
-// @Param id path int true "Company Size ID"
-// @Success 200 {object} utils.Response
-// @Failure 400 {object} utils.Response
-// @Failure 404 {object} utils.Response
-// @Failure 500 {object} utils.Response
-// @Router /api/v1/meta/company-sizes/{id} [get]
 func (h *CompanySizeHandler) GetCompanySizeByID(c *fiber.Ctx) error {
 	ctx := c.Context()
 

@@ -3,14 +3,14 @@ package routes
 import (
 	"time"
 
-	"keerja-backend/internal/handler/http"
+	"keerja-backend/internal/handler/http/master"
 	"keerja-backend/internal/middleware"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 // SetupJobMasterDataRoutes sets up routes for job master data (Phase 1-4)
-func SetupJobMasterDataRoutes(api fiber.Router, handler *http.MasterDataHandler, authMw *middleware.AuthMiddleware) {
+func SetupJobMasterDataRoutes(api fiber.Router, handler *master.MasterDataHandler, authMw *middleware.AuthMiddleware) {
 	master := api.Group("/master")
 
 	// Phase 1: Job Titles endpoint (public, with rate limiting)

@@ -1,0 +1,5 @@
+# This file ensures the config directory is tracked by Git
+
+# The directory contains sensitive configuration files that are gitignored
+
+# See config/README.md for details

@@ -21,18 +21,6 @@ func NewIndustryHandler(service master.IndustryService) *IndustryHandler {
 	}
 }
 
-// GetAllIndustries godoc
-// @Summary Get all industries
-// @Description Retrieve all industries with optional filtering by active status and search query
-// @Tags Master Data - Industries
-// @Accept json
-// @Produce json
-// @Param active query boolean false "Filter by active status (true/false)"
-// @Param search query string false "Search industries by name (min 2 characters)"
-// @Success 200 {object} utils.Response
-// @Failure 400 {object} utils.Response
-// @Failure 500 {object} utils.Response
-// @Router /api/v1/meta/industries [get]
 func (h *IndustryHandler) GetAllIndustries(c *fiber.Ctx) error {
 	ctx := c.Context()
 
@@ -59,18 +47,6 @@ func (h *IndustryHandler) GetAllIndustries(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, "Industries retrieved successfully", industries)
 }
 
-// GetIndustryByID godoc
-// @Summary Get industry by ID
-// @Description Retrieve a single industry by its ID
-// @Tags Master Data - Industries
-// @Accept json
-// @Produce json
-// @Param id path int true "Industry ID"
-// @Success 200 {object} utils.Response
-// @Failure 400 {object} utils.Response
-// @Failure 404 {object} utils.Response
-// @Failure 500 {object} utils.Response
-// @Router /api/v1/meta/industries/{id} [get]
 func (h *IndustryHandler) GetIndustryByID(c *fiber.Ctx) error {
 	ctx := c.Context()
 

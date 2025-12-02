@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"keerja-backend/internal/handler/http"
+	notificationhandler "keerja-backend/internal/handler/http/notification"
 	"keerja-backend/internal/middleware"
 
 	"github.com/gofiber/fiber/v2"
@@ -19,7 +19,7 @@ import (
 //   - POST   /validate             Validate device token with FCM
 //
 // Total: 6 endpoints
-func SetupDeviceTokenRoutes(api fiber.Router, handler *http.DeviceTokenHandler, authMw *middleware.AuthMiddleware) {
+func SetupDeviceTokenRoutes(api fiber.Router, handler *notificationhandler.DeviceTokenHandler, authMw *middleware.AuthMiddleware) {
 	// Device Token routes group
 	deviceTokens := api.Group("/device-tokens")
 
