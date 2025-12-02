@@ -157,8 +157,8 @@ make run
 
 - System: PostgreSQL
 - Server: postgres
-- Username: bekerja
-- Password: bekerja_dev_pass_123
+- Username: postgres
+- Password: postgres_admin_pas
 - Database: keerja
 
 #### Option 2: Manual Setup

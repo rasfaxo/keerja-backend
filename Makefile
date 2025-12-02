@@ -14,6 +14,11 @@ APP_VERSION?=1.0.0
 BUILD_TIME=$(shell date -u '+%Y-%m-%d_%H:%M:%S')
 GIT_COMMIT=$(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 
+ifneq (,$(wildcard .env))
+    include .env
+    export
+endif
+
 .PHONY: all build clean test coverage run dev docker-up docker-down docker-logs docker-reset help install db-migration-create db-migrate-up db-migrate-down db-migration-status db-migrate-to
 
 help:
@@ -116,7 +121,7 @@ docker-dev:
 docker-app:
 	@echo "Starting with production API..."
 	$(DOCKER_COMPOSE) --profile app up -d
-	@echo "✅ Application ready!"
+	@echo "Application ready!"
 	@echo "   API:        localhost:8080"
 	@echo "   Health:     localhost:8080/health"
 
@@ -124,7 +129,7 @@ docker-app:
 docker-full:
 	@echo "Starting all services..."
 	$(DOCKER_COMPOSE) --profile full up -d
-	@echo "✅ All services ready!"
+	@echo "All services ready!"
 
 ## docker-down: Stop Docker containers
 docker-down:
@@ -142,7 +147,7 @@ docker-reset:
 	@read -p "Are you sure? [y/N] " ans && [ $${ans:-N} = y ]
 	$(DOCKER_COMPOSE) --profile full down -v
 	$(DOCKER_COMPOSE) up -d postgres redis
-	@echo "✅ Database reset complete"
+	@echo "Database reset complete"
 
 ## docker-build: Build Docker image
 docker-build:
@@ -151,7 +156,7 @@ docker-build:
 		--build-arg APP_VERSION=$(APP_VERSION) \
 		--build-arg BUILD_TIME=$(BUILD_TIME) \
 		--build-arg GIT_COMMIT=$(GIT_COMMIT)
-	@echo "✅ Image built: keerja-api:$(APP_VERSION)"
+	@echo "Image built: keerja-api:$(APP_VERSION)"
 
 ## docker-build-dev: Build development Docker image
 docker-build-dev:
@@ -168,7 +173,7 @@ docker-push:
 	docker tag keerja-api:latest $(REGISTRY)/keerja-api:latest
 	docker push $(REGISTRY)/keerja-api:$(APP_VERSION)
 	docker push $(REGISTRY)/keerja-api:latest
-	@echo "✅ Image pushed to $(REGISTRY)"
+	@echo "Image pushed to $(REGISTRY)"
 
 ## docker-restart: Restart Docker containers
 docker-restart:
@@ -209,13 +214,13 @@ db-migrate-up:
 	fi
 	@echo "Running migrations..."
 	migrate -path database/migrations -database "$$DATABASE_URL" up
-	@echo "✅ Migrations completed successfully"
+	@echo "Migrations completed successfully"
 
 ## db-migrate-up-docker: Apply migrations via docker (using migrator role)
 db-migrate-up-docker:
 	@echo "Running migrations via Docker..."
 	$(DOCKER_COMPOSE) exec migrate migrate -path /migrations -database "postgresql://kustan:$${DB_MIGRATOR_PASSWORD:-kustan_dev_pass_123}@postgres:5432/keerja?sslmode=disable" up
-	@echo "✅ Docker migrations completed successfully"
+	@echo "Docker migrations completed successfully"
 
 ## db-migrate-down: Rollback one migration step
 db-migrate-down:
@@ -230,7 +235,7 @@ db-migrate-down:
 	fi
 	@echo "Rolling back one migration..."
 	migrate -path database/migrations -database "$$DATABASE_URL" down -steps 1
-	@echo "✅ Rollback completed successfully"
+	@echo "Rollback completed successfully"
 
 ## db-migration-status: Show current migration version
 db-migration-status:

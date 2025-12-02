@@ -1,8 +1,3 @@
---
--- PostgreSQL database dump
---
-
-\restrict USe5kuJ02Y8BSPSOe5QSmuHVsY9jBEsDhQ1eKjjJO6W3Wbz7fMliflmwqg2bBSZ
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -7094,6 +7089,3 @@ ALTER TABLE ONLY public.user_skills
 --
 -- PostgreSQL database dump complete
 --
-
-\unrestrict USe5kuJ02Y8BSPSOe5QSmuHVsY9jBEsDhQ1eKjjJO6W3Wbz7fMliflmwqg2bBSZ
-
