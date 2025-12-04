@@ -158,7 +158,7 @@ make run
 - System: PostgreSQL
 - Server: postgres
 - Username: postgres
-- Password: postgres_admin_pas
+- Password: postgres_admin_pass
 - Database: keerja
 
 #### Option 2: Manual Setup
