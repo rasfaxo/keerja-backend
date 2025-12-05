@@ -158,7 +158,7 @@ make run
 - System: PostgreSQL
 - Server: postgres
 - Username: postgres
-- Password: postgres_admin_pas
+- Password: postgres_admin_pass
 - Database: keerja
 
 #### Option 2: Manual Setup
@@ -299,6 +299,23 @@ make coverage
 # Run specific package tests
 go test ./internal/domain/user/... -v
 ```
+
+### Linting and Formatting
+
+To ensure code quality and proper formatting, you can use the following commands:
+
+- **Lint**: Run the linter to check for issues in the code.
+
+  ```bash
+  make lint
+  ```
+
+- **Format**: Automatically format the code.
+  ```bash
+  make fmt
+  ```
+
+These commands use `golangci-lint` for linting and `gofmt` for formatting.
 
 ---
 

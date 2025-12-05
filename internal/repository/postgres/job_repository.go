@@ -180,11 +180,17 @@ func (r *jobRepository) List(ctx context.Context, filter job.JobFilter, page, li
 	// Apply sorting
 	query = r.applySorting(query, filter.SortBy)
 
-	// Execute query
+	// Execute query with full preloads for public listing
 	err := query.
 		Preload("Category").
 		Preload("CompanyAddress").
 		Preload("JobSubcategory").
+		Preload("JobTitle").
+		Preload("JobType").
+		Preload("WorkPolicy").
+		Preload("EducationLevelM").
+		Preload("ExperienceLevelM").
+		Preload("GenderPreference").
 		Preload("Locations").
 		Preload("Benefits").
 		Preload("Skills.Skill").
@@ -276,14 +282,34 @@ func (r *jobRepository) SearchJobs(ctx context.Context, filter job.JobSearchFilt
 		query = query.Where("job_level IN ?", filter.JobLevels)
 	}
 
-	// Employment types filter
+	// Employment types filter (legacy)
 	if len(filter.EmploymentTypes) > 0 {
 		query = query.Where("employment_type IN ?", filter.EmploymentTypes)
 	}
 
-	// Remote only filter
+	// Remote only filter (legacy - use WorkPolicyIDs for new implementation)
 	if filter.RemoteOnly {
 		query = query.Where("remote_option = ?", true)
+	}
+
+	// Master Data: Job Type IDs filter (Full-Time, Part-Time, Contract, Internship)
+	if len(filter.JobTypeIDs) > 0 {
+		query = query.Where("job_type_id IN ?", filter.JobTypeIDs)
+	}
+
+	// Master Data: Work Policy IDs filter (On-site, Remote, Hybrid)
+	if len(filter.WorkPolicyIDs) > 0 {
+		query = query.Where("work_policy_id IN ?", filter.WorkPolicyIDs)
+	}
+
+	// Master Data: Education Level ID filter
+	if filter.EducationLevelID != nil {
+		query = query.Where("education_level_id = ?", *filter.EducationLevelID)
+	}
+
+	// Master Data: Experience Level ID filter
+	if filter.ExperienceLevelID != nil {
+		query = query.Where("experience_level_id = ?", *filter.ExperienceLevelID)
 	}
 
 	// Salary range filter
@@ -294,7 +320,7 @@ func (r *jobRepository) SearchJobs(ctx context.Context, filter job.JobSearchFilt
 		query = query.Where("salary_min <= ? OR salary_min IS NULL", *filter.MaxSalary)
 	}
 
-	// Experience filter
+	// Experience filter (legacy - years)
 	if filter.MinExperience != nil {
 		query = query.Where("experience_max >= ? OR experience_max IS NULL", *filter.MinExperience)
 	}
@@ -302,7 +328,7 @@ func (r *jobRepository) SearchJobs(ctx context.Context, filter job.JobSearchFilt
 		query = query.Where("experience_min <= ? OR experience_min IS NULL", *filter.MaxExperience)
 	}
 
-	// Education levels filter
+	// Education levels filter (legacy)
 	if len(filter.EducationLevels) > 0 {
 		query = query.Where("education_level IN ?", filter.EducationLevels)
 	}
@@ -349,6 +375,12 @@ func (r *jobRepository) SearchJobs(ctx context.Context, filter job.JobSearchFilt
 		Preload("Category").
 		Preload("CompanyAddress").
 		Preload("JobSubcategory").
+		Preload("JobTitle").
+		Preload("JobType").
+		Preload("WorkPolicy").
+		Preload("EducationLevelM").
+		Preload("ExperienceLevelM").
+		Preload("GenderPreference").
 		Preload("Locations").
 		Preload("Benefits").
 		Preload("Skills.Skill").
@@ -360,38 +392,49 @@ func (r *jobRepository) SearchJobs(ctx context.Context, filter job.JobSearchFilt
 	return jobs, total, err
 }
 
-// GetJobsGroupedByStatus returns jobs grouped by status for a user
-func (r *jobRepository) GetJobsGroupedByStatus(ctx context.Context, userID int64) (map[string][]job.Job, error) {
+// GetJobsByStatus returns jobs by specific status for a user with pagination
+func (r *jobRepository) GetJobsByStatus(ctx context.Context, userID int64, status string, page, limit int) ([]job.Job, int64, error) {
 	var jobs []job.Job
-	err := r.db.WithContext(ctx).
+	var total int64
+
+	// Map UI status to database status
+	dbStatuses := []string{}
+	switch status {
+	case "active":
+		dbStatuses = []string{"published"}
+	case "inactive":
+		dbStatuses = []string{"inactive"}
+	case "draft":
+		dbStatuses = []string{"draft"}
+	case "in_review":
+		dbStatuses = []string{"in_review", "pending_review"}
+	default:
+		return nil, 0, nil
+	}
+
+	query := r.db.WithContext(ctx).
 		Model(&job.Job{}).
 		Joins("JOIN employer_users eu ON eu.id = jobs.employer_user_id").
 		Where("eu.user_id = ?", userID).
+		Where("jobs.status IN ?", dbStatuses)
+
+	// Count total
+	err := query.Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Fetch with pagination
+	offset := (page - 1) * limit
+	err = query.Order("jobs.created_at DESC").
+		Offset(offset).
+		Limit(limit).
 		Find(&jobs).Error
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	grouped := map[string][]job.Job{
-		"active":    {},
-		"inactive":  {},
-		"draft":     {},
-		"in_review": {},
-	}
-	for _, j := range jobs {
-		switch j.Status {
-		case "published":
-			// published jobs are considered 'active' in the mobile UI
-			grouped["active"] = append(grouped["active"], j)
-		case "inactive":
-			grouped["inactive"] = append(grouped["inactive"], j)
-		case "draft":
-			grouped["draft"] = append(grouped["draft"], j)
-		case "in_review", "pending_review":
-			// both in_review and pending_review map to the in_review tab
-			grouped["in_review"] = append(grouped["in_review"], j)
-		}
-	}
-	return grouped, nil
+
+	return jobs, total, nil
 }
 
 // ===========================================

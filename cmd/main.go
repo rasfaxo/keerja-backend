@@ -366,7 +366,10 @@ func main() {
 	// 5. Rate limiting
 	app.Use(middleware.RateLimiter(cfg))
 
-	// 6. Error handler
+	// 6. Response compression (gzip for >5KB responses)
+	app.Use(middleware.ResponseCompression())
+
+	// 7. Error handler
 	app.Use(middleware.ErrorHandler(cfg.AppEnv == "development"))
 
 	// Setup routes

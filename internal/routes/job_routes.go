@@ -14,7 +14,7 @@ import (
 //   - GET    /:id                Get job details by ID
 //   - POST   /search             Advanced job search
 //
-// Employer Endpoints (7):
+// Employer Endpoints (10):
 //   - POST   /                   Create new job posting
 //   - POST   /draft              Save job draft (Phase 6)
 //   - PUT    /:id                Update existing job
@@ -22,8 +22,12 @@ import (
 //   - GET    /my-jobs            List employer's own jobs
 //   - PATCH  /:id/publish        Publish draft job
 //   - PATCH  /:id/close          Close active job
+//   - GET    /status/active      Get active jobs with pagination
+//   - GET    /status/draft       Get draft jobs with pagination
+//   - GET    /status/in-review   Get in-review jobs with pagination
+//   - GET    /status/inactive    Get inactive jobs with pagination
 //
-// Total: 10 endpoints
+// Total: 13 endpoints
 func SetupJobRoutes(api fiber.Router, deps *Dependencies, authMw *middleware.AuthMiddleware) {
 	jobs := api.Group("/jobs")
 
@@ -69,10 +73,28 @@ func SetupJobRoutes(api fiber.Router, deps *Dependencies, authMw *middleware.Aut
 		deps.JobHandler.GetMyJobs,
 	)
 
-	// GET /api/v1/jobs/grouped-by-status - Get jobs grouped by status for mobile tab UI
-	protected.Get("/grouped-by-status",
+	// GET /api/v1/jobs/status/active - Get active jobs with pagination
+	protected.Get("/status/active",
 		middleware.SearchRateLimiter(),
-		deps.JobHandler.GetJobsGroupedByStatus,
+		deps.JobHandler.GetActiveJobs,
+	)
+
+	// GET /api/v1/jobs/status/draft - Get draft jobs with pagination
+	protected.Get("/status/draft",
+		middleware.SearchRateLimiter(),
+		deps.JobHandler.GetDraftJobs,
+	)
+
+	// GET /api/v1/jobs/status/in-review - Get in-review jobs with pagination
+	protected.Get("/status/in-review",
+		middleware.SearchRateLimiter(),
+		deps.JobHandler.GetInReviewJobs,
+	)
+
+	// GET /api/v1/jobs/status/inactive - Get inactive jobs with pagination
+	protected.Get("/status/inactive",
+		middleware.SearchRateLimiter(),
+		deps.JobHandler.GetInactiveJobs,
 	)
 
 	// POST /api/v1/jobs/draft - Save job draft (Phase 6)

@@ -1,7 +1,7 @@
 package jobhandler
 
 import (
-	"keerja-backend/internal/domain/job"
+	"keerja-backend/internal/domain/company"
 	"keerja-backend/internal/dto/mapper"
 	"keerja-backend/internal/dto/request"
 	"keerja-backend/internal/dto/response"
@@ -35,9 +35,31 @@ func (h *JobHandler) SearchJobs(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to search jobs", err.Error())
 	}
 
-	respJobs := mapper.MapEntities[job.Job, response.JobResponse](result.Jobs, func(j *job.Job) *response.JobResponse {
-		return mapper.ToJobResponse(j)
-	})
+	// Collect unique company IDs for batch fetching
+	companyIDMap := make(map[int64]bool)
+	for _, j := range result.Jobs {
+		companyIDMap[j.CompanyID] = true
+	}
+
+	// Fetch companies in batch to avoid N+1 queries
+	companies := make(map[int64]*company.Company)
+	for companyID := range companyIDMap {
+		comp, err := h.companyService.GetCompany(ctx, companyID)
+		if err == nil && comp != nil {
+			companies[companyID] = comp
+		}
+	}
+
+	// Map jobs with company data
+	respJobs := make([]response.JobResponse, 0, len(result.Jobs))
+	for _, j := range result.Jobs {
+		comp := companies[j.CompanyID]
+		jobResp := mapper.ToJobResponseWithCompany(&j, comp)
+		if jobResp != nil {
+			respJobs = append(respJobs, *jobResp)
+		}
+	}
+
 	meta := utils.GetPaginationMeta(result.Page, result.Limit, result.Total)
 	payload := response.JobListResponse{Jobs: respJobs}
 	return utils.SuccessResponseWithMeta(c, common.MsgFetchedSuccess, payload, meta)

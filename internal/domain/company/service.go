@@ -115,8 +115,8 @@ type CompanyService interface {
 	GetVerifiedCompanies(ctx context.Context, page, limit int) ([]Company, int64, error)
 	GetCompanyEngagement(ctx context.Context, companyID int64) (*EngagementStats, error)
 
-	// Job grouping by status
-	GetJobsGroupedByStatus(ctx context.Context, userID int64) (map[string][]job.Job, error)
+	// Get jobs by specific status with pagination
+	GetJobsByStatus(ctx context.Context, userID int64, status string, page, limit int) ([]job.Job, int64, error)
 
 	// Company address management
 	CreateCompanyAddress(ctx context.Context, companyID int64, req *CreateCompanyAddressRequest) (*CompanyAddress, error)

@@ -59,8 +59,8 @@ type JobRepository interface {
 	GetCategoryTree(ctx context.Context) ([]JobCategory, error)
 	GetActiveCategories(ctx context.Context) ([]JobCategory, error)
 
-	// Group jobs by status
-	GetJobsGroupedByStatus(ctx context.Context, userID int64) (map[string][]Job, error)
+	// Get jobs by specific status
+	GetJobsByStatus(ctx context.Context, userID int64, status string, page, limit int) ([]Job, int64, error)
 
 	// JobSubcategory CRUD
 	CreateSubcategory(ctx context.Context, subcategory *JobSubcategory) error
@@ -158,6 +158,12 @@ type JobSearchFilter struct {
 	EducationLevels []string
 	CompanyIDs      []int64
 	PostedWithin    *int // days
+
+	// Master Data ID Filters
+	JobTypeIDs        []int64 // Full-Time, Part-Time, Contract, Internship
+	WorkPolicyIDs     []int64 // On-site, Remote, Hybrid
+	EducationLevelID  *int64
+	ExperienceLevelID *int64
 }
 
 // CategoryFilter defines filter criteria for category listing

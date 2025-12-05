@@ -12,31 +12,53 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func (h *JobHandler) GetJobsGroupedByStatus(c *fiber.Ctx) error {
+// getJobsByStatusHelper is a helper function to get jobs by specific status
+func (h *JobHandler) getJobsByStatusHelper(c *fiber.Ctx, status string) error {
 	ctx := c.UserContext()
 	userID := middleware.GetUserID(c)
 	if userID == 0 {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Authentication required", "User ID not found in context")
 	}
 
-	groupedJobs, err := h.companyService.GetJobsGroupedByStatus(ctx, userID)
+	// Parse pagination
+	page := c.QueryInt("page", 1)
+	limit := c.QueryInt("limit", 10)
+	page, limit = utils.ValidatePagination(page, limit, 100)
+
+	jobs, total, err := h.companyService.GetJobsByStatus(ctx, userID, status, page, limit)
 	if err != nil {
-		return utils.InternalServerErrorResponse(c, "Failed to retrieve jobs grouped by status")
+		return utils.InternalServerErrorResponse(c, "Failed to retrieve "+status+" jobs")
 	}
 
-	groupedResp := map[string][]response.JobResponse{
-		"active":    {},
-		"inactive":  {},
-		"draft":     {},
-		"in_review": {},
-	}
-	for status, jobs := range groupedJobs {
-		groupedResp[status] = mapper.MapEntities[job.Job, response.JobResponse](jobs, func(j *job.Job) *response.JobResponse {
-			return mapper.ToJobResponse(j)
-		})
-	}
+	respJobs := mapper.MapEntities[job.Job, response.JobResponse](jobs, func(j *job.Job) *response.JobResponse {
+		return mapper.ToJobResponse(j)
+	})
 
-	return utils.SuccessResponse(c, "Jobs grouped by status retrieved successfully", groupedResp)
+	meta := utils.GetPaginationMeta(page, limit, total)
+	payload := struct {
+		Jobs []response.JobResponse `json:"jobs"`
+	}{Jobs: respJobs}
+	return utils.SuccessResponseWithMeta(c, status+" jobs retrieved successfully", payload, meta)
+}
+
+// GetActiveJobs returns jobs with active/published status
+func (h *JobHandler) GetActiveJobs(c *fiber.Ctx) error {
+	return h.getJobsByStatusHelper(c, "active")
+}
+
+// GetDraftJobs returns jobs with draft status
+func (h *JobHandler) GetDraftJobs(c *fiber.Ctx) error {
+	return h.getJobsByStatusHelper(c, "draft")
+}
+
+// GetInReviewJobs returns jobs with in_review status
+func (h *JobHandler) GetInReviewJobs(c *fiber.Ctx) error {
+	return h.getJobsByStatusHelper(c, "in_review")
+}
+
+// GetInactiveJobs returns jobs with inactive status
+func (h *JobHandler) GetInactiveJobs(c *fiber.Ctx) error {
+	return h.getJobsByStatusHelper(c, "inactive")
 }
 
 func (h *JobHandler) GetMyJobs(c *fiber.Ctx) error {

@@ -72,14 +72,16 @@ func BuildJobFilter(q request.JobSearchRequest) job.JobFilter {
 // BuildJobSearchFilter builds job.JobSearchFilter from request.JobSearchRequest
 func BuildJobSearchFilter(q request.JobSearchRequest) job.JobSearchFilter {
 	f := job.JobSearchFilter{
-		Keyword:       q.Query,
-		Location:      q.Location,
-		RemoteOnly:    q.RemoteOnly,
-		MinSalary:     q.SalaryMin,
-		MaxSalary:     q.SalaryMax,
-		MinExperience: q.ExperienceMin,
-		MaxExperience: q.ExperienceMax,
-		PostedWithin:  q.PostedWithin,
+		Keyword:           q.Query,
+		Location:          q.Location,
+		RemoteOnly:        q.RemoteOnly,
+		MinSalary:         q.SalaryMin,
+		MaxSalary:         q.SalaryMax,
+		MinExperience:     q.ExperienceMin,
+		MaxExperience:     q.ExperienceMax,
+		PostedWithin:      q.PostedWithin,
+		EducationLevelID:  q.EducationLevelID,
+		ExperienceLevelID: q.ExperienceLevelID,
 	}
 
 	// Optional ID fields
@@ -95,7 +97,15 @@ func BuildJobSearchFilter(q request.JobSearchRequest) job.JobSearchFilter {
 		f.SkillIDs = q.SkillIDs
 	}
 
-	// Optional string array fields
+	// Master Data ID array filters (UI: Job Type & Work Policy chips)
+	if len(q.JobTypeIDs) > 0 {
+		f.JobTypeIDs = q.JobTypeIDs
+	}
+	if len(q.WorkPolicyIDs) > 0 {
+		f.WorkPolicyIDs = q.WorkPolicyIDs
+	}
+
+	// Optional string array fields (legacy support)
 	if q.EmploymentType != "" {
 		f.EmploymentTypes = []string{q.EmploymentType}
 	}
