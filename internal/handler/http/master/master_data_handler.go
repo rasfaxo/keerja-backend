@@ -245,8 +245,8 @@ func (h *MasterDataHandler) GetJobRequirementsOptions(c *fiber.Ctx) error {
 // GET /api/v1/master/job-form/job-description
 func (h *MasterDataHandler) GetJobDescriptionOptions(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, "Job description options retrieved successfully", fiber.Map{
-		"max_length":  5000, 
-		"min_length":  100,  
+		"max_length":  5000,
+		"min_length":  100,
 		"placeholder": "Describe the job responsibilities, requirements, and benefits...",
 		"tips": []string{
 			"Jelaskan tanggung jawab utama pekerjaan",

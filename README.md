@@ -300,6 +300,23 @@ make coverage
 go test ./internal/domain/user/... -v
 ```
 
+### Linting and Formatting
+
+To ensure code quality and proper formatting, you can use the following commands:
+
+- **Lint**: Run the linter to check for issues in the code.
+
+  ```bash
+  make lint
+  ```
+
+- **Format**: Automatically format the code.
+  ```bash
+  make fmt
+  ```
+
+These commands use `golangci-lint` for linting and `gofmt` for formatting.
+
 ---
 
 ## API Documentation

@@ -10,10 +10,10 @@ import (
 
 const (
 	// Cache keys with different TTL for tiered caching strategy
-	jobOptionsCacheKey        = "master:job_options"         // 3-day TTL (static, admin-managed)
-	
-	jobOptionsCacheTTL       = 3 * 24 * time.Hour // 3 days - static data (types, policies, levels)
-	
+	jobOptionsCacheKey = "master:job_options" // 3-day TTL (static, admin-managed)
+
+	jobOptionsCacheTTL = 3 * 24 * time.Hour // 3 days - static data (types, policies, levels)
+
 )
 
 type jobOptionsService struct {

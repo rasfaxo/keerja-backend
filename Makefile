@@ -19,7 +19,7 @@ ifneq (,$(wildcard .env))
     export
 endif
 
-.PHONY: all build clean test coverage run dev docker-up docker-down docker-logs docker-reset help install db-migration-create db-migrate-up db-migrate-down db-migration-status db-migrate-to
+.PHONY: all build clean test coverage run dev docker-up docker-down docker-logs docker-reset help install db-migration-create db-migrate-up db-migrate-down db-migration-status db-migrate-to lint fmt
 
 help:
 	@echo "╔══════════════════════════════════════════════════════════════╗"
@@ -33,6 +33,8 @@ help:
 	@echo "║   make test         - Run unit tests                          ║"
 	@echo "║   make coverage     - Run tests with coverage                 ║"
 	@echo "║   make clean        - Clean build files                       ║"
+	@echo "║   make lint         - Run linter                              ║"
+	@echo "║   make fmt          - Format code                            ║"
 	@echo "╠══════════════════════════════════════════════════════════════╣"
 	@echo "║ Docker:                                                       ║"
 	@echo "║   make docker-up         - Start infrastructure (db, redis)   ║"
@@ -187,6 +189,16 @@ docker-ps:
 ## docker-stats: Show container stats
 docker-stats:
 	@docker stats --no-stream $(shell $(DOCKER_COMPOSE) ps -q)
+
+## lint: Run linter
+lint:
+	@echo "Running linter..."
+	golangci-lint run
+
+## fmt: Format code
+fmt:
+	@echo "Formatting code..."
+	gofmt -w .
 
 ## db-migration-create: Create a new migration
 db-migration-create:
