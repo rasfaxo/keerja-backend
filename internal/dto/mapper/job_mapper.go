@@ -335,6 +335,74 @@ func ToJobDetailResponseWithCompany(j *job.Job, comp *company.Company, addr *com
 		}
 		resp.CompanyVerified = comp.IsVerified()
 		resp.CompanySlug = comp.Slug
+
+		// Build nested company response for job detail page
+		companyResp := &response.JobCompanyResponse{
+			ID:          comp.ID,
+			CompanyName: comp.CompanyName,
+			Slug:        comp.Slug,
+			Verified:    comp.IsVerified(),
+			Country:     comp.Country,
+		}
+
+		companyResp.UUID = comp.UUID.String()
+
+		if comp.LogoURL != nil {
+			companyResp.LogoURL = *comp.LogoURL
+		}
+		if comp.BannerURL != nil {
+			companyResp.BannerURL = *comp.BannerURL
+		}
+
+		// Location
+		companyResp.FullAddress = comp.FullAddress
+		if comp.City != nil {
+			companyResp.City = *comp.City
+		}
+		if comp.Province != nil {
+			companyResp.Province = *comp.Province
+		}
+
+		// Contact - use email domain as fallback since Company doesn't have direct email field
+		if comp.EmailDomain != nil {
+			companyResp.Email = "contact@" + *comp.EmailDomain
+		}
+		if comp.Phone != nil {
+			companyResp.Phone = *comp.Phone
+		}
+		if comp.WebsiteURL != nil {
+			companyResp.WebsiteURL = *comp.WebsiteURL
+		}
+
+		// Social Media
+		if comp.InstagramURL != nil {
+			companyResp.InstagramURL = *comp.InstagramURL
+		}
+		if comp.FacebookURL != nil {
+			companyResp.FacebookURL = *comp.FacebookURL
+		}
+		if comp.LinkedinURL != nil {
+			companyResp.LinkedinURL = *comp.LinkedinURL
+		}
+		if comp.TwitterURL != nil {
+			companyResp.TwitterURL = *comp.TwitterURL
+		}
+
+		// About
+		if comp.Industry != nil {
+			companyResp.Industry = *comp.Industry
+		}
+		if comp.SizeCategory != nil {
+			companyResp.SizeCategory = *comp.SizeCategory
+		}
+		if comp.About != nil {
+			companyResp.About = *comp.About
+		}
+		if comp.Description != nil {
+			companyResp.ShortDescription = *comp.Description
+		}
+
+		resp.Company = companyResp
 	}
 
 	// Add selected company address if provided

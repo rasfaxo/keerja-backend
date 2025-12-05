@@ -138,6 +138,12 @@ type JobSearchRequest struct {
 	Limit          int      `json:"limit" query:"limit" validate:"omitempty,min=1,max=100"`
 	SortBy         string   `json:"sort_by" query:"sort_by" validate:"omitempty,oneof=relevance posted_date salary views applications"`
 	SortOrder      string   `json:"sort_order" query:"sort_order" validate:"omitempty,oneof=asc desc"`
+
+	// Master Data Filters (UI: Job Type & Work Policy chips)
+	JobTypeIDs        []int64 `json:"job_type_ids" query:"job_type_ids" validate:"omitempty"`       // Full-Time, Part-Time, Contract, Internship
+	WorkPolicyIDs     []int64 `json:"work_policy_ids" query:"work_policy_ids" validate:"omitempty"` // On-site, Remote, Hybrid
+	EducationLevelID  *int64  `json:"education_level_id" query:"education_level_id" validate:"omitempty"`
+	ExperienceLevelID *int64  `json:"experience_level_id" query:"experience_level_id" validate:"omitempty"`
 }
 
 // JobFilterRequest represents job filter request

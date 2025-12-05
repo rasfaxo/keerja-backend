@@ -158,6 +158,12 @@ type JobSearchFilter struct {
 	EducationLevels []string
 	CompanyIDs      []int64
 	PostedWithin    *int // days
+
+	// Master Data ID Filters
+	JobTypeIDs        []int64 // Full-Time, Part-Time, Contract, Internship
+	WorkPolicyIDs     []int64 // On-site, Remote, Hybrid
+	EducationLevelID  *int64
+	ExperienceLevelID *int64
 }
 
 // CategoryFilter defines filter criteria for category listing

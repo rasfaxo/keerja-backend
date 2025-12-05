@@ -40,6 +40,40 @@ type JobResponse struct {
 	DaysRemaining     *int                    `json:"days_remaining,omitempty"`
 }
 
+// JobCompanyResponse represents company info embedded in job detail
+type JobCompanyResponse struct {
+	ID          int64  `json:"id"`
+	UUID        string `json:"uuid,omitempty"`
+	CompanyName string `json:"company_name"`
+	Slug        string `json:"slug"`
+	LogoURL     string `json:"logo_url,omitempty"`
+	BannerURL   string `json:"banner_url,omitempty"`
+	Verified    bool   `json:"verified"`
+
+	// Location
+	FullAddress string `json:"full_address,omitempty"`
+	City        string `json:"city,omitempty"`
+	Province    string `json:"province,omitempty"`
+	Country     string `json:"country,omitempty"`
+
+	// Contact
+	Email      string `json:"email,omitempty"`
+	Phone      string `json:"phone,omitempty"`
+	WebsiteURL string `json:"website_url,omitempty"`
+
+	// Social Media
+	InstagramURL string `json:"instagram_url,omitempty"`
+	FacebookURL  string `json:"facebook_url,omitempty"`
+	LinkedinURL  string `json:"linkedin_url,omitempty"`
+	TwitterURL   string `json:"twitter_url,omitempty"`
+
+	// About
+	Industry         string `json:"industry,omitempty"`
+	SizeCategory     string `json:"size_category,omitempty"`
+	About            string `json:"about,omitempty"`
+	ShortDescription string `json:"short_description,omitempty"`
+}
+
 // JobDetailResponse represents detailed job response (master data only)
 type JobDetailResponse struct {
 	ID              int64  `json:"id"`
@@ -52,6 +86,9 @@ type JobDetailResponse struct {
 	EmployerUserID  *int64 `json:"employer_user_id,omitempty"`
 	Title           string `json:"title"`
 	Slug            string `json:"slug"`
+
+	// Nested Company Detail (for job detail page)
+	Company *JobCompanyResponse `json:"company,omitempty"`
 
 	// Master Data IDs
 	JobTitle           *JobMasterDataItem       `json:"job_title,omitempty"`

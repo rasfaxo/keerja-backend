@@ -180,11 +180,17 @@ func (r *jobRepository) List(ctx context.Context, filter job.JobFilter, page, li
 	// Apply sorting
 	query = r.applySorting(query, filter.SortBy)
 
-	// Execute query
+	// Execute query with full preloads for public listing
 	err := query.
 		Preload("Category").
 		Preload("CompanyAddress").
 		Preload("JobSubcategory").
+		Preload("JobTitle").
+		Preload("JobType").
+		Preload("WorkPolicy").
+		Preload("EducationLevelM").
+		Preload("ExperienceLevelM").
+		Preload("GenderPreference").
 		Preload("Locations").
 		Preload("Benefits").
 		Preload("Skills.Skill").
@@ -276,14 +282,34 @@ func (r *jobRepository) SearchJobs(ctx context.Context, filter job.JobSearchFilt
 		query = query.Where("job_level IN ?", filter.JobLevels)
 	}
 
-	// Employment types filter
+	// Employment types filter (legacy)
 	if len(filter.EmploymentTypes) > 0 {
 		query = query.Where("employment_type IN ?", filter.EmploymentTypes)
 	}
 
-	// Remote only filter
+	// Remote only filter (legacy - use WorkPolicyIDs for new implementation)
 	if filter.RemoteOnly {
 		query = query.Where("remote_option = ?", true)
+	}
+
+	// Master Data: Job Type IDs filter (Full-Time, Part-Time, Contract, Internship)
+	if len(filter.JobTypeIDs) > 0 {
+		query = query.Where("job_type_id IN ?", filter.JobTypeIDs)
+	}
+
+	// Master Data: Work Policy IDs filter (On-site, Remote, Hybrid)
+	if len(filter.WorkPolicyIDs) > 0 {
+		query = query.Where("work_policy_id IN ?", filter.WorkPolicyIDs)
+	}
+
+	// Master Data: Education Level ID filter
+	if filter.EducationLevelID != nil {
+		query = query.Where("education_level_id = ?", *filter.EducationLevelID)
+	}
+
+	// Master Data: Experience Level ID filter
+	if filter.ExperienceLevelID != nil {
+		query = query.Where("experience_level_id = ?", *filter.ExperienceLevelID)
 	}
 
 	// Salary range filter
@@ -294,7 +320,7 @@ func (r *jobRepository) SearchJobs(ctx context.Context, filter job.JobSearchFilt
 		query = query.Where("salary_min <= ? OR salary_min IS NULL", *filter.MaxSalary)
 	}
 
-	// Experience filter
+	// Experience filter (legacy - years)
 	if filter.MinExperience != nil {
 		query = query.Where("experience_max >= ? OR experience_max IS NULL", *filter.MinExperience)
 	}
@@ -302,7 +328,7 @@ func (r *jobRepository) SearchJobs(ctx context.Context, filter job.JobSearchFilt
 		query = query.Where("experience_min <= ? OR experience_min IS NULL", *filter.MaxExperience)
 	}
 
-	// Education levels filter
+	// Education levels filter (legacy)
 	if len(filter.EducationLevels) > 0 {
 		query = query.Where("education_level IN ?", filter.EducationLevels)
 	}
@@ -349,6 +375,12 @@ func (r *jobRepository) SearchJobs(ctx context.Context, filter job.JobSearchFilt
 		Preload("Category").
 		Preload("CompanyAddress").
 		Preload("JobSubcategory").
+		Preload("JobTitle").
+		Preload("JobType").
+		Preload("WorkPolicy").
+		Preload("EducationLevelM").
+		Preload("ExperienceLevelM").
+		Preload("GenderPreference").
 		Preload("Locations").
 		Preload("Benefits").
 		Preload("Skills.Skill").
