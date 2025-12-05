@@ -360,38 +360,49 @@ func (r *jobRepository) SearchJobs(ctx context.Context, filter job.JobSearchFilt
 	return jobs, total, err
 }
 
-// GetJobsGroupedByStatus returns jobs grouped by status for a user
-func (r *jobRepository) GetJobsGroupedByStatus(ctx context.Context, userID int64) (map[string][]job.Job, error) {
+// GetJobsByStatus returns jobs by specific status for a user with pagination
+func (r *jobRepository) GetJobsByStatus(ctx context.Context, userID int64, status string, page, limit int) ([]job.Job, int64, error) {
 	var jobs []job.Job
-	err := r.db.WithContext(ctx).
+	var total int64
+
+	// Map UI status to database status
+	dbStatuses := []string{}
+	switch status {
+	case "active":
+		dbStatuses = []string{"published"}
+	case "inactive":
+		dbStatuses = []string{"inactive"}
+	case "draft":
+		dbStatuses = []string{"draft"}
+	case "in_review":
+		dbStatuses = []string{"in_review", "pending_review"}
+	default:
+		return nil, 0, nil
+	}
+
+	query := r.db.WithContext(ctx).
 		Model(&job.Job{}).
 		Joins("JOIN employer_users eu ON eu.id = jobs.employer_user_id").
 		Where("eu.user_id = ?", userID).
+		Where("jobs.status IN ?", dbStatuses)
+
+	// Count total
+	err := query.Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Fetch with pagination
+	offset := (page - 1) * limit
+	err = query.Order("jobs.created_at DESC").
+		Offset(offset).
+		Limit(limit).
 		Find(&jobs).Error
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	grouped := map[string][]job.Job{
-		"active":    {},
-		"inactive":  {},
-		"draft":     {},
-		"in_review": {},
-	}
-	for _, j := range jobs {
-		switch j.Status {
-		case "published":
-			// published jobs are considered 'active' in the mobile UI
-			grouped["active"] = append(grouped["active"], j)
-		case "inactive":
-			grouped["inactive"] = append(grouped["inactive"], j)
-		case "draft":
-			grouped["draft"] = append(grouped["draft"], j)
-		case "in_review", "pending_review":
-			// both in_review and pending_review map to the in_review tab
-			grouped["in_review"] = append(grouped["in_review"], j)
-		}
-	}
-	return grouped, nil
+
+	return jobs, total, nil
 }
 
 // ===========================================

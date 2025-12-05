@@ -59,8 +59,8 @@ type JobRepository interface {
 	GetCategoryTree(ctx context.Context) ([]JobCategory, error)
 	GetActiveCategories(ctx context.Context) ([]JobCategory, error)
 
-	// Group jobs by status
-	GetJobsGroupedByStatus(ctx context.Context, userID int64) (map[string][]Job, error)
+	// Get jobs by specific status
+	GetJobsByStatus(ctx context.Context, userID int64, status string, page, limit int) ([]Job, int64, error)
 
 	// JobSubcategory CRUD
 	CreateSubcategory(ctx context.Context, subcategory *JobSubcategory) error

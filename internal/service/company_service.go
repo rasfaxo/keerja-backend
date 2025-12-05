@@ -42,10 +42,9 @@ type companyService struct {
 	userRepo           user.UserRepository
 }
 
-// GetJobsGroupedByStatus implements CompanyService interface for job status grouping
-func (s *companyService) GetJobsGroupedByStatus(ctx context.Context, userID int64) (map[string][]job.Job, error) {
-	// Delegate to jobRepo for real data
-	return s.jobRepo.GetJobsGroupedByStatus(ctx, userID)
+// GetJobsByStatus implements CompanyService interface for getting jobs by specific status
+func (s *companyService) GetJobsByStatus(ctx context.Context, userID int64, status string, page, limit int) ([]job.Job, int64, error) {
+	return s.jobRepo.GetJobsByStatus(ctx, userID, status, page, limit)
 }
 
 // NewCompanyService creates a new company service instance

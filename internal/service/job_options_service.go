@@ -9,8 +9,11 @@ import (
 )
 
 const (
-	jobOptionsCacheKey = "master:job_options"
-	jobOptionsCacheTTL = 24 * time.Hour // Cache for 24 hours since this is static data
+	// Cache keys with different TTL for tiered caching strategy
+	jobOptionsCacheKey        = "master:job_options"         // 3-day TTL (static, admin-managed)
+	
+	jobOptionsCacheTTL       = 3 * 24 * time.Hour // 3 days - static data (types, policies, levels)
+	
 )
 
 type jobOptionsService struct {
@@ -26,7 +29,7 @@ func NewJobOptionsService(repo master.JobOptionsRepository, cache cache.Cache) m
 	}
 }
 
-// GetJobOptions retrieves all job options (heavily cached)
+// GetJobOptions retrieves all job options (heavily cached with 3-day TTL)
 func (s *jobOptionsService) GetJobOptions(ctx context.Context) (*master.JobOptionsResponse, error) {
 	// Try to get from cache first
 	cachedData, ok := s.cache.Get(jobOptionsCacheKey)
@@ -42,7 +45,7 @@ func (s *jobOptionsService) GetJobOptions(ctx context.Context) (*master.JobOptio
 		return nil, err
 	}
 
-	// Store in cache asynchronously to not block response
+	// Store in cache asynchronously with 3-day TTL for tiered caching
 	go func() {
 		s.cache.Set(jobOptionsCacheKey, response, jobOptionsCacheTTL)
 	}()
