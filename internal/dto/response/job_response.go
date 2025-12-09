@@ -30,6 +30,11 @@ type JobResponse struct {
 	MinAge            *int                    `json:"min_age,omitempty"`
 	MaxAge            *int                    `json:"max_age,omitempty"`
 	Currency          string                  `json:"currency"`
+	
+	// Location
+	City              string                  `json:"city,omitempty"`
+	Province          string                  `json:"province,omitempty"`
+	
 	Status            string                  `json:"status"`
 	ViewsCount        int64                   `json:"views_count"`
 	ApplicationsCount int64                   `json:"applications_count"`

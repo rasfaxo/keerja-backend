@@ -42,6 +42,24 @@ func ToJobResponse(j *job.Job) *response.JobResponse {
 		DaysRemaining:     daysRemaining,
 	}
 
+	// Populate City and Province from CompanyAddress if available
+	if j.CompanyAddress != nil {
+		if j.CompanyAddress.City != nil {
+			resp.City = j.CompanyAddress.City.Name
+		}
+		if j.CompanyAddress.Province != nil {
+			resp.Province = j.CompanyAddress.Province.Name
+		}
+	}
+
+	// Fallback to legacy fields if CompanyAddress is not available
+	if resp.City == "" && j.City != "" {
+		resp.City = j.City
+	}
+	if resp.Province == "" && j.Province != "" {
+		resp.Province = j.Province
+	}
+
 	// Map master data details
 	if j.JobType != nil {
 		resp.JobType = &response.JobMasterDataItem{

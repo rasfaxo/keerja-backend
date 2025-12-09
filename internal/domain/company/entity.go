@@ -544,7 +544,9 @@ type CompanyAddress struct {
 	DeletedAt   *time.Time `gorm:"index" json:"deleted_at,omitempty"`
 
 	// Relationships
-	Company *Company `gorm:"foreignKey:CompanyID" json:"-"`
+	Company  *Company         `gorm:"foreignKey:CompanyID" json:"-"`
+	Province *master.Province `gorm:"foreignKey:ProvinceID;references:ID;constraint:OnDelete:SET NULL" json:"province,omitempty"`
+	City     *master.City     `gorm:"foreignKey:CityID;references:ID;constraint:OnDelete:SET NULL" json:"city,omitempty"`
 }
 
 // TableName specifies the table name for CompanyAddress
