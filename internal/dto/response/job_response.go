@@ -22,27 +22,27 @@ type JobResponse struct {
 	GenderPreference *JobMasterDataItem `json:"gender_preference,omitempty"`
 
 	// Category/Subcategory (objects)
-	JobCategory       *JobCategoryResponse    `json:"job_category,omitempty"`
-	JobSubcategory    *JobSubcategoryResponse `json:"job_subcategory,omitempty"`
-	SalaryMin         *float64                `json:"salary_min,omitempty"`
-	SalaryMax         *float64                `json:"salary_max,omitempty"`
-	SalaryDisplay     string                  `json:"salary_display,omitempty"`
-	MinAge            *int                    `json:"min_age,omitempty"`
-	MaxAge            *int                    `json:"max_age,omitempty"`
-	Currency          string                  `json:"currency"`
-	
+	JobCategory    *JobCategoryResponse    `json:"job_category,omitempty"`
+	JobSubcategory *JobSubcategoryResponse `json:"job_subcategory,omitempty"`
+	SalaryMin      *float64                `json:"salary_min,omitempty"`
+	SalaryMax      *float64                `json:"salary_max,omitempty"`
+	SalaryDisplay  string                  `json:"salary_display,omitempty"`
+	MinAge         *int                    `json:"min_age,omitempty"`
+	MaxAge         *int                    `json:"max_age,omitempty"`
+	Currency       string                  `json:"currency"`
+
 	// Location
-	City              string                  `json:"city,omitempty"`
-	Province          string                  `json:"province,omitempty"`
-	
-	Status            string                  `json:"status"`
-	ViewsCount        int64                   `json:"views_count"`
-	ApplicationsCount int64                   `json:"applications_count"`
-	PublishedAt       *time.Time              `json:"published_at,omitempty"`
-	ExpiredAt         *time.Time              `json:"expired_at,omitempty"`
-	CreatedAt         time.Time               `json:"created_at"`
-	IsExpired         bool                    `json:"is_expired"`
-	DaysRemaining     *int                    `json:"days_remaining,omitempty"`
+	City     string `json:"city,omitempty"`
+	Province string `json:"province,omitempty"`
+
+	Status            string     `json:"status"`
+	ViewsCount        int64      `json:"views_count"`
+	ApplicationsCount int64      `json:"applications_count"`
+	PublishedAt       *time.Time `json:"published_at,omitempty"`
+	ExpiredAt         *time.Time `json:"expired_at,omitempty"`
+	CreatedAt         time.Time  `json:"created_at"`
+	IsExpired         bool       `json:"is_expired"`
+	DaysRemaining     *int       `json:"days_remaining,omitempty"`
 }
 
 // JobCompanyResponse represents company info embedded in job detail
