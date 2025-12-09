@@ -419,6 +419,10 @@ type CompanyAddress struct {
 	CreatedAt   time.Time  `gorm:"type:timestamp;default:now()" json:"created_at"`
 	UpdatedAt   time.Time  `gorm:"type:timestamp;default:now()" json:"updated_at"`
 	DeletedAt   *time.Time `gorm:"index" json:"deleted_at,omitempty"`
+
+	// Relationships
+	Province *master.Province `gorm:"foreignKey:ProvinceID;references:ID;constraint:OnDelete:SET NULL" json:"province,omitempty"`
+	City     *master.City     `gorm:"foreignKey:CityID;references:ID;constraint:OnDelete:SET NULL" json:"city,omitempty"`
 }
 
 // TableName ensures GORM uses the existing company_addresses table
