@@ -6,11 +6,13 @@ import (
 	"keerja-backend/internal/handler/http/admin"
 	applicationhandler "keerja-backend/internal/handler/http/application"
 	authhandler "keerja-backend/internal/handler/http/auth"
+	chathandler "keerja-backend/internal/handler/http/chat"
 	companyhandler "keerja-backend/internal/handler/http/company"
 	jobhandler "keerja-backend/internal/handler/http/job"
 	userhandler "keerja-backend/internal/handler/http/jobseeker"
 	"keerja-backend/internal/handler/http/master"
 	notificationhandler "keerja-backend/internal/handler/http/notification"
+	"keerja-backend/internal/handler/websocket"
 	"keerja-backend/internal/middleware"
 
 	"github.com/gofiber/fiber/v2"
@@ -57,6 +59,11 @@ type Dependencies struct {
 	DeviceTokenHandler      *notificationhandler.DeviceTokenHandler      // Device token management (6 endpoints)
 	PushNotificationHandler *notificationhandler.PushNotificationHandler // Push notifications (5 endpoints)
 
+	// Chat handlers
+	ChatHandler      *chathandler.ChatHandler // Chat HTTP handler (6 endpoints)
+	WebSocketHub     *websocket.Hub           // WebSocket hub
+	WebSocketHandler *websocket.Handler       // WebSocket handler
+
 	// Services (for middlewares)
 	CompanyService company.CompanyService
 }
@@ -102,5 +109,15 @@ func SetupRoutes(app *fiber.App, deps *Dependencies) {
 	}
 	if deps.PushNotificationHandler != nil {
 		SetupPushNotificationRoutes(api, deps.PushNotificationHandler, authMw) // push_notification_routes.go
+	}
+
+	// Chat routes
+	if deps.ChatHandler != nil {
+		SetupChatRoutes(api, deps.ChatHandler, authMw) // chat_routes.go
+	}
+
+	// WebSocket routes
+	if deps.WebSocketHandler != nil {
+		SetupWebSocketRoutes(app, deps.WebSocketHandler) // websocket_routes.go
 	}
 }

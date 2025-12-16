@@ -3,6 +3,13 @@
 -- Direction: down
 
 -- Drop all tables in correct order to respect foreign key constraints
+
+-- Drop chat tables first
+DROP TABLE IF EXISTS messages CASCADE;
+DROP TABLE IF EXISTS chat_participants CASCADE;
+DROP TABLE IF EXISTS conversations CASCADE;
+
+-- Drop other tables
 DROP TABLE IF EXISTS application_documents CASCADE;
 DROP TABLE IF EXISTS application_notes CASCADE;
 DROP TABLE IF EXISTS admin_users CASCADE;

@@ -13,12 +13,14 @@ import (
 	"keerja-backend/internal/handler/http/admin"
 	applicationhandler "keerja-backend/internal/handler/http/application"
 	authhandler "keerja-backend/internal/handler/http/auth"
+	chathandler "keerja-backend/internal/handler/http/chat"
 	companyhandler "keerja-backend/internal/handler/http/company"
 	"keerja-backend/internal/handler/http/health"
 	jobhandler "keerja-backend/internal/handler/http/job"
 	userhandler "keerja-backend/internal/handler/http/jobseeker"
 	"keerja-backend/internal/handler/http/master"
 	notificationhandler "keerja-backend/internal/handler/http/notification"
+	"keerja-backend/internal/handler/websocket"
 	"keerja-backend/internal/jobs"
 	"keerja-backend/internal/middleware"
 	"keerja-backend/internal/repository/postgres"
@@ -87,6 +89,11 @@ func main() {
 
 	// FCM Notification repository
 	deviceTokenRepo := postgres.NewDeviceTokenRepository(db)
+
+	// Chat repositories
+	appLogger.Info("Initializing chat repositories...")
+	chatRepo := postgres.NewChatRepository(db)
+	appLogger.Info("✓ Chat repositories initialized")
 
 	// Master data repositories
 	appLogger.Info("Initializing master data repositories...")
@@ -230,6 +237,17 @@ func main() {
 	applicationService := service.NewApplicationService(applicationRepo, jobRepo, userRepo, companyRepo, emailService, nil) // notificationService disabled temporarily
 	skillsMasterService := service.NewSkillsMasterService(skillsMasterRepo)
 
+	// Initialize WebSocket hub
+	appLogger.Info("Initializing WebSocket hub...")
+	wsHub := websocket.NewHub()
+	go wsHub.Run() // Start hub in background goroutine
+	appLogger.Info("✓ WebSocket hub started")
+
+	// Chat service
+	appLogger.Info("Initializing chat service...")
+	chatService := service.NewChatService(chatRepo, chatRepo, userRepo, wsHub)
+	appLogger.Info("✓ Chat service initialized")
+
 	// Initialize handlers
 	appLogger.Info("Initializing handlers...")
 	authHandler := authhandler.NewAuthHandler(authService, oauthService, registrationService, refreshTokenService, userRepo, companyRepo)
@@ -329,6 +347,12 @@ func main() {
 	pushNotificationHandler := notificationhandler.NewPushNotificationHandler(fcmService, appLogger)
 	appLogger.Info("FCM handlers initialized successfully")
 
+	// Initialize chat handlers
+	appLogger.Info("Initializing chat handlers...")
+	chatHandler := chathandler.NewChatHandler(chatService, userRepo, chatRepo)
+	wsHandler := websocket.NewHandler(wsHub, chatRepo, cfg)
+	appLogger.Info("✓ Chat handlers initialized")
+
 	// Initialize health check handler
 	appLogger.Info("Initializing health check handler...")
 	healthHandler := health.NewHealthHandler(db, redisClient, cfg.AppVersion)
@@ -421,6 +445,11 @@ func main() {
 		// FCM Notification handlers
 		DeviceTokenHandler:      deviceTokenHandler,
 		PushNotificationHandler: pushNotificationHandler,
+
+		// Chat handlers
+		ChatHandler:      chatHandler,
+		WebSocketHub:     wsHub,
+		WebSocketHandler: wsHandler,
 
 		// Services (for middlewares)
 		CompanyService: companyService,
