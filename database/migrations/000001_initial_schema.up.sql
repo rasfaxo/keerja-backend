@@ -7087,5 +7087,75 @@ ALTER TABLE ONLY public.user_skills
 
 
 --
+-- Name: Chat Feature Tables
+--
+
+-- Create conversations table
+CREATE TABLE IF NOT EXISTS public.conversations (
+    id bigserial PRIMARY KEY,
+    uuid uuid DEFAULT gen_random_uuid() UNIQUE NOT NULL,
+    last_message_at timestamp,
+    created_at timestamp DEFAULT now() NOT NULL,
+    updated_at timestamp DEFAULT now() NOT NULL,
+    deleted_at timestamp
+);
+
+-- Create chat_participants table
+CREATE TABLE IF NOT EXISTS public.chat_participants (
+    id bigserial PRIMARY KEY,
+    conversation_id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    is_archived boolean DEFAULT false NOT NULL,
+    created_at timestamp DEFAULT now() NOT NULL,
+    CONSTRAINT chat_participants_conversation_id_fkey 
+        FOREIGN KEY (conversation_id) 
+        REFERENCES public.conversations(id) 
+        ON DELETE CASCADE,
+    CONSTRAINT chat_participants_user_id_fkey 
+        FOREIGN KEY (user_id) 
+        REFERENCES public.users(id) 
+        ON DELETE CASCADE,
+    CONSTRAINT chat_participants_conversation_user_unique 
+        UNIQUE (conversation_id, user_id)
+);
+
+-- Create messages table
+CREATE TABLE IF NOT EXISTS public.messages (
+    id bigserial PRIMARY KEY,
+    uuid uuid DEFAULT gen_random_uuid() UNIQUE NOT NULL,
+    conversation_id bigint NOT NULL,
+    sender_id bigint NOT NULL,
+    content varchar(5000) NOT NULL,
+    is_read boolean DEFAULT false NOT NULL,
+    created_at timestamp DEFAULT now() NOT NULL,
+    updated_at timestamp DEFAULT now() NOT NULL,
+    deleted_at timestamp,
+    CONSTRAINT messages_conversation_id_fkey 
+        FOREIGN KEY (conversation_id) 
+        REFERENCES public.conversations(id) 
+        ON DELETE CASCADE,
+    CONSTRAINT messages_sender_id_fkey 
+        FOREIGN KEY (sender_id) 
+        REFERENCES public.users(id) 
+        ON DELETE CASCADE
+);
+
+-- Create indexes for conversations
+CREATE INDEX IF NOT EXISTS idx_conversations_deleted_at ON public.conversations USING btree (deleted_at);
+CREATE INDEX IF NOT EXISTS idx_conversations_last_message_at ON public.conversations USING btree (last_message_at DESC);
+
+-- Create indexes for chat_participants
+CREATE INDEX IF NOT EXISTS idx_chat_participants_user_id ON public.chat_participants USING btree (user_id);
+CREATE INDEX IF NOT EXISTS idx_chat_participants_conversation_id ON public.chat_participants USING btree (conversation_id);
+
+-- Create indexes for messages
+CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON public.messages USING btree (conversation_id);
+CREATE INDEX IF NOT EXISTS idx_messages_sender_id ON public.messages USING btree (sender_id);
+CREATE INDEX IF NOT EXISTS idx_messages_created_at ON public.messages USING btree (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_messages_deleted_at ON public.messages USING btree (deleted_at);
+CREATE INDEX IF NOT EXISTS idx_messages_conversation_created ON public.messages USING btree (conversation_id, created_at DESC);
+
+
+--
 -- PostgreSQL database dump complete
 --
