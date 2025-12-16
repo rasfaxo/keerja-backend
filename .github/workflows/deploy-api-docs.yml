@@ -1,0 +1,95 @@
+name: Deploy API Documentation
+
+on:
+  push:
+    branches: ["main", "master"]
+    paths:
+      - "docs/swagger.yaml"
+      - ".bump.yml"
+      - ".github/workflows/deploy-api-docs.yml"
+  pull_request:
+    branches: ["main", "master"]
+    paths:
+      - "docs/swagger.yaml"
+      - ".bump.yml"
+  schedule:
+    - cron: '0 0 * * *' # Run daily at midnight UTC
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  validate:
+    name: Validate OpenAPI Definition
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Validator
+        run: npm install -g @apidevtools/swagger-cli
+
+      - name: Validate Swagger
+        run: |
+          echo "Validating docs/swagger.yaml..."
+          swagger-cli validate docs/swagger.yaml
+          echo "✅ Validation passed!"
+  deploy-doc:
+    name: Deploy to Bump.sh
+    needs: validate
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Deploy to Bump.sh
+        uses: bump-sh/github-action@v1
+        with:
+          doc: ${{ secrets.BUMP_DOC_ID }}
+          token: ${{ secrets.BUMP_TOKEN }}
+          file: docs/swagger.yaml
+          # The action automatically outputs the doc URL
+  api-diff:
+    name: API Diff Check
+    needs: validate
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write # Required to post comments
+      contents: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Check API Diff
+        uses: bump-sh/github-action@v1
+        with:
+          doc: ${{ secrets.BUMP_DOC_ID }}
+          token: ${{ secrets.BUMP_TOKEN }}
+          file: docs/swagger.yaml
+          command: diff
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  scheduled-check:
+    name: Daily Documentation Check
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Run Validation Script
+        run: |
+          chmod +x scripts/validate-swagger.sh
+          ./scripts/validate-swagger.sh
+      - name: Check Deployment Status
+        env:
+          BUMP_TOKEN: ${{ secrets.BUMP_TOKEN }}
+          BUMP_DOC_ID: ${{ secrets.BUMP_DOC_ID }}
+        run: |
+          chmod +x scripts/check-deployment-status.sh
+          ./scripts/check-deployment-status.sh

@@ -1,0 +1,24 @@
+version: 0.1
+doc: docs/swagger.yaml
+format: openapi/v2
+
+# Preview configuration
+preview:
+  # Customize the preview experience
+  show_table_of_contents: true
+  show_sidebar: true
+
+# Validation rules
+# Bump.sh will check API definition against these rules
+validation:
+  rules:
+    # Ensure operations have summaries
+    - operation-summary
+    # Ensure operations have descriptions
+    - operation-description
+    # Ensure operations have tags for grouping
+    - operation-tags
+    # Ensure models have descriptions
+    - model-description
+    # Ensure no empty operation IDs
+    - operation-operationId
