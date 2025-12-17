@@ -82,6 +82,3 @@ The integration is handled by GitHub Actions.
 **3. API Diff comment not appearing**
 *   **Cause**: GitHub Actions permissions issue.
 *   **Fix**: Ensure the workflow has `pull-requests: write` permission (already configured in the provided YAML).
-
-### Contact
-For support, contact the dev team at dev@keerja.com.
