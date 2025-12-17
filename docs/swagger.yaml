@@ -146,6 +146,187 @@ paths:
         200:
           description: "Logged out successfully"
 
+  /auth/register-otp:
+    post:
+      tags: ["Auth"]
+      summary: "Register with OTP"
+      parameters:
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/RegisterWithOTPRequest"
+      responses:
+        201:
+          description: "Registration initiated, OTP sent"
+
+  /auth/verify-email-otp:
+    post:
+      tags: ["Auth"]
+      summary: "Verify Email with OTP"
+      parameters:
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/VerifyEmailOTPRequest"
+      responses:
+        200:
+          description: "Email verified"
+
+  /auth/resend-otp:
+    post:
+      tags: ["Auth"]
+      summary: "Resend OTP"
+      parameters:
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/ResendOTPRequest"
+      responses:
+        200:
+          description: "OTP resent"
+
+  /auth/forgot-password-otp:
+    post:
+      tags: ["Auth"]
+      summary: "Forgot Password (OTP)"
+      parameters:
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/ForgotPasswordOTPRequest"
+      responses:
+        200:
+          description: "OTP sent"
+
+  /auth/reset-password-otp:
+    post:
+      tags: ["Auth"]
+      summary: "Reset Password with OTP"
+      parameters:
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/ResetPasswordOTPRequest"
+      responses:
+        200:
+          description: "Password reset successfully"
+
+  /auth/login-remember:
+    post:
+      tags: ["Auth"]
+      summary: "Login with Remember Me"
+      parameters:
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            type: object
+            required: ["email", "password"]
+            properties:
+              email:
+                type: string
+                format: email
+              password:
+                type: string
+              remember_me:
+                type: boolean
+              device_id:
+                type: string
+      responses:
+        200:
+          description: "Login successful (returns access and refresh tokens)"
+
+  /auth/refresh:
+    post:
+      tags: ["Auth"]
+      summary: "Refresh Access Token"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            type: object
+            required: ["refresh_token"]
+            properties:
+              refresh_token:
+                type: string
+      responses:
+        200:
+          description: "Token refreshed (returns new access and refresh tokens)"
+
+  /auth/devices:
+    get:
+      tags: ["Auth"]
+      summary: "List Active Devices"
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: "List of active device sessions"
+
+  /auth/devices/revoke:
+    post:
+      tags: ["Auth"]
+      summary: "Revoke Device Session"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            type: object
+            required: ["device_id"]
+            properties:
+              device_id:
+                type: string
+      responses:
+        200:
+          description: "Device session revoked"
+
+  /auth/logout-all:
+    post:
+      tags: ["Auth"]
+      summary: "Logout From All Devices"
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: "Logged out from all devices"
+
+  /auth/admin/login:
+    post:
+      tags: ["Auth"]
+      summary: "Admin Login"
+      parameters:
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/AdminLoginRequest"
+      responses:
+        200:
+          description: "Admin login successful"
+          schema:
+            $ref: "#/definitions/AuthResponse"
+
+  /auth/admin/logout:
+    post:
+      tags: ["Auth"]
+      summary: "Admin Logout"
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: "Admin logged out"
+
   # ==========================================================
   # USER ENDPOINTS
   # ==========================================================
@@ -155,6 +336,11 @@ paths:
       summary: "Get My Profile"
       security:
         - Bearer: []
+      parameters:
+        - in: "query"
+          name: "include"
+          type: "string"
+          description: "Include related data (e.g., 'educations,skills,projects' or 'all')"
       responses:
         200:
           description: "User profile data"
@@ -199,7 +385,69 @@ paths:
         200:
           description: "Preferences updated"
 
-  /users/me/education:
+  /users/me/documents:
+    get:
+      tags: ["User"]
+      summary: "Get My Documents"
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: "List of documents"
+    post:
+      tags: ["User"]
+      summary: "Upload Document"
+      security:
+        - Bearer: []
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: "formData"
+          name: "file"
+          type: "file"
+          required: true
+        - in: "formData"
+          name: "document_type"
+          type: "string"
+          required: true
+        - in: "formData"
+          name: "document_name"
+          type: "string"
+          required: false
+        - in: "formData"
+          name: "description"
+          type: "string"
+          required: false
+      responses:
+        201:
+          description: "Document uploaded"
+
+  /users/profile-photo:
+    post:
+      tags: ["User"]
+      summary: "Upload Profile Photo"
+      security:
+        - Bearer: []
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: "formData"
+          name: "file"
+          type: "file"
+          required: true
+      responses:
+        200:
+          description: "Profile photo updated"
+
+  /users/me/educations:
+    get:
+      tags: ["User"]
+      summary: "Get My Educations"
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: "List of educations"
     post:
       tags: ["User"]
       summary: "Add Education"
@@ -215,7 +463,15 @@ paths:
         201:
           description: "Education added"
 
-  /users/me/experience:
+  /users/me/experiences:
+    get:
+      tags: ["User"]
+      summary: "Get My Experiences"
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: "List of experiences"
     post:
       tags: ["User"]
       summary: "Add Experience"
@@ -231,10 +487,18 @@ paths:
         201:
           description: "Experience added"
 
-  /users/me/skills/batch:
+  /users/me/skills:
+    get:
+      tags: ["User"]
+      summary: "Get My Skills"
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: "List of skills"
     post:
       tags: ["User"]
-      summary: "Add Skills (Batch)"
+      summary: "Add Skills"
       security:
         - Bearer: []
       parameters:
@@ -246,6 +510,306 @@ paths:
       responses:
         201:
           description: "Skills added"
+
+  /users/me/projects:
+    get:
+      tags: ["User"]
+      summary: "Get My Projects"
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: "List of projects"
+
+  /users/me/certifications:
+    get:
+      tags: ["User"]
+      summary: "Get My Certifications"
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: "List of certifications"
+
+  /users/me/languages:
+    get:
+      tags: ["User"]
+      summary: "Get My Languages"
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: "List of languages"
+
+  /skills:
+    get:
+      tags: ["Master"]
+      summary: "List Skills"
+      parameters:
+        - in: "query"
+          name: "q"
+          type: "string"
+      responses:
+        200:
+          description: "List of skills"
+
+  /skills/search:
+    get:
+      tags: ["Master"]
+      summary: "Search Skills"
+      parameters:
+        - in: "query"
+          name: "q"
+          type: "string"
+          required: true
+      responses:
+        200:
+          description: "List of matching skills"
+
+  /skills/type/soft:
+    get:
+      tags: ["Master"]
+      summary: "Get Soft Skills"
+      parameters:
+        - in: "query"
+          name: "page"
+          type: "integer"
+        - in: "query"
+          name: "page_size"
+          type: "integer"
+      responses:
+        200:
+          description: "List of soft skills"
+
+  /master/skills:
+    get:
+      tags: ["Master"]
+      summary: "List Skills (Paginated)"
+      parameters:
+        - in: "query"
+          name: "q"
+          type: "string"
+        - in: "query"
+          name: "page"
+          type: "integer"
+        - in: "query"
+          name: "limit"
+          type: "integer"
+      responses:
+        200:
+          description: "List of skills"
+
+  /master/job-titles:
+    get:
+      tags: ["Master"]
+      summary: "List Job Titles"
+      parameters:
+        - in: "query"
+          name: "q"
+          type: "string"
+        - in: "query"
+          name: "limit"
+          type: "integer"
+      responses:
+        200:
+          description: "List of job titles"
+
+  /master/job-options:
+    get:
+      tags: ["Master"]
+      summary: "Get Job Options (Legacy)"
+      responses:
+        200:
+          description: "Job options"
+
+  /master/job-form/job-details:
+    get:
+      tags: ["Master"]
+      summary: "Get Job Details Options"
+      responses:
+        200:
+          description: "Job details options"
+
+  /master/job-form/job-type:
+    get:
+      tags: ["Master"]
+      summary: "Get Job Type Options"
+      responses:
+        200:
+          description: "Job type options"
+
+  /master/job-form/job-requirements:
+    get:
+      tags: ["Master"]
+      summary: "Get Job Requirements Options"
+      parameters:
+        - in: "query"
+          name: "skills_page"
+          type: "integer"
+        - in: "query"
+          name: "skills_limit"
+          type: "integer"
+        - in: "query"
+          name: "skills_q"
+          type: "string"
+      responses:
+        200:
+          description: "Job requirements options"
+
+  /master/job-form/job-description:
+    get:
+      tags: ["Master"]
+      summary: "Get Job Description Options"
+      responses:
+        200:
+          description: "Job description options"
+
+  /master/locations/provinces:
+    get:
+      tags: ["Master"]
+      summary: "List Provinces"
+      parameters:
+        - in: "query"
+          name: "active"
+          type: "boolean"
+        - in: "query"
+          name: "search"
+          type: "string"
+      responses:
+        200:
+          description: "List of provinces"
+
+  /master/locations/provinces/{id}:
+    get:
+      tags: ["Master"]
+      summary: "Get Province"
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "Province details"
+
+  /master/locations/cities:
+    get:
+      tags: ["Master"]
+      summary: "List Cities"
+      parameters:
+        - in: "query"
+          name: "province_id"
+          required: true
+          type: "integer"
+        - in: "query"
+          name: "active"
+          type: "boolean"
+        - in: "query"
+          name: "search"
+          type: "string"
+      responses:
+        200:
+          description: "List of cities"
+
+  /master/locations/cities/{id}:
+    get:
+      tags: ["Master"]
+      summary: "Get City"
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "City details"
+
+  /master/locations/districts:
+    get:
+      tags: ["Master"]
+      summary: "List Districts"
+      parameters:
+        - in: "query"
+          name: "city_id"
+          required: true
+          type: "integer"
+        - in: "query"
+          name: "active"
+          type: "boolean"
+        - in: "query"
+          name: "search"
+          type: "string"
+      responses:
+        200:
+          description: "List of districts"
+
+  /master/locations/districts/{id}:
+    get:
+      tags: ["Master"]
+      summary: "Get District"
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "District details"
+
+  /master/industries:
+    get:
+      tags: ["Master"]
+      summary: "List Industries"
+      parameters:
+        - in: "query"
+          name: "active"
+          type: "boolean"
+        - in: "query"
+          name: "search"
+          type: "string"
+      responses:
+        200:
+          description: "List of industries"
+
+  /master/industries/{id}:
+    get:
+      tags: ["Master"]
+      summary: "Get Industry"
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "Industry details"
+
+  /master/company-sizes:
+    get:
+      tags: ["Master"]
+      summary: "List Company Sizes"
+      parameters:
+        - in: "query"
+          name: "active"
+          type: "boolean"
+      responses:
+        200:
+          description: "List of company sizes"
+
+  /master/company-sizes/{id}:
+    get:
+      tags: ["Master"]
+      summary: "Get Company Size"
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "Company size details"
+
+
 
   # ==========================================================
   # JOB ENDPOINTS
@@ -360,6 +924,113 @@ paths:
         200:
           description: "List of employer's jobs"
 
+  /jobs/search:
+    post:
+      tags: ["Job"]
+      summary: "Search Jobs"
+      parameters:
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            type: object
+            properties:
+              query:
+                type: string
+              location:
+                type: string
+              job_type_ids:
+                type: array
+                items:
+                  type: integer
+      responses:
+        200:
+          description: "List of jobs"
+
+  /jobs/status/active:
+    get:
+      tags: ["Job"]
+      summary: "Get Active Jobs"
+      responses:
+        200:
+          description: "List of active jobs"
+
+  /jobs/status/draft:
+    get:
+      tags: ["Job"]
+      summary: "Get Draft Jobs"
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: "List of draft jobs"
+
+  /jobs/status/in-review:
+    get:
+      tags: ["Job"]
+      summary: "Get Jobs In Review"
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: "List of jobs in review"
+
+  /jobs/status/inactive:
+    get:
+      tags: ["Job"]
+      summary: "Get Inactive Jobs"
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: "List of inactive jobs"
+
+  /jobs/{id}/publish:
+    patch:
+      tags: ["Job"]
+      summary: "Publish Job"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "Job published"
+
+  /jobs/{id}/close:
+    patch:
+      tags: ["Job"]
+      summary: "Close Job"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "Job closed"
+
+  /jobs/job-types:
+    get:
+      tags: ["Job"]
+      summary: "Get Job Types"
+      responses:
+        200:
+          description: "List of job types"
+
+  /jobs/job-requirements:
+    get:
+      tags: ["Job"]
+      summary: "Get Job Requirements"
+      responses:
+        200:
+          description: "List of job requirements"
+
   # ==========================================================
   # APPLICATION ENDPOINTS
   # ==========================================================
@@ -429,6 +1100,335 @@ paths:
         201:
           description: "Interview scheduled"
 
+  /applications/jobs/{job_id}/apply:
+    post:
+      tags: ["Application"]
+      summary: "Apply for Job"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "job_id"
+          required: true
+          type: "integer"
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/ApplyJobRequest"
+      responses:
+        201:
+          description: "Application submitted"
+
+  /applications/{id}:
+    get:
+      tags: ["Application"]
+      summary: "Get Application Details"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "Application details"
+
+  /applications/{id}/withdraw:
+    delete:
+      tags: ["Application"]
+      summary: "Withdraw Application"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "Application withdrawn"
+
+  /applications/{id}/documents:
+    post:
+      tags: ["Application"]
+      summary: "Upload Application Document"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/UploadApplicationDocumentRequest"
+      responses:
+        201:
+          description: "Document uploaded"
+
+  /applications/{id}/rate:
+    post:
+      tags: ["Application"]
+      summary: "Rate Application Experience"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/RateApplicationExperienceRequest"
+      responses:
+        201:
+          description: "Rating submitted"
+
+  /applications/job/{job_id}:
+    get:
+      tags: ["Application"]
+      summary: "Get Applications by Job (Employer)"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "job_id"
+          required: true
+          type: "integer"
+        - in: "query"
+          name: "page"
+          type: "integer"
+        - in: "query"
+          name: "limit"
+          type: "integer"
+      responses:
+        200:
+          description: "List of applications"
+
+  /applications/search:
+    post:
+      tags: ["Application"]
+      summary: "Search Applications (Employer)"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/ApplicationSearchRequest"
+      responses:
+        200:
+          description: "List of applications"
+
+  /applications/bulk-status:
+    post:
+      tags: ["Application"]
+      summary: "Bulk Update Application Status"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/BulkUpdateApplicationsRequest"
+      responses:
+        200:
+          description: "Applications updated"
+
+  /applications/{id}/stage:
+    patch:
+      tags: ["Application"]
+      summary: "Update Application Stage"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/UpdateApplicationStageRequest"
+      responses:
+        200:
+          description: "Stage updated"
+
+  /applications/{id}/notes:
+    post:
+      tags: ["Application"]
+      summary: "Add Application Note"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/AddApplicationNoteRequest"
+      responses:
+        201:
+          description: "Note added"
+
+  /applications/{id}/notes/{note_id}:
+    put:
+      tags: ["Application"]
+      summary: "Update Application Note"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+        - in: "path"
+          name: "note_id"
+          required: true
+          type: "integer"
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/UpdateApplicationNoteRequest"
+      responses:
+        200:
+          description: "Note updated"
+
+  /applications/{id}/interviews/{interview_id}:
+    put:
+      tags: ["Application"]
+      summary: "Update Interview"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+        - in: "path"
+          name: "interview_id"
+          required: true
+          type: "integer"
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/UpdateInterviewRequest"
+      responses:
+        200:
+          description: "Interview updated"
+    delete:
+      tags: ["Application"]
+      summary: "Cancel Interview"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+        - in: "path"
+          name: "interview_id"
+          required: true
+          type: "integer"
+        - in: "query"
+          name: "reason"
+          type: "string"
+      responses:
+        200:
+          description: "Interview cancelled"
+
+  /applications/{id}/interviews/{interview_id}/reschedule:
+    patch:
+      tags: ["Application"]
+      summary: "Reschedule Interview"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+        - in: "path"
+          name: "interview_id"
+          required: true
+          type: "integer"
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/RescheduleInterviewRequest"
+      responses:
+        200:
+          description: "Interview rescheduled"
+
+  /applications/{id}/interviews/{interview_id}/complete:
+    patch:
+      tags: ["Application"]
+      summary: "Complete Interview"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+        - in: "path"
+          name: "interview_id"
+          required: true
+          type: "integer"
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/CompleteInterviewRequest"
+      responses:
+        200:
+          description: "Interview completed"
+
+  /applications/{id}/bookmark:
+    patch:
+      tags: ["Application"]
+      summary: "Bookmark Application"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "Application bookmarked"
+
+  /applications/{id}/viewed:
+    patch:
+      tags: ["Application"]
+      summary: "Mark Application as Viewed"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "Application marked as viewed"
+
   # ==========================================================
   # COMPANY ENDPOINTS
   # ==========================================================
@@ -443,6 +1443,12 @@ paths:
         - in: "query"
           name: "industry"
           type: "string"
+        - in: "query"
+          name: "page"
+          type: "integer"
+        - in: "query"
+          name: "limit"
+          type: "integer"
       responses:
         200:
           description: "List of companies"
@@ -451,15 +1457,152 @@ paths:
       summary: "Register Company"
       security:
         - Bearer: []
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: "formData"
+          name: "company_name"
+          type: "string"
+          required: true
+        - in: "formData"
+          name: "legal_name"
+          type: "string"
+        - in: "formData"
+          name: "logo"
+          type: "file"
+      responses:
+        201:
+          description: "Company registered"
+
+  /companies/my-companies:
+    get:
+      tags: ["Company"]
+      summary: "Get My Companies"
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: "List of my companies"
+
+  /companies/me/addresses:
+    get:
+      tags: ["Company"]
+      summary: "Get My Company Addresses"
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: "List of addresses"
+    post:
+      tags: ["Company"]
+      summary: "Create Company Address"
+      security:
+        - Bearer: []
       parameters:
         - in: "body"
           name: "body"
           required: true
           schema:
-            $ref: "#/definitions/RegisterCompanyRequest"
+            $ref: "#/definitions/CreateCompanyAddressRequest"
       responses:
         201:
-          description: "Company registered"
+          description: "Address created"
+
+  /companies/me/addresses/{id}:
+    put:
+      tags: ["Company"]
+      summary: "Update Company Address"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/UpdateCompanyAddressRequest"
+      responses:
+        200:
+          description: "Address updated"
+    delete:
+      tags: ["Company"]
+      summary: "Delete Company Address"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "Address deleted"
+
+  /companies/me/verification-status:
+    get:
+      tags: ["Company"]
+      summary: "Get My Verification Status"
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: "Verification status"
+
+  /companies/me/employer:
+    get:
+      tags: ["Company"]
+      summary: "Get My Employer Profile"
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: "Employer profile"
+    put:
+      tags: ["Company"]
+      summary: "Update My Employer Profile"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/UpdateEmployerUserRequest"
+      responses:
+        200:
+          description: "Profile updated"
+
+  /companies/verified:
+    get:
+      tags: ["Company"]
+      summary: "Get Verified Companies"
+      responses:
+        200:
+          description: "List of verified companies"
+
+  /companies/top-rated:
+    get:
+      tags: ["Company"]
+      summary: "Get Top Rated Companies"
+      responses:
+        200:
+          description: "List of top rated companies"
+
+  /companies/slug/{slug}:
+    get:
+      tags: ["Company"]
+      summary: "Get Company by Slug"
+      parameters:
+        - in: "path"
+          name: "slug"
+          required: true
+          type: "string"
+      responses:
+        200:
+          description: "Company details"
 
   /companies/{id}:
     get:
@@ -532,6 +1675,298 @@ paths:
         201:
           description: "Invitation sent"
 
+  /companies/{id}/ratings:
+    get:
+      tags: ["Company"]
+      summary: "Get Company Ratings"
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "Company ratings breakdown"
+
+  /companies/{id}/profile:
+    get:
+      tags: ["Company"]
+      summary: "Get Company Profile (Public)"
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "Company public profile"
+    put:
+      tags: ["Company"]
+      summary: "Update Company Profile"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/UpdateCompanyProfileRequest"
+      responses:
+        200:
+          description: "Company profile updated"
+
+  /companies/{id}/followers:
+    get:
+      tags: ["Company"]
+      summary: "Get Company Followers"
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "List of followers"
+
+  /companies/{id}/stats:
+    get:
+      tags: ["Company"]
+      summary: "Get Company Stats"
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "Company statistics"
+
+  /companies/{id}/verification-status:
+    get:
+      tags: ["Company"]
+      summary: "Get Verification Status"
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "Verification status"
+
+  /companies/{id}/logo:
+    post:
+      tags: ["Company"]
+      summary: "Upload Logo"
+      security:
+        - Bearer: []
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+        - in: "formData"
+          name: "file"
+          type: "file"
+          required: true
+      responses:
+        200:
+          description: "Logo uploaded"
+    delete:
+      tags: ["Company"]
+      summary: "Delete Logo"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "Logo deleted"
+
+  /companies/{id}/banner:
+    post:
+      tags: ["Company"]
+      summary: "Upload Banner"
+      security:
+        - Bearer: []
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+        - in: "formData"
+          name: "file"
+          type: "file"
+          required: true
+      responses:
+        200:
+          description: "Banner uploaded"
+    delete:
+      tags: ["Company"]
+      summary: "Delete Banner"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "Banner deleted"
+
+  /companies/{id}/profile/publish:
+    post:
+      tags: ["Company"]
+      summary: "Publish Profile"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "Profile published"
+
+  /companies/{id}/profile/unpublish:
+    post:
+      tags: ["Company"]
+      summary: "Unpublish Profile"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "Profile unpublished"
+
+  /companies/{id}/follow:
+    post:
+      tags: ["Company"]
+      summary: "Follow Company"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "Followed"
+    delete:
+      tags: ["Company"]
+      summary: "Unfollow Company"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "Unfollowed"
+
+  /companies/followed:
+    get:
+      tags: ["Company"]
+      summary: "Get Followed Companies"
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: "List of followed companies"
+
+  /companies/{id}/verify:
+    post:
+      tags: ["Company"]
+      summary: "Request Verification"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/RequestVerificationRequest"
+      responses:
+        201:
+          description: "Verification requested"
+
+  /companies/invitations/accept:
+    post:
+      tags: ["Company"]
+      summary: "Accept Invitation"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "query"
+          name: "token"
+          required: true
+          type: "string"
+      responses:
+        200:
+          description: "Invitation accepted"
+
+  /companies/{id}/invitations/{invite_id}/resend:
+    post:
+      tags: ["Company"]
+      summary: "Resend Invitation"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+        - in: "path"
+          name: "invite_id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "Invitation resent"
+
+  /companies/{id}/invitations/{invite_id}:
+    delete:
+      tags: ["Company"]
+      summary: "Cancel Invitation"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+        - in: "path"
+          name: "invite_id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "Invitation cancelled"
+
   # ==========================================================
   # CHAT ENDPOINTS
   # ==========================================================
@@ -593,6 +2028,211 @@ paths:
           description: "Message sent"
 
   # ==========================================================
+  # ADMIN ENDPOINTS
+  # ==========================================================
+  /admin/companies:
+    get:
+      tags: ["Admin"]
+      summary: "List Companies (Admin)"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "query"
+          name: "page"
+          type: "integer"
+        - in: "query"
+          name: "limit"
+          type: "integer"
+        - in: "query"
+          name: "status"
+          type: "string"
+      responses:
+        200:
+          description: "List of companies"
+
+  /admin/companies/{id}:
+    get:
+      tags: ["Admin"]
+      summary: "Get Company Details (Admin)"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "Company details"
+
+  /admin/companies/{id}/stats:
+    get:
+      tags: ["Admin"]
+      summary: "Get Company Stats (Admin)"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "Company stats"
+
+  /admin/companies/{id}/status:
+    patch:
+      tags: ["Admin"]
+      summary: "Update Company Status"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                enum: ["verified", "rejected", "pending"]
+      responses:
+        200:
+          description: "Status updated"
+
+  /admin/companies/{id}/audit-logs:
+    get:
+      tags: ["Admin"]
+      summary: "Get Company Audit Logs"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "Audit logs"
+
+  /admin/dashboard/stats:
+    get:
+      tags: ["Admin"]
+      summary: "Get Dashboard Stats"
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: "Dashboard stats"
+
+  /admin/jobs/pending:
+    get:
+      tags: ["Admin"]
+      summary: "Get Pending Jobs"
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: "List of pending jobs"
+
+  /admin/jobs/{id}/approve:
+    patch:
+      tags: ["Admin"]
+      summary: "Approve Job"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "Job approved"
+
+  /admin/jobs/{id}/reject:
+    patch:
+      tags: ["Admin"]
+      summary: "Reject Job"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            type: object
+            properties:
+              reason:
+                type: string
+      responses:
+        200:
+          description: "Job rejected"
+
+  /admin/master/job-titles:
+    post:
+      tags: ["Admin"]
+      summary: "Create Job Title"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+      responses:
+        201:
+          description: "Job title created"
+
+  /admin/master/job-titles/{id}:
+    put:
+      tags: ["Admin"]
+      summary: "Update Job Title"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+      responses:
+        200:
+          description: "Job title updated"
+    delete:
+      tags: ["Admin"]
+      summary: "Delete Job Title"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "Job title deleted"
+
+  # ==========================================================
   # NOTIFICATION ENDPOINTS
   # ==========================================================
   /device-tokens:
@@ -610,6 +2250,88 @@ paths:
       responses:
         201:
           description: "Token registered"
+    get:
+      tags: ["Notification"]
+      summary: "Get My Device Tokens"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "query"
+          name: "page"
+          type: "integer"
+        - in: "query"
+          name: "page_size"
+          type: "integer"
+        - in: "query"
+          name: "platform"
+          type: "string"
+          enum: ["android", "ios", "web"]
+        - in: "query"
+          name: "is_active"
+          type: "boolean"
+      responses:
+        200:
+          description: "List of device tokens"
+
+  /device-tokens/stats:
+    get:
+      tags: ["Notification"]
+      summary: "Get Device Token Stats"
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: "Device token statistics"
+
+  /device-tokens/{id}:
+    get:
+      tags: ["Notification"]
+      summary: "Get Device Token by ID"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "Device token details"
+
+  /device-tokens/{token}:
+    delete:
+      tags: ["Notification"]
+      summary: "Unregister Device Token"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: "token"
+          required: true
+          type: "string"
+      responses:
+        200:
+          description: "Device token unregistered"
+
+  /device-tokens/validate:
+    post:
+      tags: ["Notification"]
+      summary: "Validate Device Token"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            type: object
+            required: ["token"]
+            properties:
+              token:
+                type: string
+      responses:
+        200:
+          description: "Device token is valid"
 
   /push/send/device:
     post:
@@ -626,53 +2348,107 @@ paths:
       responses:
         200:
           description: "Notification sent"
-
-  # ==========================================================
-  # MASTER DATA ENDPOINTS
-  # ==========================================================
-  /master/industries:
-    get:
-      tags: ["Master"]
-      summary: "Get Industries"
-      responses:
-        200:
-          description: "List of industries"
-
-  /master/company-sizes:
-    get:
-      tags: ["Master"]
-      summary: "Get Company Sizes"
-      responses:
-        200:
-          description: "List of company sizes"
-
-  /master/locations/provinces:
-    get:
-      tags: ["Master"]
-      summary: "Get Provinces"
-      responses:
-        200:
-          description: "List of provinces"
-
-  /master/locations/cities:
-    get:
-      tags: ["Master"]
-      summary: "Get Cities"
+  /push/send/user/{id}:
+    post:
+      tags: ["Notification"]
+      summary: "Send Push to All User Devices"
+      security:
+        - Bearer: []
       parameters:
-        - in: "query"
-          name: "province_id"
+        - in: "path"
+          name: "id"
+          required: true
           type: "integer"
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            type: "object"
+            required: ["title", "body"]
+            properties:
+              title:
+                type: "string"
+              body:
+                type: "string"
+              data:
+                type: "string"
       responses:
         200:
-          description: "List of cities"
+          description: "Notification sent"
 
-  /master/job-titles:
-    get:
-      tags: ["Master"]
-      summary: "Get Job Titles"
+  /push/send/batch:
+    post:
+      tags: ["Notification"]
+      summary: "Send Push to Multiple Users"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            type: "object"
+            required: ["user_ids", "title", "body"]
+            properties:
+              user_ids:
+                type: "array"
+                items:
+                  type: "integer"
+              title:
+                type: "string"
+              body:
+                type: "string"
+              data:
+                type: "string"
       responses:
         200:
-          description: "List of job titles"
+          description: "Batch notification sent"
+
+  /push/send/topic:
+    post:
+      tags: ["Notification"]
+      summary: "Send Push to Topic Subscribers"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            type: "object"
+            required: ["topic", "title", "body"]
+            properties:
+              topic:
+                type: "string"
+              title:
+                type: "string"
+              body:
+                type: "string"
+              data:
+                type: "string"
+      responses:
+        200:
+          description: "Topic notification sent"
+
+  /push/test:
+    post:
+      tags: ["Notification"]
+      summary: "Send Test Notification"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            type: "object"
+            required: ["token"]
+            properties:
+              token:
+                type: "string"
+      responses:
+        200:
+          description: "Test notification sent"
 
 definitions:
   # Auth
@@ -743,6 +2519,232 @@ definitions:
         minLength: 8
         maxLength: 72
 
+  UpdateCompanyProfileRequest:
+    type: "object"
+    properties:
+      founded_year:
+        type: "integer"
+      employee_count:
+        type: "integer"
+      description:
+        type: "string"
+      mission:
+        type: "string"
+      vision:
+        type: "string"
+      core_values:
+        type: "string"
+      facebook_url:
+        type: "string"
+      twitter_url:
+        type: "string"
+      linkedin_url:
+        type: "string"
+      instagram_url:
+        type: "string"
+      youtube_url:
+        type: "string"
+      awards:
+        type: "string"
+      certifications:
+        type: "string"
+
+  UpdateReviewRequest:
+    type: "object"
+    properties:
+      rating_overall:
+        type: "number"
+      rating_culture:
+        type: "number"
+      rating_work_life:
+        type: "number"
+      rating_salary:
+        type: "number"
+      rating_management:
+        type: "number"
+      pros:
+        type: "string"
+      cons:
+        type: "string"
+      advice_to_management:
+        type: "string"
+      recommend_to_friend:
+        type: "boolean"
+
+  UpdateEmployeeRequest:
+    type: "object"
+    properties:
+      position:
+        type: "string"
+      role:
+        type: "string"
+        enum: ["admin", "hr", "recruiter", "manager", "viewer"]
+      is_active:
+        type: "boolean"
+
+
+  CreateCompanyAddressRequest:
+    type: "object"
+    properties:
+      full_address:
+        type: "string"
+      latitude:
+        type: "number"
+      longitude:
+        type: "number"
+      province_id:
+        type: "integer"
+      city_id:
+        type: "integer"
+      district_id:
+        type: "integer"
+
+  UpdateCompanyAddressRequest:
+    type: "object"
+    properties:
+      full_address:
+        type: "string"
+      latitude:
+        type: "number"
+      longitude:
+        type: "number"
+      province_id:
+        type: "integer"
+      city_id:
+        type: "integer"
+      district_id:
+        type: "integer"
+
+  UpdateEmployerUserRequest:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+      position_title:
+        type: "string"
+      province_id:
+        type: "integer"
+      city_id:
+        type: "integer"
+      district_id:
+        type: "integer"
+
+  UploadApplicationDocumentRequest:
+    type: "object"
+    properties:
+      document_type:
+        type: "string"
+        enum: ["resume", "cover_letter", "certificate", "portfolio", "other"]
+      document_url:
+        type: "string"
+      file_name:
+        type: "string"
+      file_size:
+        type: "integer"
+      description:
+        type: "string"
+
+  RateApplicationExperienceRequest:
+    type: "object"
+    properties:
+      rating:
+        type: "integer"
+        minimum: 1
+        maximum: 5
+      feedback:
+        type: "string"
+
+  BulkUpdateApplicationsRequest:
+    type: "object"
+    properties:
+      application_ids:
+        type: "array"
+        items:
+          type: "integer"
+      status:
+        type: "string"
+      notes:
+        type: "string"
+
+  AddApplicationNoteRequest:
+    type: "object"
+    properties:
+      note_text:
+        type: "string"
+      visibility:
+        type: "string"
+        enum: ["internal", "public"]
+      sentiment:
+        type: "string"
+        enum: ["positive", "neutral", "negative"]
+      is_pinned:
+        type: "boolean"
+
+  UpdateApplicationNoteRequest:
+    type: "object"
+    properties:
+      note_text:
+        type: "string"
+      visibility:
+        type: "string"
+        enum: ["internal", "public"]
+      sentiment:
+        type: "string"
+        enum: ["positive", "neutral", "negative"]
+      is_pinned:
+        type: "boolean"
+
+  UpdateApplicationStageRequest:
+    type: "object"
+    properties:
+      stage_name:
+        type: "string"
+      stage_order:
+        type: "integer"
+      description:
+        type: "string"
+      notes:
+        type: "string"
+
+  ApplicationSearchRequest:
+    type: "object"
+    properties:
+      query:
+        type: "string"
+      job_id:
+        type: "integer"
+      company_id:
+        type: "integer"
+      user_id:
+        type: "integer"
+      status:
+        type: "string"
+        enum: ["pending", "screening", "shortlisted", "interview", "offered", "rejected", "withdrawn"]
+      applied_from:
+        type: "string"
+        format: "date-time"
+      applied_to:
+        type: "string"
+        format: "date-time"
+      min_salary:
+        type: "number"
+      max_salary:
+        type: "number"
+      has_interview:
+        type: "boolean"
+      interview_status:
+        type: "string"
+        enum: ["scheduled", "rescheduled", "completed", "cancelled", "no_show"]
+      sort_by:
+        type: "string"
+        enum: ["created_at", "updated_at", "applied_date", "status"]
+      sort_order:
+        type: "string"
+        enum: ["asc", "desc"]
+      page:
+        type: "integer"
+      limit:
+        type: "integer"
   RefreshTokenRequest:
     type: object
     required:
@@ -1022,6 +3024,61 @@ definitions:
       notes:
         type: string
 
+  UpdateInterviewRequest:
+    type: object
+    properties:
+      interview_type:
+        type: string
+        enum: ["online", "onsite", "hybrid"]
+      scheduled_at:
+        type: string
+        format: date-time
+      meeting_link:
+        type: string
+      location:
+        type: string
+      notes:
+        type: string
+
+  RescheduleInterviewRequest:
+    type: object
+    required:
+      - scheduled_at
+    properties:
+      scheduled_at:
+        type: string
+        format: date-time
+      reason:
+        type: string
+      meeting_link:
+        type: string
+      location:
+        type: string
+
+  CompleteInterviewRequest:
+    type: object
+    properties:
+      overall_score:
+        type: number
+        minimum: 0
+        maximum: 100
+      technical_score:
+        type: number
+        minimum: 0
+        maximum: 100
+      communication_score:
+        type: number
+        minimum: 0
+        maximum: 100
+      personality_score:
+        type: number
+        minimum: 0
+        maximum: 100
+      remarks:
+        type: string
+      feedback_summary:
+        type: string
+
   # Company
   RegisterCompanyRequest:
     type: object
@@ -1143,4 +3200,160 @@ definitions:
       body:
         type: string
       data:
+        type: string
+
+  # Auth OTP
+  RequestOTPRequest:
+    type: object
+    required:
+      - contact
+    properties:
+      contact:
+        type: string
+        format: email
+      purpose:
+        type: string
+        enum: ["login", "verify_email", "reset_password"]
+
+  VerifyOTPRequest:
+    type: object
+    required:
+      - contact
+      - otp
+    properties:
+      contact:
+        type: string
+        format: email
+      otp:
+        type: string
+        minLength: 6
+        maxLength: 6
+      purpose:
+        type: string
+        enum: ["login", "verify_email", "reset_password"]
+
+  RegisterWithOTPRequest:
+    type: object
+    required:
+      - full_name
+      - email
+      - password
+      - user_type
+    properties:
+      full_name:
+        type: string
+        minLength: 3
+        maxLength: 150
+      email:
+        type: string
+        format: email
+        maxLength: 150
+      phone:
+        type: string
+        minLength: 10
+        maxLength: 20
+      password:
+        type: string
+        minLength: 8
+        maxLength: 72
+      user_type:
+        type: string
+        enum: ["jobseeker", "employer"]
+
+  VerifyEmailOTPRequest:
+    type: object
+    required:
+      - email
+      - otp_code
+    properties:
+      email:
+        type: string
+        format: email
+      otp_code:
+        type: string
+        minLength: 6
+        maxLength: 6
+
+  ResendOTPRequest:
+    type: object
+    required:
+      - email
+    properties:
+      email:
+        type: string
+        format: email
+
+  ForgotPasswordOTPRequest:
+    type: object
+    required:
+      - email
+    properties:
+      email:
+        type: string
+        format: email
+
+  ResetPasswordOTPRequest:
+    type: object
+    required:
+      - email
+      - otp_code
+      - new_password
+    properties:
+      email:
+        type: string
+        format: email
+      otp_code:
+        type: string
+        minLength: 6
+        maxLength: 6
+      new_password:
+        type: string
+        minLength: 8
+        maxLength: 72
+
+  # Admin Auth
+  AdminLoginRequest:
+    type: object
+    required:
+      - email
+      - password
+    properties:
+      email:
+        type: string
+        format: email
+        maxLength: 150
+      password:
+        type: string
+        minLength: 6
+        maxLength: 100
+
+  # Admin Company
+  AdminUpdateCompanyStatusRequest:
+    type: object
+    required:
+      - status
+    properties:
+      status:
+        type: string
+        enum: ["pending_verification", "verified", "rejected", "suspended", "blacklisted"]
+      rejection_reason:
+        type: string
+        maxLength: 1000
+      notes:
+        type: string
+        maxLength: 2000
+      grant_badge:
+        type: boolean
+
+  # Company Verification
+  RequestVerificationRequest:
+    type: object
+    required:
+      - npwp_number
+    properties:
+      npwp_number:
+        type: string
+      nib_number:
+        type: string
+      notes:
         type: string
