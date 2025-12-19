@@ -1,0 +1,381 @@
+# ============================================================
+# Keerja Backend - VPS Multi-Environment Configuration
+# ============================================================
+#
+# PURPOSE:
+#   Deploy STAGING + DEMO environments on single VPS (145.79.8.227)
+#   Uses single PostgreSQL container with 2 separate databases
+#   to conserve RAM on 4GB VPS
+#
+# ARCHITECTURE:
+#   ┌─────────────────────────────────────────────────────────┐
+#   │                        NGINX                            │
+#   │   staging-api.145.79.8.227.nip.io → localhost:8080     │
+#   │   demo-api.145.79.8.227.nip.io    → localhost:8081     │
+#   └─────────────────────────────────────────────────────────┘
+#                    │                    │
+#            ┌───────┴───────┐    ┌───────┴───────┐
+#            │   STAGING     │    │     DEMO      │
+#            │   api:8080    │    │   api:8081    │
+#            └───────┬───────┘    └───────┬───────┘
+#                    │                    │
+#            ┌───────┴────────────────────┴───────┐
+#            │           PostgreSQL               │
+#            │   keerja_staging | keerja_demo     │
+#            └────────────────────────────────────┘
+#                            │
+#                    ┌───────┴───────┐
+#                    │     Redis     │
+#                    └───────────────┘
+#
+# USAGE:
+#   Initial setup:     docker-compose -f docker-compose.vps.yml up -d postgres redis
+#   Deploy STAGING:    docker-compose -f docker-compose.vps.yml --profile staging up -d
+#   Deploy DEMO:       docker-compose -f docker-compose.vps.yml --profile demo up -d
+#   Deploy ALL:        docker-compose -f docker-compose.vps.yml --profile staging --profile demo up -d
+#   View logs:         docker-compose -f docker-compose.vps.yml logs -f api-staging
+#   Run migrations:    docker-compose -f docker-compose.vps.yml --profile migrate-staging up
+#
+# REQUIREMENTS:
+#   - Docker Engine 20.10+
+#   - Docker Compose V2
+#   - .env.staging and .env.demo files configured
+#
+# INTEGRATION WITH EXISTING:
+#   - This file is SEPARATE from docker-compose.yml (local dev)
+#   - This file is SEPARATE from docker-compose.prod.yml (single prod)
+#   - Uses same Dockerfile for builds (production target)
+#   - Compatible with existing Makefile commands
+# ============================================================
+
+services:
+  # ==========================================
+  # PostgreSQL Database (Shared)
+  # Contains both keerja_staging and keerja_demo databases
+  # ==========================================
+  postgres:
+    image: postgres:17-alpine
+    container_name: keerja-vps-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?PostgreSQL password is required}
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=C"
+      TZ: Asia/Jakarta
+    ports:
+      - "127.0.0.1:5432:5432"  # Only accessible from localhost (security)
+    volumes:
+      - vps_postgres_data:/var/lib/postgresql/data
+      - ./scripts/vps-init-db.sh:/docker-entrypoint-initdb.d/00-init-databases.sh:ro
+    networks:
+      - keerja-vps-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # ==========================================
+  # Redis Cache (Shared between environments)
+  # STAGING uses DB 0, DEMO uses DB 1
+  # ==========================================
+  redis:
+    image: redis:7-alpine
+    container_name: keerja-vps-redis
+    command: >
+      redis-server 
+      --appendonly yes 
+      --maxmemory 128mb 
+      --maxmemory-policy allkeys-lru
+      --requirepass ${REDIS_PASSWORD:-}
+    ports:
+      - "127.0.0.1:6379:6379"  # Only accessible from localhost (security)
+    volumes:
+      - vps_redis_data:/data
+    networks:
+      - keerja-vps-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 192M
+        reservations:
+          memory: 64M
+
+  # ==========================================
+  # STAGING API Server
+  # Accessible at: http://staging-api.145.79.8.227.nip.io
+  # Internal port: 8080
+  # ==========================================
+  api-staging:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+      args:
+        APP_VERSION: ${APP_VERSION:-staging}
+        BUILD_TIME: ${BUILD_TIME:-}
+        GIT_COMMIT: ${GIT_COMMIT:-}
+    image: keerja-api:staging
+    container_name: keerja-api-staging
+    env_file:
+      - .env.staging
+    environment:
+      # Override database to use staging database
+      DATABASE_URL: postgresql://${STAGING_DB_USER:-bekerja}:${STAGING_DB_PASSWORD}@postgres:5432/keerja_staging?sslmode=disable
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: keerja_staging
+      DB_USER: ${STAGING_DB_USER:-bekerja}
+      DB_PASSWORD: ${STAGING_DB_PASSWORD}
+      # Redis connection (DB 0 for staging)
+      REDIS_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/0
+      REDIS_HOST: redis
+      REDIS_DB: 0
+      # Environment identifier
+      APP_ENV: staging
+      SERVER_PORT: 8080
+    ports:
+      - "127.0.0.1:8080:8080"  # Only accessible from localhost (nginx will proxy)
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - keerja-vps-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    profiles:
+      - staging
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+        reservations:
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # ==========================================
+  # DEMO API Server
+  # Accessible at: http://demo-api.145.79.8.227.nip.io
+  # Internal port: 8081 (mapped from container's 8080)
+  # ==========================================
+  api-demo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+      args:
+        APP_VERSION: ${APP_VERSION:-demo}
+        BUILD_TIME: ${BUILD_TIME:-}
+        GIT_COMMIT: ${GIT_COMMIT:-}
+    image: keerja-api:demo
+    container_name: keerja-api-demo
+    env_file:
+      - .env.demo
+    environment:
+      # Override database to use demo database
+      DATABASE_URL: postgresql://${DEMO_DB_USER:-bekerja}:${DEMO_DB_PASSWORD}@postgres:5432/keerja_demo?sslmode=disable
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: keerja_demo
+      DB_USER: ${DEMO_DB_USER:-bekerja}
+      DB_PASSWORD: ${DEMO_DB_PASSWORD}
+      # Redis connection (DB 1 for demo - isolated from staging)
+      REDIS_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/1
+      REDIS_HOST: redis
+      REDIS_DB: 1
+      # Environment identifier
+      APP_ENV: production
+      SERVER_PORT: 8080
+    ports:
+      - "127.0.0.1:8081:8080"  # Map to 8081 externally, but app runs on 8080 internally
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - keerja-vps-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    profiles:
+      - demo
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+        reservations:
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # ==========================================
+  # Database Migration Runner (STAGING)
+  # One-shot container for running migrations
+  # Usage: docker-compose -f docker-compose.vps.yml --profile migrate-staging up
+  # ==========================================
+  migrate-staging:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    image: keerja-api:staging
+    container_name: keerja-migrate-staging
+    env_file:
+      - .env.staging
+    environment:
+      DATABASE_URL: postgresql://${STAGING_DB_USER:-bekerja}:${STAGING_DB_PASSWORD}@postgres:5432/keerja_staging?sslmode=disable
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: keerja_staging
+      DB_USER: ${STAGING_DB_USER:-bekerja}
+      DB_PASSWORD: ${STAGING_DB_PASSWORD}
+    command: ["./main", "migrate"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - keerja-vps-network
+    profiles:
+      - migrate-staging
+    restart: "no"
+
+  # ==========================================
+  # Database Migration Runner (DEMO)
+  # One-shot container for running migrations
+  # Usage: docker-compose -f docker-compose.vps.yml --profile migrate-demo up
+  # ==========================================
+  migrate-demo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    image: keerja-api:demo
+    container_name: keerja-migrate-demo
+    env_file:
+      - .env.demo
+    environment:
+      DATABASE_URL: postgresql://${DEMO_DB_USER:-bekerja}:${DEMO_DB_PASSWORD}@postgres:5432/keerja_demo?sslmode=disable
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: keerja_demo
+      DB_USER: ${DEMO_DB_USER:-bekerja}
+      DB_PASSWORD: ${DEMO_DB_PASSWORD}
+    command: ["./main", "migrate"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - keerja-vps-network
+    profiles:
+      - migrate-demo
+    restart: "no"
+
+  # ==========================================
+  # Database Seeder (STAGING)
+  # One-shot container for seeding data
+  # Usage: docker-compose -f docker-compose.vps.yml --profile seed-staging up
+  # ==========================================
+  seed-staging:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    image: keerja-api:staging
+    container_name: keerja-seed-staging
+    env_file:
+      - .env.staging
+    environment:
+      DATABASE_URL: postgresql://${STAGING_DB_USER:-bekerja}:${STAGING_DB_PASSWORD}@postgres:5432/keerja_staging?sslmode=disable
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: keerja_staging
+    command: ["./main", "seed"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - keerja-vps-network
+    profiles:
+      - seed-staging
+    restart: "no"
+
+  # ==========================================
+  # Database Seeder (DEMO)
+  # One-shot container for seeding data
+  # Usage: docker-compose -f docker-compose.vps.yml --profile seed-demo up
+  # ==========================================
+  seed-demo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    image: keerja-api:demo
+    container_name: keerja-seed-demo
+    env_file:
+      - .env.demo
+    environment:
+      DATABASE_URL: postgresql://${DEMO_DB_USER:-bekerja}:${DEMO_DB_PASSWORD}@postgres:5432/keerja_demo?sslmode=disable
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: keerja_demo
+    command: ["./main", "seed"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - keerja-vps-network
+    profiles:
+      - seed-demo
+    restart: "no"
+
+# ==========================================
+# Networks
+# ==========================================
+networks:
+  keerja-vps-network:
+    name: keerja-vps-network
+    driver: bridge
+
+# ==========================================
+# Volumes
+# Named volumes for data persistence
+# ==========================================
+volumes:
+  vps_postgres_data:
+    name: keerja-vps-postgres-data
+  vps_redis_data:
+    name: keerja-vps-redis-data

@@ -286,4 +286,186 @@ seed:
 	@echo "Running database seeders..."
 	$(GOCMD) run ./cmd/seeder/main.go
 
+# ============================================================
+# VPS Multi-Environment Commands
+# ============================================================
+# These commands are for managing STAGING and DEMO environments
+# on the VPS (145.79.8.227)
+#
+# Prerequisites:
+#   - SSH access to VPS configured
+#   - .env.staging and .env.demo files present on VPS
+#   - docker-compose.vps.yml synced to VPS
+# ============================================================
+
+# VPS Configuration
+VPS_HOST ?= 145.79.8.227
+VPS_USER ?= root
+VPS_PATH ?= /opt/keerja
+VPS_COMPOSE_FILE = docker-compose.vps.yml
+
+.PHONY: vps-help vps-ssh vps-status vps-logs-staging vps-logs-demo vps-restart-staging vps-restart-demo vps-deploy-staging vps-deploy-demo vps-backup-staging vps-backup-demo vps-health
+
+## vps-help: Show VPS-related commands
+vps-help:
+	@echo "╔══════════════════════════════════════════════════════════════╗"
+	@echo "║           Keerja Backend - VPS Commands                       ║"
+	@echo "╠══════════════════════════════════════════════════════════════╣"
+	@echo "║ Connection:                                                   ║"
+	@echo "║   make vps-ssh           - SSH into VPS                       ║"
+	@echo "║   make vps-status        - Show container status              ║"
+	@echo "║   make vps-health        - Run health check                   ║"
+	@echo "╠══════════════════════════════════════════════════════════════╣"
+	@echo "║ STAGING (http://staging-api.145.79.8.227.nip.io):             ║"
+	@echo "║   make vps-deploy-staging  - Deploy to STAGING                ║"
+	@echo "║   make vps-logs-staging    - View STAGING logs                ║"
+	@echo "║   make vps-restart-staging - Restart STAGING                  ║"
+	@echo "║   make vps-backup-staging  - Backup STAGING database          ║"
+	@echo "╠══════════════════════════════════════════════════════════════╣"
+	@echo "║ DEMO (http://demo-api.145.79.8.227.nip.io):                   ║"
+	@echo "║   make vps-deploy-demo     - Deploy to DEMO                   ║"
+	@echo "║   make vps-logs-demo       - View DEMO logs                   ║"
+	@echo "║   make vps-restart-demo    - Restart DEMO                     ║"
+	@echo "║   make vps-backup-demo     - Backup DEMO database             ║"
+	@echo "╠══════════════════════════════════════════════════════════════╣"
+	@echo "║ Infrastructure:                                               ║"
+	@echo "║   make vps-infra-start   - Start PostgreSQL & Redis           ║"
+	@echo "║   make vps-infra-stop    - Stop all VPS containers            ║"
+	@echo "║   make vps-migrate-staging - Run STAGING migrations           ║"
+	@echo "║   make vps-migrate-demo    - Run DEMO migrations              ║"
+	@echo "╚══════════════════════════════════════════════════════════════╝"
+
+## vps-ssh: SSH into VPS
+vps-ssh:
+	@echo "Connecting to VPS..."
+	ssh $(VPS_USER)@$(VPS_HOST)
+
+## vps-status: Show VPS container status
+vps-status:
+	@echo "Checking VPS container status..."
+	@ssh $(VPS_USER)@$(VPS_HOST) "cd $(VPS_PATH) && docker-compose -f $(VPS_COMPOSE_FILE) ps"
+
+## vps-health: Run health check on VPS
+vps-health:
+	@echo "Running health check on VPS..."
+	@ssh $(VPS_USER)@$(VPS_HOST) "cd $(VPS_PATH) && chmod +x scripts/health-check.sh && ./scripts/health-check.sh"
+
+## vps-infra-start: Start infrastructure services on VPS
+vps-infra-start:
+	@echo "Starting infrastructure on VPS..."
+	@ssh $(VPS_USER)@$(VPS_HOST) "cd $(VPS_PATH) && docker-compose -f $(VPS_COMPOSE_FILE) up -d postgres redis"
+	@echo "Infrastructure started. Waiting for services..."
+	@sleep 10
+	@ssh $(VPS_USER)@$(VPS_HOST) "docker exec keerja-vps-postgres pg_isready -U postgres || echo 'PostgreSQL not ready yet'"
+
+## vps-infra-stop: Stop all VPS containers
+vps-infra-stop:
+	@echo "Stopping all VPS containers..."
+	@ssh $(VPS_USER)@$(VPS_HOST) "cd $(VPS_PATH) && docker-compose -f $(VPS_COMPOSE_FILE) --profile staging --profile demo down"
+
+## vps-deploy-staging: Deploy STAGING environment
+vps-deploy-staging:
+	@echo "Deploying to STAGING..."
+	@echo "Step 1: Syncing code..."
+	rsync -avz --delete \
+		--exclude '.git' \
+		--exclude 'node_modules' \
+		--exclude '*.log' \
+		--exclude '.env' \
+		--exclude '.env.staging' \
+		--exclude '.env.demo' \
+		--exclude 'uploads/*' \
+		-e ssh ./ $(VPS_USER)@$(VPS_HOST):$(VPS_PATH)/
+	@echo "Step 2: Building and deploying..."
+	@ssh $(VPS_USER)@$(VPS_HOST) "cd $(VPS_PATH) && \
+		docker-compose -f $(VPS_COMPOSE_FILE) build api-staging && \
+		docker-compose -f $(VPS_COMPOSE_FILE) --profile staging up -d api-staging"
+	@echo "Step 3: Health check..."
+	@sleep 15
+	@curl -sf http://$(VPS_HOST):8080/health/live && echo "STAGING deployed successfully!" || echo "Health check failed"
+
+## vps-deploy-demo: Deploy DEMO environment
+vps-deploy-demo:
+	@echo "Deploying to DEMO..."
+	@echo "Step 1: Syncing code..."
+	rsync -avz --delete \
+		--exclude '.git' \
+		--exclude 'node_modules' \
+		--exclude '*.log' \
+		--exclude '.env' \
+		--exclude '.env.staging' \
+		--exclude '.env.demo' \
+		--exclude 'uploads/*' \
+		-e ssh ./ $(VPS_USER)@$(VPS_HOST):$(VPS_PATH)/
+	@echo "Step 2: Building and deploying..."
+	@ssh $(VPS_USER)@$(VPS_HOST) "cd $(VPS_PATH) && \
+		docker-compose -f $(VPS_COMPOSE_FILE) build api-demo && \
+		docker-compose -f $(VPS_COMPOSE_FILE) --profile demo up -d api-demo"
+	@echo "Step 3: Health check..."
+	@sleep 15
+	@curl -sf http://$(VPS_HOST):8081/health/live && echo "DEMO deployed successfully!" || echo "Health check failed"
+
+## vps-logs-staging: View STAGING logs
+vps-logs-staging:
+	@echo "Viewing STAGING logs (Ctrl+C to exit)..."
+	@ssh $(VPS_USER)@$(VPS_HOST) "cd $(VPS_PATH) && docker-compose -f $(VPS_COMPOSE_FILE) logs -f api-staging"
+
+## vps-logs-demo: View DEMO logs
+vps-logs-demo:
+	@echo "Viewing DEMO logs (Ctrl+C to exit)..."
+	@ssh $(VPS_USER)@$(VPS_HOST) "cd $(VPS_PATH) && docker-compose -f $(VPS_COMPOSE_FILE) logs -f api-demo"
+
+## vps-restart-staging: Restart STAGING container
+vps-restart-staging:
+	@echo "Restarting STAGING..."
+	@ssh $(VPS_USER)@$(VPS_HOST) "cd $(VPS_PATH) && docker-compose -f $(VPS_COMPOSE_FILE) --profile staging restart api-staging"
+	@echo "STAGING restarted"
+
+## vps-restart-demo: Restart DEMO container
+vps-restart-demo:
+	@echo "Restarting DEMO..."
+	@ssh $(VPS_USER)@$(VPS_HOST) "cd $(VPS_PATH) && docker-compose -f $(VPS_COMPOSE_FILE) --profile demo restart api-demo"
+	@echo "DEMO restarted"
+
+## vps-migrate-staging: Run migrations on STAGING
+vps-migrate-staging:
+	@echo "Running STAGING migrations..."
+	@ssh $(VPS_USER)@$(VPS_HOST) "cd $(VPS_PATH) && docker-compose -f $(VPS_COMPOSE_FILE) --profile migrate-staging up --build"
+	@echo "STAGING migrations complete"
+
+## vps-migrate-demo: Run migrations on DEMO
+vps-migrate-demo:
+	@echo "Running DEMO migrations..."
+	@ssh $(VPS_USER)@$(VPS_HOST) "cd $(VPS_PATH) && docker-compose -f $(VPS_COMPOSE_FILE) --profile migrate-demo up --build"
+	@echo "DEMO migrations complete"
+
+## vps-backup-staging: Backup STAGING database
+vps-backup-staging:
+	@echo "Backing up STAGING database..."
+	@ssh $(VPS_USER)@$(VPS_HOST) "cd $(VPS_PATH) && \
+		mkdir -p backups && \
+		docker exec keerja-vps-postgres pg_dump -U postgres keerja_staging > backups/staging_$$(date +%Y%m%d_%H%M%S).sql"
+	@echo "Backup created in $(VPS_PATH)/backups/"
+
+## vps-backup-demo: Backup DEMO database
+vps-backup-demo:
+	@echo "Backing up DEMO database..."
+	@ssh $(VPS_USER)@$(VPS_HOST) "cd $(VPS_PATH) && \
+		mkdir -p backups && \
+		docker exec keerja-vps-postgres pg_dump -U postgres keerja_demo > backups/demo_$$(date +%Y%m%d_%H%M%S).sql"
+	@echo "Backup created in $(VPS_PATH)/backups/"
+
+## vps-seed-staging: Seed STAGING database
+vps-seed-staging:
+	@echo "Seeding STAGING database..."
+	@ssh $(VPS_USER)@$(VPS_HOST) "cd $(VPS_PATH) && docker-compose -f $(VPS_COMPOSE_FILE) --profile seed-staging up --build"
+	@echo "STAGING seeding complete"
+
+## vps-seed-demo: Seed DEMO database
+vps-seed-demo:
+	@echo "Seeding DEMO database..."
+	@ssh $(VPS_USER)@$(VPS_HOST) "cd $(VPS_PATH) && docker-compose -f $(VPS_COMPOSE_FILE) --profile seed-demo up --build"
+	@echo "DEMO seeding complete"
+
 .DEFAULT_GOAL := help
+
