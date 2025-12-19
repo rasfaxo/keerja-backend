@@ -26,6 +26,11 @@ go.work.sum
 
 # env file
 .env
+.env.staging
+.env.demo
+.env.production
+.env.local
+.env.*.local
 
 # Firebase credentials (NEVER commit these!)
 firebase-service-account.json
@@ -35,3 +40,55 @@ config/firebase-service-account.json
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# =================================================
+# VPS Deployment (added for multi-env deployment)
+# =================================================
+
+# Backup files
+*.backup
+*.bak
+backups/
+*.sql.gz
+
+# Old/temporary files
+*.old
+*.tmp
+*.temp
+
+# Build artifacts
+build/
+dist/
+tmp/
+
+# Log files (local)
+*.log
+logs/*.log
+
+# Certificates and keys
+*.pem
+*.key
+*.crt
+!nginx/*.conf
+
+# Docker volumes data (local)
+postgres-data/
+redis-data/
+pgadmin-data/
+
+# Upload directories (should be empty in repo)
+uploads/avatars/*
+uploads/company/*
+uploads/documents/*
+!uploads/avatars/.gitkeep
+!uploads/company/.gitkeep
+!uploads/documents/.gitkeep
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

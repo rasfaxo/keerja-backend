@@ -1,3 +1,26 @@
+# ============================================================
+# .github/workflows/deploy-api-docs.yml
+# ============================================================
+# GitHub Actions workflow for Bump.sh API documentation
+#
+# UPDATED: Now supports multi-environment documentation
+#   - STAGING docs: Updated on push to main
+#   - DEMO docs: Updated on release/tag
+#
+# REQUIRED GITHUB SECRETS:
+#   - BUMP_TOKEN: Bump.sh API token
+#   - BUMP_DOC_ID: Default documentation ID (legacy, for backward compatibility)
+#   - STAGING_BUMP_DOC_ID: Bump.sh documentation ID for STAGING
+#   - DEMO_BUMP_DOC_ID: Bump.sh documentation ID for DEMO
+#
+# HOW TO GET BUMP.SH DOC IDs:
+#   1. Go to https://bump.sh and create account
+#   2. Create two documentation projects:
+#      - "Keerja API - Staging" → Get STAGING_BUMP_DOC_ID
+#      - "Keerja API - Demo" → Get DEMO_BUMP_DOC_ID
+#   3. Add IDs to GitHub Secrets
+# ============================================================
+
 name: Deploy API Documentation
 
 on:
@@ -12,22 +35,37 @@ on:
     paths:
       - "docs/swagger.yaml"
       - ".bump.yml"
+  release:
+    types: [published]
   schedule:
     - cron: '0 0 * * *' # Run daily at midnight UTC
-  workflow_dispatch: # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Which environment docs to update'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - demo
+          - both
 
 jobs:
+  # ==========================================
+  # Job 1: Validate OpenAPI Definition
+  # ==========================================
   validate:
     name: Validate OpenAPI Definition
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
 
       - name: Install Validator
         run: npm install -g @apidevtools/swagger-cli
@@ -37,59 +75,156 @@ jobs:
           echo "Validating docs/swagger.yaml..."
           swagger-cli validate docs/swagger.yaml
           echo "✅ Validation passed!"
-  deploy-doc:
-    name: Deploy to Bump.sh
+
+  # ==========================================
+  # Job 2: Deploy STAGING Documentation
+  # Triggered on push to main branch
+  # ==========================================
+  deploy-staging-docs:
+    name: Deploy STAGING Docs to Bump.sh
     needs: validate
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    if: |
+      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')) ||
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.environment == 'staging' || github.event.inputs.environment == 'both'))
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Deploy to Bump.sh
+      - name: Prepare STAGING Swagger
+        run: |
+          # Create staging version with correct host
+          cp docs/swagger.yaml docs/swagger-staging.yaml
+          
+          # Update host/server URL for staging
+          sed -i 's|url: .*|url: http://staging-api.145.79.8.227.nip.io|g' docs/swagger-staging.yaml
+          
+          # Update title to indicate staging
+          sed -i 's|title: .*|title: Keerja API (Staging)|g' docs/swagger-staging.yaml
+          
+          echo "Prepared staging swagger file"
+          head -30 docs/swagger-staging.yaml
+
+      - name: Deploy STAGING to Bump.sh
         uses: bump-sh/github-action@v1
         with:
-          doc: ${{ secrets.BUMP_DOC_ID }}
+          doc: ${{ secrets.STAGING_BUMP_DOC_ID || secrets.BUMP_DOC_ID }}
           token: ${{ secrets.BUMP_TOKEN }}
-          file: docs/swagger.yaml
-          # The action automatically outputs the doc URL
+          file: docs/swagger-staging.yaml
+
+      - name: Summary
+        run: |
+          echo "## STAGING Documentation Updated" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** STAGING" >> $GITHUB_STEP_SUMMARY
+          echo "- **API URL:** http://staging-api.145.79.8.227.nip.io" >> $GITHUB_STEP_SUMMARY
+          echo "- **Docs URL:** https://bump.sh/doc/${{ secrets.STAGING_BUMP_DOC_ID || secrets.BUMP_DOC_ID }}" >> $GITHUB_STEP_SUMMARY
+
+  # ==========================================
+  # Job 3: Deploy DEMO Documentation
+  # Triggered on release/tag creation
+  # ==========================================
+  deploy-demo-docs:
+    name: Deploy DEMO Docs to Bump.sh
+    needs: validate
+    if: |
+      github.event_name == 'release' ||
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.environment == 'demo' || github.event.inputs.environment == 'both'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
+          else
+            VERSION="manual-$(date +%Y%m%d)"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Prepare DEMO Swagger
+        run: |
+          # Create demo version with correct host
+          cp docs/swagger.yaml docs/swagger-demo.yaml
+          
+          # Update host/server URL for demo
+          sed -i 's|url: .*|url: http://demo-api.145.79.8.227.nip.io|g' docs/swagger-demo.yaml
+          
+          # Update title to indicate demo/production
+          sed -i 's|title: .*|title: Keerja API (Demo)|g' docs/swagger-demo.yaml
+          
+          # Update version
+          sed -i "s|version: .*|version: ${{ steps.version.outputs.version }}|g" docs/swagger-demo.yaml
+          
+          echo "Prepared demo swagger file"
+          head -30 docs/swagger-demo.yaml
+
+      - name: Deploy DEMO to Bump.sh
+        uses: bump-sh/github-action@v1
+        with:
+          doc: ${{ secrets.DEMO_BUMP_DOC_ID || secrets.BUMP_DOC_ID }}
+          token: ${{ secrets.BUMP_TOKEN }}
+          file: docs/swagger-demo.yaml
+
+      - name: Summary
+        run: |
+          echo "## DEMO Documentation Updated" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** DEMO" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **API URL:** http://demo-api.145.79.8.227.nip.io" >> $GITHUB_STEP_SUMMARY
+          echo "- **Docs URL:** https://bump.sh/doc/${{ secrets.DEMO_BUMP_DOC_ID || secrets.BUMP_DOC_ID }}" >> $GITHUB_STEP_SUMMARY
+
+  # ==========================================
+  # Job 4: API Diff Check (PR)
+  # ==========================================
   api-diff:
     name: API Diff Check
     needs: validate
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
-      pull-requests: write # Required to post comments
+      pull-requests: write
       contents: read
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Check API Diff
         uses: bump-sh/github-action@v1
         with:
-          doc: ${{ secrets.BUMP_DOC_ID }}
+          doc: ${{ secrets.STAGING_BUMP_DOC_ID || secrets.BUMP_DOC_ID }}
           token: ${{ secrets.BUMP_TOKEN }}
           file: docs/swagger.yaml
           command: diff
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ==========================================
+  # Job 5: Daily Documentation Check
+  # ==========================================
   scheduled-check:
     name: Daily Documentation Check
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run Validation Script
         run: |
           chmod +x scripts/validate-swagger.sh
           ./scripts/validate-swagger.sh
+
       - name: Check Deployment Status
         env:
           BUMP_TOKEN: ${{ secrets.BUMP_TOKEN }}
           BUMP_DOC_ID: ${{ secrets.BUMP_DOC_ID }}
+          STAGING_BUMP_DOC_ID: ${{ secrets.STAGING_BUMP_DOC_ID }}
+          DEMO_BUMP_DOC_ID: ${{ secrets.DEMO_BUMP_DOC_ID }}
         run: |
           chmod +x scripts/check-deployment-status.sh
           ./scripts/check-deployment-status.sh

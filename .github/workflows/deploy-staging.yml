@@ -1,0 +1,316 @@
+# ============================================================
+# .github/workflows/deploy-staging.yml
+# ============================================================
+# GitHub Actions workflow for automatic STAGING deployment
+#
+# TRIGGERS:
+#   - Push to main branch
+#
+# ACTIONS:
+#   1. SSH to VPS
+#   2. Pull latest code
+#   3. Build Docker image
+#   4. Run database migrations
+#   5. Deploy STAGING container
+#   6. Health check
+#   7. Notify via commit status
+#
+# REQUIRED GITHUB SECRETS:
+#   - VPS_HOST: 145.79.8.227
+#   - VPS_USER: root (or deploy user)
+#   - SSH_PRIVATE_KEY: SSH private key for VPS access
+#   - STAGING_DB_PASSWORD: PostgreSQL password for staging
+#   - REDIS_PASSWORD: Redis password
+#   - POSTGRES_PASSWORD: PostgreSQL admin password
+#
+# INTEGRATION:
+#   - Works with docker-compose.vps.yml
+#   - Uses existing Dockerfile (production target)
+#   - Runs migrations automatically
+# ============================================================
+
+name: Deploy to STAGING
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.github/workflows/deploy-demo.yml'
+      - '.github/workflows/api-docs.yml'
+
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      skip_migrations:
+        description: 'Skip database migrations'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  DEPLOY_PATH: /opt/keerja
+  COMPOSE_FILE: docker-compose.vps.yml
+
+jobs:
+  # ==========================================
+  # Job 1: Build and Test
+  # ==========================================
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run tests
+        run: go test -v -race -short ./...
+
+      - name: Build binary
+        run: |
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+            -ldflags="-w -s -X main.Version=${{ github.sha }}" \
+            -o ./bin/main ./cmd/main.go
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: keerja-binary
+          path: ./bin/main
+          retention-days: 1
+
+  # ==========================================
+  # Job 2: Deploy to STAGING
+  # ==========================================
+  deploy:
+    name: Deploy to STAGING
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: staging
+      url: http://staging-api.145.79.8.227.nip.io
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set deployment info
+        id: deploy-info
+        run: |
+          echo "timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_OUTPUT
+          echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Create deployment directory
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+            mkdir -p ${{ env.DEPLOY_PATH }}
+            mkdir -p ${{ env.DEPLOY_PATH }}/logs
+            mkdir -p ${{ env.DEPLOY_PATH }}/backups
+          EOF
+
+      - name: Sync repository to VPS
+        run: |
+          rsync -avz --delete \
+            --exclude '.git' \
+            --exclude 'node_modules' \
+            --exclude '*.log' \
+            --exclude '.env' \
+            --exclude '.env.staging' \
+            --exclude '.env.demo' \
+            --exclude 'uploads/*' \
+            -e "ssh -o StrictHostKeyChecking=no" \
+            ./ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{ env.DEPLOY_PATH }}/
+
+      - name: Create/Update environment file
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+            cd ${{ env.DEPLOY_PATH }}
+            
+            # Create .env.staging if it doesn't exist
+            if [ ! -f .env.staging ]; then
+              cp .env.staging.example .env.staging
+              echo "Created .env.staging from example - please update with real values!"
+            fi
+            
+            # Update dynamic values
+            sed -i "s/APP_VERSION=.*/APP_VERSION=${{ steps.deploy-info.outputs.short_sha }}/" .env.staging
+          EOF
+
+      - name: Set environment secrets
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF
+            cd ${{ env.DEPLOY_PATH }}
+            
+            # Update secrets in .env.staging (if secrets are provided)
+            if [ -n "${{ secrets.STAGING_DB_PASSWORD }}" ]; then
+              sed -i "s/STAGING_DB_PASSWORD=.*/STAGING_DB_PASSWORD=${{ secrets.STAGING_DB_PASSWORD }}/" .env.staging
+              sed -i "s/DB_PASSWORD=.*/DB_PASSWORD=${{ secrets.STAGING_DB_PASSWORD }}/" .env.staging
+            fi
+            
+            if [ -n "${{ secrets.REDIS_PASSWORD }}" ]; then
+              sed -i "s/REDIS_PASSWORD=.*/REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}/" .env.staging
+            fi
+            
+            if [ -n "${{ secrets.POSTGRES_PASSWORD }}" ]; then
+              sed -i "s/POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}/" .env.staging
+            fi
+            
+            if [ -n "${{ secrets.JWT_SECRET_STAGING }}" ]; then
+              sed -i "s/JWT_SECRET=.*/JWT_SECRET=${{ secrets.JWT_SECRET_STAGING }}/" .env.staging
+            fi
+          EOF
+
+      - name: Start infrastructure services
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+            cd ${{ env.DEPLOY_PATH }}
+            
+            # Export required environment variables
+            export POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}"
+            export REDIS_PASSWORD="${{ secrets.REDIS_PASSWORD }}"
+            export STAGING_DB_PASSWORD="${{ secrets.STAGING_DB_PASSWORD }}"
+            export STAGING_DB_USER="bekerja"
+            
+            # Start PostgreSQL and Redis if not running
+            docker-compose -f ${{ env.COMPOSE_FILE }} up -d postgres redis
+            
+            # Wait for PostgreSQL to be ready
+            echo "Waiting for PostgreSQL to be ready..."
+            sleep 10
+            
+            # Check PostgreSQL health
+            docker-compose -f ${{ env.COMPOSE_FILE }} exec -T postgres pg_isready -U postgres || {
+              echo "PostgreSQL is not ready, waiting more..."
+              sleep 20
+            }
+          EOF
+
+      - name: Run database migrations
+        if: ${{ github.event.inputs.skip_migrations != 'true' }}
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+            cd ${{ env.DEPLOY_PATH }}
+            
+            # Export required environment variables
+            export POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}"
+            export REDIS_PASSWORD="${{ secrets.REDIS_PASSWORD }}"
+            export STAGING_DB_PASSWORD="${{ secrets.STAGING_DB_PASSWORD }}"
+            export STAGING_DB_USER="bekerja"
+            
+            echo "Running migrations for STAGING..."
+            docker-compose -f ${{ env.COMPOSE_FILE }} --profile migrate-staging up --build
+            
+            echo "Migrations completed"
+          EOF
+
+      - name: Build and deploy STAGING
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+            cd ${{ env.DEPLOY_PATH }}
+            
+            # Export required environment variables
+            export POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}"
+            export REDIS_PASSWORD="${{ secrets.REDIS_PASSWORD }}"
+            export STAGING_DB_PASSWORD="${{ secrets.STAGING_DB_PASSWORD }}"
+            export STAGING_DB_USER="bekerja"
+            export APP_VERSION="${{ steps.deploy-info.outputs.short_sha }}"
+            export BUILD_TIME="${{ steps.deploy-info.outputs.timestamp }}"
+            export GIT_COMMIT="${{ github.sha }}"
+            
+            # Build new image
+            echo "Building STAGING image..."
+            docker-compose -f ${{ env.COMPOSE_FILE }} build api-staging
+            
+            # Stop old container gracefully
+            echo "Stopping old container..."
+            docker-compose -f ${{ env.COMPOSE_FILE }} --profile staging stop api-staging || true
+            
+            # Start new container
+            echo "Starting new container..."
+            docker-compose -f ${{ env.COMPOSE_FILE }} --profile staging up -d api-staging
+            
+            # Clean up old images
+            echo "Cleaning up old images..."
+            docker image prune -f
+          EOF
+
+      - name: Health check
+        run: |
+          echo "Waiting for service to start..."
+          sleep 30
+          
+          # Check health endpoint
+          for i in {1..5}; do
+            response=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.VPS_HOST }}:8080/health/live || echo "000")
+            if [ "$response" = "200" ]; then
+              echo "✅ Health check passed!"
+              exit 0
+            fi
+            echo "Attempt $i: HTTP $response - waiting..."
+            sleep 10
+          done
+          
+          echo "❌ Health check failed after 5 attempts"
+          exit 1
+
+      - name: Deployment summary
+        if: success()
+        run: |
+          echo "## 🚀 STAGING Deployment Successful" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Environment | STAGING |" >> $GITHUB_STEP_SUMMARY
+          echo "| URL | http://staging-api.145.79.8.227.nip.io |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit | ${{ steps.deploy-info.outputs.short_sha }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Deployed at | ${{ steps.deploy-info.outputs.timestamp }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Triggered by | @${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "## ❌ STAGING Deployment Failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Check the logs above for details." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ steps.deploy-info.outputs.short_sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+
+  # ==========================================
+  # Job 3: Notify (optional)
+  # ==========================================
+  notify:
+    name: Send Notifications
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: always()
+
+    steps:
+      - name: Deployment status
+        run: |
+          if [ "${{ needs.deploy.result }}" = "success" ]; then
+            echo "✅ STAGING deployment successful"
+            echo "URL: http://staging-api.145.79.8.227.nip.io"
+          else
+            echo "❌ STAGING deployment failed"
+            echo "Check workflow logs for details"
+          fi
