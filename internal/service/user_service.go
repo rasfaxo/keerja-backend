@@ -1323,7 +1323,9 @@ func (s *userService) DeleteDocument(ctx context.Context, userID int64, document
 	}
 
 	// Delete file from storage
-	_ = s.uploadService.DeleteFile(ctx, docToDelete.FileURL)
+	if err := s.uploadService.DeleteFile(ctx, docToDelete.FileURL); err != nil {
+		return fmt.Errorf("failed to delete file from storage: %w", err)
+	}
 
 	// Delete document record
 	if err := s.userRepo.DeleteDocument(ctx, documentID); err != nil {
@@ -1385,92 +1387,48 @@ func (s *userService) GetProfileCompletionPercentage(ctx context.Context, userID
 		return 0, fmt.Errorf("failed to get user profile: %w", err)
 	}
 
-	// Calculate completion percentage
-	totalFields := 0
-	completedFields := 0
+	score := 0
 
-	// Basic profile fields (weight: 30%)
-	basicFields := 10
-	basicCompleted := 0
-
-	totalFields += basicFields
-
-	if usr.FullName != "" {
-		basicCompleted++
-	}
-	if usr.Email != "" {
-		basicCompleted++
-	}
-	if usr.Phone != nil {
-		basicCompleted++
+	// Personal Details - 30%
+	if usr.Phone != nil && *usr.Phone != "" {
+		score += 5
 	}
 	if usr.Profile != nil {
 		if usr.Profile.Headline != nil && *usr.Profile.Headline != "" {
-			basicCompleted++
+			score += 10
 		}
-		if usr.Profile.Bio != nil && *usr.Profile.Bio != "" {
-			basicCompleted++
+		if usr.Profile.Address != nil && *usr.Profile.Address != "" {
+			score += 10
 		}
-		if usr.Profile.LocationCity != nil {
-			basicCompleted++
-		}
-		if usr.Profile.AvatarURL != nil {
-			basicCompleted++
-		}
-		if usr.Profile.DesiredPosition != nil {
-			basicCompleted++
-		}
-		if usr.Profile.ExperienceLevel != nil {
-			basicCompleted++
-		}
-		if usr.Profile.IndustryInterest != nil {
-			basicCompleted++
+		if usr.Profile.AvatarURL != nil && *usr.Profile.AvatarURL != "" {
+			score += 5
 		}
 	}
 
-	completedFields += basicCompleted
-
-	// Education (weight: 15%)
-	educationFields := 2
-	totalFields += educationFields
+	// Education - 20%
 	if len(usr.Educations) > 0 {
-		completedFields += educationFields
+		score += 20
 	}
 
-	// Experience (weight: 20%)
-	experienceFields := 3
-	totalFields += experienceFields
+	// Experience - 25%
 	if len(usr.Experiences) > 0 {
-		completedFields += experienceFields
+		score += 25
 	}
 
-	// Skills (weight: 20%)
-	skillFields := 3
-	totalFields += skillFields
-	if len(usr.Skills) >= 3 {
-		completedFields += skillFields
-	} else if len(usr.Skills) > 0 {
-		completedFields += len(usr.Skills)
+	// Documents - 25%
+	hasResumeOrPortfolio := false
+	for _, doc := range usr.Documents {
+		if doc.DocumentType != nil &&
+		   (*doc.DocumentType == "resume" || *doc.DocumentType == "portfolio") {
+			hasResumeOrPortfolio = true
+			break
+		}
+	}
+	if hasResumeOrPortfolio {
+		score += 25
 	}
 
-	// Certifications (weight: 10%)
-	certFields := 1
-	totalFields += certFields
-	if len(usr.Certifications) > 0 {
-		completedFields += certFields
-	}
-
-	// Languages (weight: 5%)
-	langFields := 1
-	totalFields += langFields
-	if len(usr.Languages) > 0 {
-		completedFields += langFields
-	}
-
-	// Calculate percentage
-	percentage := (completedFields * 100) / totalFields
-
-	return percentage, nil
+	return score, nil
 }
 
 // UpdateLastLogin updates the user's last login timestamp

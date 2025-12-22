@@ -7,22 +7,23 @@ import (
 )
 
 // ToUserResponse converts User entity to UserResponse DTO
-func ToUserResponse(u *user.User) *response.UserResponse {
+func ToUserResponse(u *user.User, profileCompletion int) *response.UserResponse {
 	if u == nil {
 		return nil
 	}
 
 	resp := &response.UserResponse{
-		ID:         u.ID,
-		UUID:       u.UUID.String(),
-		FullName:   u.FullName,
-		Email:      u.Email,
-		Phone:      PtrToString(u.Phone),
-		UserType:   u.UserType,
-		IsVerified: u.IsVerified,
-		Status:     u.Status,
-		LastLogin:  u.LastLogin,
-		CreatedAt:  u.CreatedAt,
+		ID:                u.ID,
+		UUID:              u.UUID.String(),
+		FullName:          u.FullName,
+		Email:             u.Email,
+		Phone:             PtrToString(u.Phone),
+		UserType:          u.UserType,
+		IsVerified:        u.IsVerified,
+		Status:            u.Status,
+		LastLogin:         u.LastLogin,
+		CreatedAt:         u.CreatedAt,
+		ProfileCompletion: profileCompletion,
 	}
 
 	// Map profile if exists
@@ -34,22 +35,23 @@ func ToUserResponse(u *user.User) *response.UserResponse {
 }
 
 // ToUserDetailResponse converts User entity with relations to UserDetailResponse DTO
-func ToUserDetailResponse(u *user.User) *response.UserDetailResponse {
+func ToUserDetailResponse(u *user.User, profileCompletion int) *response.UserDetailResponse {
 	if u == nil {
 		return nil
 	}
 
 	resp := &response.UserDetailResponse{
-		ID:         u.ID,
-		UUID:       u.UUID.String(),
-		FullName:   u.FullName,
-		Email:      u.Email,
-		Phone:      PtrToString(u.Phone),
-		UserType:   u.UserType,
-		IsVerified: u.IsVerified,
-		Status:     u.Status,
-		LastLogin:  u.LastLogin,
-		CreatedAt:  u.CreatedAt,
+		ID:                u.ID,
+		UUID:              u.UUID.String(),
+		FullName:          u.FullName,
+		Email:             u.Email,
+		Phone:             PtrToString(u.Phone),
+		UserType:          u.UserType,
+		IsVerified:        u.IsVerified,
+		Status:            u.Status,
+		LastLogin:         u.LastLogin,
+		CreatedAt:         u.CreatedAt,
+		ProfileCompletion: profileCompletion,
 	}
 
 	// Map profile
@@ -137,7 +139,7 @@ func ToUserDetailResponse(u *user.User) *response.UserDetailResponse {
 
 // ToUserResponseWithIncludes converts User entity with selective relations based on includes parameter
 // Supports: profile, educations, experiences, skills, certifications, languages, projects, documents, preference
-func ToUserResponseWithIncludes(u *user.User, includes []string) *response.UserDetailResponse {
+func ToUserResponseWithIncludes(u *user.User, includes []string, profileCompletion int) *response.UserDetailResponse {
 	if u == nil {
 		return nil
 	}
@@ -149,16 +151,17 @@ func ToUserResponseWithIncludes(u *user.User, includes []string) *response.UserD
 	}
 
 	resp := &response.UserDetailResponse{
-		ID:         u.ID,
-		UUID:       u.UUID.String(),
-		FullName:   u.FullName,
-		Email:      u.Email,
-		Phone:      PtrToString(u.Phone),
-		UserType:   u.UserType,
-		IsVerified: u.IsVerified,
-		Status:     u.Status,
-		LastLogin:  u.LastLogin,
-		CreatedAt:  u.CreatedAt,
+		ID:                u.ID,
+		UUID:              u.UUID.String(),
+		FullName:          u.FullName,
+		Email:             u.Email,
+		Phone:             PtrToString(u.Phone),
+		UserType:          u.UserType,
+		IsVerified:        u.IsVerified,
+		Status:            u.Status,
+		LastLogin:         u.LastLogin,
+		CreatedAt:         u.CreatedAt,
+		ProfileCompletion: profileCompletion,
 	}
 
 	// Always include basic profile (it's lightweight)

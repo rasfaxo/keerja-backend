@@ -4,17 +4,18 @@ import "time"
 
 // UserResponse represents user public response
 type UserResponse struct {
-	ID         int64                `json:"id"`
-	UUID       string               `json:"uuid"`
-	FullName   string               `json:"full_name"`
-	Email      string               `json:"email"`
-	Phone      string               `json:"phone,omitempty"`
-	UserType   string               `json:"user_type"`
-	IsVerified bool                 `json:"is_verified"`
-	Status     string               `json:"status"`
-	LastLogin  *time.Time           `json:"last_login,omitempty"`
-	CreatedAt  time.Time            `json:"created_at"`
-	Profile    *UserProfileResponse `json:"profile,omitempty"`
+	ID                int64                `json:"id"`
+	UUID              string               `json:"uuid"`
+	FullName          string               `json:"full_name"`
+	Email             string               `json:"email"`
+	Phone             string               `json:"phone,omitempty"`
+	UserType          string               `json:"user_type"`
+	IsVerified        bool                 `json:"is_verified"`
+	Status            string               `json:"status"`
+	LastLogin         *time.Time           `json:"last_login,omitempty"`
+	CreatedAt         time.Time            `json:"created_at"`
+	Profile           *UserProfileResponse `json:"profile,omitempty"`
+	ProfileCompletion int                  `json:"profile_completion"`
 }
 
 // UserProfileResponse represents user profile response
@@ -50,25 +51,26 @@ type UserProfileResponse struct {
 
 // UserDetailResponse represents detailed user response with all relations
 type UserDetailResponse struct {
-	ID             int64                       `json:"id"`
-	UUID           string                      `json:"uuid"`
-	FullName       string                      `json:"full_name"`
-	Email          string                      `json:"email"`
-	Phone          string                      `json:"phone,omitempty"`
-	UserType       string                      `json:"user_type"`
-	IsVerified     bool                        `json:"is_verified"`
-	Status         string                      `json:"status"`
-	LastLogin      *time.Time                  `json:"last_login,omitempty"`
-	CreatedAt      time.Time                   `json:"created_at"`
-	Profile        *UserProfileResponse        `json:"profile,omitempty"`
-	Educations     []UserEducationResponse     `json:"educations,omitempty"`
-	Experiences    []UserExperienceResponse    `json:"experiences,omitempty"`
-	Skills         []UserSkillResponse         `json:"skills,omitempty"`
-	Certifications []UserCertificationResponse `json:"certifications,omitempty"`
-	Languages      []UserLanguageResponse      `json:"languages,omitempty"`
-	Projects       []UserProjectResponse       `json:"projects,omitempty"`
-	Documents      []UserDocumentResponse      `json:"documents,omitempty"`
-	Preference     *UserPreferenceResponse     `json:"preference,omitempty"`
+	ID                int64                       `json:"id"`
+	UUID              string                      `json:"uuid"`
+	FullName          string                      `json:"full_name"`
+	Email             string                      `json:"email"`
+	Phone             string                      `json:"phone,omitempty"`
+	UserType          string                      `json:"user_type"`
+	IsVerified        bool                        `json:"is_verified"`
+	Status            string                      `json:"status"`
+	LastLogin         *time.Time                  `json:"last_login,omitempty"`
+	CreatedAt         time.Time                   `json:"created_at"`
+	Profile           *UserProfileResponse        `json:"profile,omitempty"`
+	Educations        []UserEducationResponse     `json:"educations,omitempty"`
+	Experiences       []UserExperienceResponse    `json:"experiences,omitempty"`
+	Skills            []UserSkillResponse         `json:"skills,omitempty"`
+	Certifications    []UserCertificationResponse `json:"certifications,omitempty"`
+	Languages         []UserLanguageResponse      `json:"languages,omitempty"`
+	Projects          []UserProjectResponse       `json:"projects,omitempty"`
+	Documents         []UserDocumentResponse      `json:"documents,omitempty"`
+	Preference        *UserPreferenceResponse     `json:"preference,omitempty"`
+	ProfileCompletion int                         `json:"profile_completion"`
 }
 
 // UserEducationResponse represents education response

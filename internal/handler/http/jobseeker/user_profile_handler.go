@@ -36,19 +36,24 @@ func (h *UserProfileHandler) GetProfile(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to get profile", err.Error())
 	}
 
+	completion, err := h.userService.GetProfileCompletionPercentage(ctx, userID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to calculate profile completion", err.Error())
+	}
+
 	var response any
 
 	switch includeParam {
 	case "":
-		response = mapper.ToUserResponse(usr)
+		response = mapper.ToUserResponse(usr, completion)
 	case "all":
-		response = mapper.ToUserDetailResponse(usr)
+		response = mapper.ToUserDetailResponse(usr, completion)
 	default:
 		includes := strings.Split(includeParam, ",")
 		for i := range includes {
 			includes[i] = strings.TrimSpace(includes[i])
 		}
-		response = mapper.ToUserResponseWithIncludes(usr, includes)
+		response = mapper.ToUserResponseWithIncludes(usr, includes, completion)
 	}
 
 	return utils.SuccessResponse(c, "Profile retrieved successfully", response)

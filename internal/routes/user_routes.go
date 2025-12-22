@@ -56,6 +56,7 @@ func SetupUserRoutes(api fiber.Router, deps *Dependencies, authMw *middleware.Au
 		}),
 		deps.UserDocumentHandler.UploadDocument,
 	)
+	users.Delete("/me/documents/:id", deps.UserDocumentHandler.DeleteDocument)
 
 	// Misc routes - certifications, languages, projects (UserMiscHandler)
 	users.Get("/me/certifications", deps.UserMiscHandler.GetCertifications)

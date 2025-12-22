@@ -1,6 +1,9 @@
 package userhandler
 
 import (
+	"strings"
+	"time"
+
 	"keerja-backend/internal/domain/user"
 	"keerja-backend/internal/dto/mapper"
 	"keerja-backend/internal/handler/http/common"
@@ -76,4 +79,29 @@ func (h *UserDocumentHandler) UploadDocument(c *fiber.Ctx) error {
 	}
 
 	return utils.CreatedResponse(c, "Document uploaded successfully", document)
+}
+
+func (h *UserDocumentHandler) DeleteDocument(c *fiber.Ctx) error {
+	ctx := c.Context()
+	userID := middleware.GetUserID(c)
+
+	documentID, err := utils.ParseIDParam(c, "id")
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid document ID", "")
+	}
+
+	err = h.userService.DeleteDocument(ctx, userID, documentID)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found or unauthorized") {
+			return utils.ErrorResponse(c, fiber.StatusNotFound, "Document not found", "")
+		}
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to delete document", err.Error())
+	}
+
+	response := map[string]interface{}{
+		"id":        documentID,
+		"deleted_at": time.Now().Format(time.RFC3339),
+	}
+
+	return utils.SuccessResponse(c, "Document deleted successfully", response)
 }
