@@ -180,41 +180,52 @@ jobs:
           EOF
 
       - name: Start infrastructure services
+        env:
+          POSTGRES_PW: ${{ secrets.POSTGRES_PASSWORD }}
+          REDIS_PW: ${{ secrets.REDIS_PASSWORD }}
+          STAGING_DB_PW: ${{ secrets.STAGING_DB_PASSWORD }}
+          DEMO_DB_PW: ${{ secrets.DEMO_DB_PASSWORD }}
+          SHORT_SHA: ${{ steps.deploy-info.outputs.short_sha }}
+          DEPLOY_TIME: ${{ steps.deploy-info.outputs.timestamp }}
+          COMMIT_SHA: ${{ github.sha }}
+          COMPOSE: ${{ env.COMPOSE_FILE }}
+          DEPLOY: ${{ env.DEPLOY_PATH }}
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
-            cd ${{ env.DEPLOY_PATH }}
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} bash << ENDSSH
+            cd ${DEPLOY}
             
-            # Export required environment variables
-            export POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}"
-            export REDIS_PASSWORD="${{ secrets.REDIS_PASSWORD }}"
-            export STAGING_DB_PASSWORD="${{ secrets.STAGING_DB_PASSWORD }}"
-            export STAGING_DB_USER="bekerja"
+            # Create .env file for docker-compose
+            cat > .env <<ENVFILE
+            POSTGRES_PASSWORD=${POSTGRES_PW}
+            REDIS_PASSWORD=${REDIS_PW}
+            STAGING_DB_PASSWORD=${STAGING_DB_PW}
+            STAGING_DB_USER=bekerja
+            DEMO_DB_PASSWORD=${DEMO_DB_PW}
+            DEMO_DB_USER=bekerja
+            APP_VERSION=${SHORT_SHA}
+            BUILD_TIME=${DEPLOY_TIME}
+            GIT_COMMIT=${COMMIT_SHA}
+            ENVFILE
+            # Trim leading spaces from heredoc content
+            sed -i 's/^ *//' .env
             
-            # Start PostgreSQL and Redis if not running
-            docker-compose -f ${{ env.COMPOSE_FILE }} up -d postgres redis
+            chmod 600 .env
+            echo "✓ Created .env file"
             
-            # Wait for PostgreSQL to be ready
-            echo "Waiting for PostgreSQL to be ready..."
+            # Start infrastructure
+            docker-compose -f ${COMPOSE} up -d postgres redis
+            
+            echo "Waiting for PostgreSQL..."
             sleep 10
             
-            # Check PostgreSQL health
-            docker-compose -f ${{ env.COMPOSE_FILE }} exec -T postgres pg_isready -U postgres || {
-              echo "PostgreSQL is not ready, waiting more..."
-              sleep 20
-            }
-          EOF
+            docker-compose -f ${COMPOSE} exec -T postgres pg_isready -U postgres || sleep 20
+          ENDSSH
 
       - name: Run database migrations
         if: ${{ github.event.inputs.skip_migrations != 'true' }}
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
             cd ${{ env.DEPLOY_PATH }}
-            
-            # Export required environment variables
-            export POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}"
-            export REDIS_PASSWORD="${{ secrets.REDIS_PASSWORD }}"
-            export STAGING_DB_PASSWORD="${{ secrets.STAGING_DB_PASSWORD }}"
-            export STAGING_DB_USER="bekerja"
             
             echo "Running migrations for STAGING..."
             docker-compose -f ${{ env.COMPOSE_FILE }} --profile migrate-staging up --build
@@ -226,15 +237,6 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
             cd ${{ env.DEPLOY_PATH }}
-            
-            # Export required environment variables
-            export POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}"
-            export REDIS_PASSWORD="${{ secrets.REDIS_PASSWORD }}"
-            export STAGING_DB_PASSWORD="${{ secrets.STAGING_DB_PASSWORD }}"
-            export STAGING_DB_USER="bekerja"
-            export APP_VERSION="${{ steps.deploy-info.outputs.short_sha }}"
-            export BUILD_TIME="${{ steps.deploy-info.outputs.timestamp }}"
-            export GIT_COMMIT="${{ github.sha }}"
             
             # Build new image
             echo "Building STAGING image..."
