@@ -255,22 +255,28 @@ jobs:
 
       - name: Health check
         run: |
-          echo "Waiting for service to start..."
-          sleep 30
-          
-          # Check health endpoint
-          for i in {1..5}; do
-            response=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.VPS_HOST }}:8080/health/live || echo "000")
-            if [ "$response" = "200" ]; then
-              echo "✅ Health check passed!"
-              exit 0
-            fi
-            echo "Attempt $i: HTTP $response - waiting..."
-            sleep 10
-          done
-          
-          echo "❌ Health check failed after 5 attempts"
-          exit 1
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} bash <<'ENDSSH'
+            cd /opt/keerja
+            echo "Waiting for service to start..."
+            sleep 30
+
+            for i in {1..10}; do
+              code_local=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8080/health/live || echo "000")
+              code_nginx=$(curl -s -o /dev/null -w "%{http_code}" http://staging-api.145.79.8.227.nip.io/health/live || echo "000")
+
+              if [ "$code_local" = "200" ] || [ "$code_nginx" = "200" ]; then
+                echo "✅ Health check passed (local=$code_local, nginx=$code_nginx)"
+                exit 0
+              fi
+
+              echo "Attempt $i: local=$code_local nginx=$code_nginx - waiting..."
+              sleep 15
+            done
+
+            echo "❌ Health check failed after 10 attempts. Showing last logs:"
+            docker compose -f docker-compose.vps.yml logs --tail=80 api-staging || true
+            exit 1
+          ENDSSH
 
       - name: Deployment summary
         if: success()
