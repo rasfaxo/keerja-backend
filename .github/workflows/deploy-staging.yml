@@ -92,7 +92,7 @@ jobs:
           retention-days: 1
 
   # ==========================================
-  # Job 2: Deploy to STAGING
+  # Job 2: Deploy to STAGING 
   # ==========================================
   deploy:
     name: Deploy to STAGING
@@ -144,14 +144,9 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
             cd ${{ env.DEPLOY_PATH }}
-            
-            # Create .env.staging if it doesn't exist
             if [ ! -f .env.staging ]; then
               cp .env.staging.example .env.staging
-              echo "Created .env.staging from example - please update with real values!"
             fi
-            
-            # Update dynamic values
             sed -i "s/APP_VERSION=.*/APP_VERSION=${{ steps.deploy-info.outputs.short_sha }}/" .env.staging
           EOF
 
@@ -159,21 +154,16 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF
             cd ${{ env.DEPLOY_PATH }}
-            
-            # Update secrets in .env.staging (if secrets are provided)
             if [ -n "${{ secrets.STAGING_DB_PASSWORD }}" ]; then
               sed -i "s/STAGING_DB_PASSWORD=.*/STAGING_DB_PASSWORD=${{ secrets.STAGING_DB_PASSWORD }}/" .env.staging
               sed -i "s/DB_PASSWORD=.*/DB_PASSWORD=${{ secrets.STAGING_DB_PASSWORD }}/" .env.staging
             fi
-            
             if [ -n "${{ secrets.REDIS_PASSWORD }}" ]; then
               sed -i "s/REDIS_PASSWORD=.*/REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}/" .env.staging
             fi
-            
             if [ -n "${{ secrets.POSTGRES_PASSWORD }}" ]; then
               sed -i "s/POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}/" .env.staging
             fi
-            
             if [ -n "${{ secrets.JWT_SECRET_STAGING }}" ]; then
               sed -i "s/JWT_SECRET=.*/JWT_SECRET=${{ secrets.JWT_SECRET_STAGING }}/" .env.staging
             fi
@@ -192,31 +182,31 @@ jobs:
           DEPLOY: ${{ env.DEPLOY_PATH }}
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} bash << ENDSSH
-            set -e  
+            set -e
             cd ${DEPLOY}
             
-            # Create .env file for docker-compose
-            cat > .env <<ENVFILE
-            POSTGRES_PASSWORD=${POSTGRES_PW}
-            REDIS_PASSWORD=${REDIS_PW}
-            STAGING_DB_PASSWORD=${STAGING_DB_PW}
-            STAGING_DB_USER=bekerja
-            DEMO_DB_PASSWORD=${DEMO_DB_PW}
-            DEMO_DB_USER=bekerja
-            APP_VERSION=${SHORT_SHA}
-            BUILD_TIME=${DEPLOY_TIME}
-            GIT_COMMIT=${COMMIT_SHA}
-            ENVFILE
+            # Hapus file .env lama dan buat baru (METODE ECHO)
+            rm -f .env
+            touch .env
+            
+            echo "POSTGRES_PASSWORD=${POSTGRES_PW}" >> .env
+            echo "REDIS_PASSWORD=${REDIS_PW}" >> .env
+            echo "STAGING_DB_PASSWORD=${STAGING_DB_PW}" >> .env
+            echo "STAGING_DB_USER=bekerja" >> .env
+            echo "DEMO_DB_PASSWORD=${DEMO_DB_PW}" >> .env
+            echo "DEMO_DB_USER=bekerja" >> .env
+            echo "APP_VERSION=${SHORT_SHA}" >> .env
+            echo "BUILD_TIME=${DEPLOY_TIME}" >> .env
+            echo "GIT_COMMIT=${COMMIT_SHA}" >> .env
             
             chmod 600 .env
-            echo "✓ Created .env file"
+            echo "✓ Created .env file cleanly"
             
-            # Start infrastructure
+            # Start infrastructure (Gunakan docker compose v2)
             docker compose -f ${COMPOSE} up -d postgres redis
             
             echo "Waiting for PostgreSQL..."
             sleep 10
-            
             docker compose -f ${COMPOSE} exec -T postgres pg_isready -U postgres || sleep 20
           ENDSSH
 
@@ -224,34 +214,28 @@ jobs:
         if: ${{ github.event.inputs.skip_migrations != 'true' }}
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
-            set -e  
+            set -e
             cd ${{ env.DEPLOY_PATH }}
-            
             echo "Running migrations for STAGING..."
             docker compose -f ${{ env.COMPOSE_FILE }} --profile migrate-staging up --build
-            
             echo "Migrations completed"
           EOF
 
       - name: Build and deploy STAGING
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
-            set -e  
+            set -e
             cd ${{ env.DEPLOY_PATH }}
             
-            # Build new image
             echo "Building STAGING image..."
             docker compose -f ${{ env.COMPOSE_FILE }} build api-staging
             
-            # Stop old container gracefully
             echo "Stopping old container..."
             docker compose -f ${{ env.COMPOSE_FILE }} --profile staging stop api-staging || true
             
-            # Start new container
             echo "Starting new container..."
             docker compose -f ${{ env.COMPOSE_FILE }} --profile staging up -d api-staging
             
-            # Clean up old images
             echo "Cleaning up old images..."
             docker image prune -f
           EOF
@@ -265,19 +249,18 @@ jobs:
 
             for i in {1..10}; do
               code_local=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8080/health/live || echo "000")
-              code_nginx=$(curl -s -o /dev/null -w "%{http_code}" http://staging-api.145.79.8.227.nip.io/health/live || echo "000")
-
-              if [ "$code_local" = "200" ] || [ "$code_nginx" = "200" ]; then
-                echo "✅ Health check passed (local=$code_local, nginx=$code_nginx)"
+              
+              if [ "$code_local" = "200" ]; then
+                echo "✅ Health check passed (local=$code_local)"
                 exit 0
               fi
 
-              echo "Attempt $i: local=$code_local nginx=$code_nginx - waiting..."
+              echo "Attempt $i: local=$code_local - waiting..."
               sleep 15
             done
 
-            echo "❌ Health check failed after 10 attempts. Showing last logs:"
-            docker compose -f docker-compose.vps.yml logs --tail=80 api-staging || true
+            echo "❌ Health check failed. Showing logs:"
+            docker compose -f docker-compose.vps.yml logs --tail=50 api-staging || true
             exit 1
           ENDSSH
 
