@@ -192,6 +192,7 @@ jobs:
           DEPLOY: ${{ env.DEPLOY_PATH }}
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} bash << ENDSSH
+            set -e  
             cd ${DEPLOY}
             
             # Create .env file for docker-compose
@@ -211,22 +212,23 @@ jobs:
             echo "✓ Created .env file"
             
             # Start infrastructure
-            docker-compose -f ${COMPOSE} up -d postgres redis
+            docker compose -f ${COMPOSE} up -d postgres redis
             
             echo "Waiting for PostgreSQL..."
             sleep 10
             
-            docker-compose -f ${COMPOSE} exec -T postgres pg_isready -U postgres || sleep 20
+            docker compose -f ${COMPOSE} exec -T postgres pg_isready -U postgres || sleep 20
           ENDSSH
 
       - name: Run database migrations
         if: ${{ github.event.inputs.skip_migrations != 'true' }}
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+            set -e  
             cd ${{ env.DEPLOY_PATH }}
             
             echo "Running migrations for STAGING..."
-            docker-compose -f ${{ env.COMPOSE_FILE }} --profile migrate-staging up --build
+            docker compose -f ${{ env.COMPOSE_FILE }} --profile migrate-staging up --build
             
             echo "Migrations completed"
           EOF
@@ -234,19 +236,20 @@ jobs:
       - name: Build and deploy STAGING
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+            set -e  
             cd ${{ env.DEPLOY_PATH }}
             
             # Build new image
             echo "Building STAGING image..."
-            docker-compose -f ${{ env.COMPOSE_FILE }} build api-staging
+            docker compose -f ${{ env.COMPOSE_FILE }} build api-staging
             
             # Stop old container gracefully
             echo "Stopping old container..."
-            docker-compose -f ${{ env.COMPOSE_FILE }} --profile staging stop api-staging || true
+            docker compose -f ${{ env.COMPOSE_FILE }} --profile staging stop api-staging || true
             
             # Start new container
             echo "Starting new container..."
-            docker-compose -f ${{ env.COMPOSE_FILE }} --profile staging up -d api-staging
+            docker compose -f ${{ env.COMPOSE_FILE }} --profile staging up -d api-staging
             
             # Clean up old images
             echo "Cleaning up old images..."
