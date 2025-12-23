@@ -206,8 +206,6 @@ jobs:
             BUILD_TIME=${DEPLOY_TIME}
             GIT_COMMIT=${COMMIT_SHA}
             ENVFILE
-            # Trim leading spaces from heredoc content
-            sed -i 's/^ *//' .env
             
             chmod 600 .env
             echo "✓ Created .env file"
