@@ -178,6 +178,7 @@ jobs:
           SHORT_SHA: ${{ steps.deploy-info.outputs.short_sha }}
           DEPLOY_TIME: ${{ steps.deploy-info.outputs.timestamp }}
           COMMIT_SHA: ${{ github.sha }}
+          FIREBASE_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
           COMPOSE: ${{ env.COMPOSE_FILE }}
           DEPLOY: ${{ env.DEPLOY_PATH }}
         run: |
@@ -185,7 +186,10 @@ jobs:
             set -e
             cd ${DEPLOY}
             
-            # Hapus file .env lama dan buat baru (METODE ECHO)
+            mkdir -p config
+            echo '$FIREBASE_JSON' > config/firebase-service-account.json
+
+            # config env file
             rm -f .env
             touch .env
             
@@ -199,8 +203,8 @@ jobs:
             echo "BUILD_TIME=${DEPLOY_TIME}" >> .env
             echo "GIT_COMMIT=${COMMIT_SHA}" >> .env
 
-            echo "FCM_ENABLED=false" >> .env
-            echo "FCM_CREDENTIALS_FILE=" >> .env
+            echo "FCM_ENABLED=true" >> .env
+            echo "FCM_CREDENTIALS_FILE=config/firebase-service-account.json" >> .env
             
             chmod 600 .env
             echo "✓ Created .env file cleanly"

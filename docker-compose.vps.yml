@@ -51,7 +51,6 @@
 services:
   # ==========================================
   # PostgreSQL Database (Shared)
-  # Contains both keerja_staging and keerja_demo databases
   # ==========================================
   postgres:
     image: postgres:17-alpine
@@ -62,7 +61,7 @@ services:
       POSTGRES_INITDB_ARGS: "-E UTF8 --locale=C"
       TZ: Asia/Jakarta
     ports:
-      - "127.0.0.1:5432:5432"  # Only accessible from localhost (security)
+      - "127.0.0.1:5432:5432"
     volumes:
       - vps_postgres_data:/var/lib/postgresql/data
       - ./scripts/vps-init-db.sh:/docker-entrypoint-initdb.d/00-init-databases.sh:ro
@@ -83,8 +82,7 @@ services:
           memory: 256M
 
   # ==========================================
-  # Redis Cache (Shared between environments)
-  # STAGING uses DB 0, DEMO uses DB 1
+  # Redis Cache (Shared)
   # ==========================================
   redis:
     image: redis:7-alpine
@@ -96,7 +94,7 @@ services:
       --maxmemory-policy allkeys-lru
       --requirepass ${REDIS_PASSWORD:-}
     ports:
-      - "127.0.0.1:6379:6379"  # Only accessible from localhost (security)
+      - "127.0.0.1:6379:6379"
     volumes:
       - vps_redis_data:/data
     networks:
@@ -116,8 +114,6 @@ services:
 
   # ==========================================
   # STAGING API Server
-  # Accessible at: http://staging-api.145.79.8.227.nip.io
-  # Internal port: 8080
   # ==========================================
   api-staging:
     build:
@@ -133,26 +129,22 @@ services:
     env_file:
       - .env.staging
     environment:
-      # Override database to use staging database
       DATABASE_URL: postgresql://${STAGING_DB_USER:-bekerja}:${STAGING_DB_PASSWORD}@postgres:5432/keerja_staging?sslmode=disable
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: keerja_staging
       DB_USER: ${STAGING_DB_USER:-bekerja}
       DB_PASSWORD: ${STAGING_DB_PASSWORD}
-      # Redis connection (DB 0 for staging)
       REDIS_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/0
       REDIS_HOST: redis
       REDIS_DB: 0
-      # Environment identifier
       APP_ENV: staging
       SERVER_PORT: 8080
-      # FCM credentials path (inside container)
       FCM_CREDENTIALS_FILE: /app/config/firebase-service-account.json
     ports:
-      - "127.0.0.1:8080:8080"  # Only accessible from localhost (nginx will proxy)
+      - "127.0.0.1:8080:8080"
     volumes:
-      - ./config:/app/config:ro
+      - ./config/firebase-service-account.json:/app/config/firebase-service-account.json
       - ./logs:/app/logs
       - ./uploads:/app/uploads
     depends_on:
@@ -186,8 +178,6 @@ services:
 
   # ==========================================
   # DEMO API Server
-  # Accessible at: http://demo-api.145.79.8.227.nip.io
-  # Internal port: 8081 (mapped from container's 8080)
   # ==========================================
   api-demo:
     build:
@@ -203,26 +193,22 @@ services:
     env_file:
       - .env.demo
     environment:
-      # Override database to use demo database
       DATABASE_URL: postgresql://${DEMO_DB_USER:-bekerja}:${DEMO_DB_PASSWORD:-changeme}@postgres:5432/keerja_demo?sslmode=disable
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: keerja_demo
       DB_USER: ${DEMO_DB_USER:-bekerja}
       DB_PASSWORD: ${DEMO_DB_PASSWORD:-changeme}
-      # Redis connection (DB 1 for demo - isolated from staging)
       REDIS_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/1
       REDIS_HOST: redis
       REDIS_DB: 1
-      # Environment identifier
       APP_ENV: production
       SERVER_PORT: 8080
-      # FCM credentials path (inside container)
       FCM_CREDENTIALS_FILE: /app/config/firebase-service-account.json
     ports:
-      - "127.0.0.1:8081:8080"  # Map to 8081 externally, but app runs on 8080 internally
+      - "127.0.0.1:8081:8080"
     volumes:
-      - ./config:/app/config:ro
+      - ./config/firebase-service-account.json:/app/config/firebase-service-account.json
       - ./logs:/app/logs
       - ./uploads:/app/uploads
     depends_on:
@@ -256,8 +242,6 @@ services:
 
   # ==========================================
   # Database Migration Runner (STAGING)
-  # One-shot container for running migrations
-  # Usage: docker-compose -f docker-compose.vps.yml --profile migrate-staging up
   # ==========================================
   migrate-staging:
     build:
@@ -277,7 +261,7 @@ services:
       DB_PASSWORD: ${STAGING_DB_PASSWORD}
       FCM_CREDENTIALS_FILE: /app/config/firebase-service-account.json
     volumes:
-      - ./config:/app/config:ro
+      - ./config/firebase-service-account.json:/app/config/firebase-service-account.json
     command: ["./main", "migrate"]
     depends_on:
       postgres:
@@ -290,8 +274,6 @@ services:
 
   # ==========================================
   # Database Migration Runner (DEMO)
-  # One-shot container for running migrations
-  # Usage: docker-compose -f docker-compose.vps.yml --profile migrate-demo up
   # ==========================================
   migrate-demo:
     build:
@@ -311,7 +293,7 @@ services:
       DB_PASSWORD: ${DEMO_DB_PASSWORD:-changeme}
       FCM_CREDENTIALS_FILE: /app/config/firebase-service-account.json
     volumes:
-      - ./config:/app/config:ro
+      - ./config/firebase-service-account.json:/app/config/firebase-service-account.json
     command: ["./main", "migrate"]
     depends_on:
       postgres:
@@ -324,8 +306,6 @@ services:
 
   # ==========================================
   # Database Seeder (STAGING)
-  # One-shot container for seeding data
-  # Usage: docker-compose -f docker-compose.vps.yml --profile seed-staging up
   # ==========================================
   seed-staging:
     build:
@@ -345,7 +325,7 @@ services:
       DB_PASSWORD: ${STAGING_DB_PASSWORD}
       FCM_CREDENTIALS_FILE: /app/config/firebase-service-account.json
     volumes:
-      - ./config:/app/config:ro
+      - ./config/firebase-service-account.json:/app/config/firebase-service-account.json
     command: ["./main", "seed"]
     depends_on:
       postgres:
@@ -358,8 +338,6 @@ services:
 
   # ==========================================
   # Database Seeder (DEMO)
-  # One-shot container for seeding data
-  # Usage: docker-compose -f docker-compose.vps.yml --profile seed-demo up
   # ==========================================
   seed-demo:
     build:
@@ -379,7 +357,7 @@ services:
       DB_PASSWORD: ${DEMO_DB_PASSWORD:-changeme}
       FCM_CREDENTIALS_FILE: /app/config/firebase-service-account.json
     volumes:
-      - ./config:/app/config:ro
+      - ./config/firebase-service-account.json:/app/config/firebase-service-account.json
     command: ["./main", "seed"]
     depends_on:
       postgres:
@@ -400,7 +378,6 @@ networks:
 
 # ==========================================
 # Volumes
-# Named volumes for data persistence
 # ==========================================
 volumes:
   vps_postgres_data:
