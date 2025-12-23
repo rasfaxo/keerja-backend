@@ -147,8 +147,14 @@ services:
       # Environment identifier
       APP_ENV: staging
       SERVER_PORT: 8080
+      # FCM credentials path (inside container)
+      FCM_CREDENTIALS_FILE: /app/config/firebase-service-account.json
     ports:
       - "127.0.0.1:8080:8080"  # Only accessible from localhost (nginx will proxy)
+    volumes:
+      - ./config:/app/config:ro
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -198,12 +204,12 @@ services:
       - .env.demo
     environment:
       # Override database to use demo database
-      DATABASE_URL: postgresql://${DEMO_DB_USER:-bekerja}:${DEMO_DB_PASSWORD}@postgres:5432/keerja_demo?sslmode=disable
+      DATABASE_URL: postgresql://${DEMO_DB_USER:-bekerja}:${DEMO_DB_PASSWORD:-changeme}@postgres:5432/keerja_demo?sslmode=disable
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: keerja_demo
       DB_USER: ${DEMO_DB_USER:-bekerja}
-      DB_PASSWORD: ${DEMO_DB_PASSWORD}
+      DB_PASSWORD: ${DEMO_DB_PASSWORD:-changeme}
       # Redis connection (DB 1 for demo - isolated from staging)
       REDIS_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/1
       REDIS_HOST: redis
@@ -211,8 +217,14 @@ services:
       # Environment identifier
       APP_ENV: production
       SERVER_PORT: 8080
+      # FCM credentials path (inside container)
+      FCM_CREDENTIALS_FILE: /app/config/firebase-service-account.json
     ports:
       - "127.0.0.1:8081:8080"  # Map to 8081 externally, but app runs on 8080 internally
+    volumes:
+      - ./config:/app/config:ro
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -263,6 +275,9 @@ services:
       DB_NAME: keerja_staging
       DB_USER: ${STAGING_DB_USER:-bekerja}
       DB_PASSWORD: ${STAGING_DB_PASSWORD}
+      FCM_CREDENTIALS_FILE: /app/config/firebase-service-account.json
+    volumes:
+      - ./config:/app/config:ro
     command: ["./main", "migrate"]
     depends_on:
       postgres:
@@ -288,12 +303,15 @@ services:
     env_file:
       - .env.demo
     environment:
-      DATABASE_URL: postgresql://${DEMO_DB_USER:-bekerja}:${DEMO_DB_PASSWORD}@postgres:5432/keerja_demo?sslmode=disable
+      DATABASE_URL: postgresql://${DEMO_DB_USER:-bekerja}:${DEMO_DB_PASSWORD:-changeme}@postgres:5432/keerja_demo?sslmode=disable
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: keerja_demo
       DB_USER: ${DEMO_DB_USER:-bekerja}
-      DB_PASSWORD: ${DEMO_DB_PASSWORD}
+      DB_PASSWORD: ${DEMO_DB_PASSWORD:-changeme}
+      FCM_CREDENTIALS_FILE: /app/config/firebase-service-account.json
+    volumes:
+      - ./config:/app/config:ro
     command: ["./main", "migrate"]
     depends_on:
       postgres:
@@ -323,6 +341,11 @@ services:
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: keerja_staging
+      DB_USER: ${STAGING_DB_USER:-bekerja}
+      DB_PASSWORD: ${STAGING_DB_PASSWORD}
+      FCM_CREDENTIALS_FILE: /app/config/firebase-service-account.json
+    volumes:
+      - ./config:/app/config:ro
     command: ["./main", "seed"]
     depends_on:
       postgres:
@@ -348,10 +371,15 @@ services:
     env_file:
       - .env.demo
     environment:
-      DATABASE_URL: postgresql://${DEMO_DB_USER:-bekerja}:${DEMO_DB_PASSWORD}@postgres:5432/keerja_demo?sslmode=disable
+      DATABASE_URL: postgresql://${DEMO_DB_USER:-bekerja}:${DEMO_DB_PASSWORD:-changeme}@postgres:5432/keerja_demo?sslmode=disable
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: keerja_demo
+      DB_USER: ${DEMO_DB_USER:-bekerja}
+      DB_PASSWORD: ${DEMO_DB_PASSWORD:-changeme}
+      FCM_CREDENTIALS_FILE: /app/config/firebase-service-account.json
+    volumes:
+      - ./config:/app/config:ro
     command: ["./main", "seed"]
     depends_on:
       postgres:

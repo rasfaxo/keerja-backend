@@ -108,7 +108,7 @@ echo "Step 2: Creating application user..."
 echo "--------------------------------------------"
 # Use environment variables or defaults
 APP_USER="${DB_APP_USER:-bekerja}"
-APP_PASSWORD="${DB_APP_PASSWORD:-bekerja_pass}"
+APP_PASSWORD="${DB_APP_PASSWORD:-KeerjaStaging2025!}"
 create_app_user "$APP_USER" "$APP_PASSWORD"
 
 echo ""
