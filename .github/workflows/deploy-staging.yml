@@ -198,6 +198,9 @@ jobs:
             echo "APP_VERSION=${SHORT_SHA}" >> .env
             echo "BUILD_TIME=${DEPLOY_TIME}" >> .env
             echo "GIT_COMMIT=${COMMIT_SHA}" >> .env
+
+            echo "FCM_ENABLED=false" >> .env
+            echo "FCM_CREDENTIALS_FILE=" >> .env
             
             chmod 600 .env
             echo "✓ Created .env file cleanly"
