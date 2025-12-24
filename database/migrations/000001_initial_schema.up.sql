@@ -82,7 +82,7 @@ CREATE SEQUENCE public.admin_roles_id_seq
 
 
 --
--- Name: admin_roles_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.admin_roles_id_seq1
@@ -94,14 +94,14 @@ CREATE SEQUENCE public.admin_roles_id_seq1
 
 
 --
--- Name: admin_roles_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.admin_roles_id_seq1 OWNED BY public.admin_roles.id;
 
 
 --
--- Name: admin_users; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.admin_users (
@@ -125,7 +125,7 @@ CREATE TABLE public.admin_users (
 
 
 --
--- Name: admin_users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.admin_users_id_seq
@@ -137,7 +137,7 @@ CREATE SEQUENCE public.admin_users_id_seq
 
 
 --
--- Name: admin_users_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.admin_users_id_seq1
@@ -149,14 +149,14 @@ CREATE SEQUENCE public.admin_users_id_seq1
 
 
 --
--- Name: admin_users_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.admin_users_id_seq1 OWNED BY public.admin_users.id;
 
 
 --
--- Name: application_documents; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.application_documents (
@@ -180,7 +180,7 @@ CREATE TABLE public.application_documents (
 
 
 --
--- Name: application_documents_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.application_documents_id_seq
@@ -192,7 +192,7 @@ CREATE SEQUENCE public.application_documents_id_seq
 
 
 --
--- Name: application_documents_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.application_documents_id_seq1
@@ -204,14 +204,14 @@ CREATE SEQUENCE public.application_documents_id_seq1
 
 
 --
--- Name: application_documents_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.application_documents_id_seq1 OWNED BY public.application_documents.id;
 
 
 --
--- Name: application_notes; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.application_notes (
@@ -233,7 +233,7 @@ CREATE TABLE public.application_notes (
 
 
 --
--- Name: application_notes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.application_notes_id_seq
@@ -245,7 +245,7 @@ CREATE SEQUENCE public.application_notes_id_seq
 
 
 --
--- Name: application_notes_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.application_notes_id_seq1
@@ -257,14 +257,14 @@ CREATE SEQUENCE public.application_notes_id_seq1
 
 
 --
--- Name: application_notes_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.application_notes_id_seq1 OWNED BY public.application_notes.id;
 
 
 --
--- Name: benefits_master; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.benefits_master (
@@ -283,7 +283,7 @@ CREATE TABLE public.benefits_master (
 
 
 --
--- Name: benefits_master_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.benefits_master_id_seq
@@ -295,7 +295,7 @@ CREATE SEQUENCE public.benefits_master_id_seq
 
 
 --
--- Name: benefits_master_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.benefits_master_id_seq1
@@ -307,14 +307,14 @@ CREATE SEQUENCE public.benefits_master_id_seq1
 
 
 --
--- Name: benefits_master_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.benefits_master_id_seq1 OWNED BY public.benefits_master.id;
 
 
 --
--- Name: cities; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.cities (
@@ -331,28 +331,28 @@ CREATE TABLE public.cities (
 
 
 --
--- Name: TABLE cities; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON TABLE public.cities IS 'Master data for Indonesian cities and regencies';
 
 
 --
--- Name: COLUMN cities.type; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.cities.type IS 'City type: "Kota" (city) or "Kabupaten" (regency)';
 
 
 --
--- Name: COLUMN cities.code; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.cities.code IS 'City code from BPS (Badan Pusat Statistik)';
 
 
 --
--- Name: cities_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.cities_id_seq
@@ -364,14 +364,14 @@ CREATE SEQUENCE public.cities_id_seq
 
 
 --
--- Name: cities_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.cities_id_seq OWNED BY public.cities.id;
 
 
 --
--- Name: companies; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.companies (
@@ -423,91 +423,91 @@ CREATE TABLE public.companies (
 
 
 --
--- Name: COLUMN companies.industry_id; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.companies.industry_id IS 'Foreign key to industries master table';
 
 
 --
--- Name: COLUMN companies.company_size_id; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.companies.company_size_id IS 'Foreign key to company_sizes master table';
 
 
 --
--- Name: COLUMN companies.district_id; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.companies.district_id IS 'Foreign key to districts master table (replaces old city/province fields)';
 
 
 --
--- Name: COLUMN companies.full_address; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.companies.full_address IS 'Complete office address (replaces old address field for new entries)';
 
 
 --
--- Name: COLUMN companies.description; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.companies.description IS 'Company description (replaces old about field for new entries)';
 
 
 --
--- Name: COLUMN companies.province_id; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.companies.province_id IS 'Foreign key to provinces master table (derived from district)';
 
 
 --
--- Name: COLUMN companies.city_id; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.companies.city_id IS 'Foreign key to cities master table (derived from district)';
 
 
 --
--- Name: COLUMN companies.instagram_url; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.companies.instagram_url IS 'Instagram profile URL';
 
 
 --
--- Name: COLUMN companies.facebook_url; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.companies.facebook_url IS 'Facebook page URL';
 
 
 --
--- Name: COLUMN companies.linkedin_url; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.companies.linkedin_url IS 'LinkedIn company page URL';
 
 
 --
--- Name: COLUMN companies.twitter_url; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.companies.twitter_url IS 'Twitter profile URL';
 
 
 --
--- Name: COLUMN companies.short_description; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.companies.short_description IS 'Short description (Singkat) - brief company overview';
 
 
 --
--- Name: companies_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.companies_id_seq
@@ -519,7 +519,7 @@ CREATE SEQUENCE public.companies_id_seq
 
 
 --
--- Name: companies_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.companies_id_seq1
@@ -531,14 +531,14 @@ CREATE SEQUENCE public.companies_id_seq1
 
 
 --
--- Name: companies_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.companies_id_seq1 OWNED BY public.companies.id;
 
 
 --
--- Name: company_addresses; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.company_addresses (
@@ -557,7 +557,7 @@ CREATE TABLE public.company_addresses (
 
 
 --
--- Name: company_addresses_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.company_addresses_id_seq
@@ -569,14 +569,14 @@ CREATE SEQUENCE public.company_addresses_id_seq
 
 
 --
--- Name: company_addresses_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.company_addresses_id_seq OWNED BY public.company_addresses.id;
 
 
 --
--- Name: company_documents; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.company_documents (
@@ -602,7 +602,7 @@ CREATE TABLE public.company_documents (
 
 
 --
--- Name: company_documents_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.company_documents_id_seq
@@ -614,7 +614,7 @@ CREATE SEQUENCE public.company_documents_id_seq
 
 
 --
--- Name: company_documents_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.company_documents_id_seq1
@@ -626,14 +626,14 @@ CREATE SEQUENCE public.company_documents_id_seq1
 
 
 --
--- Name: company_documents_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.company_documents_id_seq1 OWNED BY public.company_documents.id;
 
 
 --
--- Name: company_employees; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.company_employees (
@@ -663,7 +663,7 @@ CREATE TABLE public.company_employees (
 
 
 --
--- Name: company_employees_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.company_employees_id_seq
@@ -675,7 +675,7 @@ CREATE SEQUENCE public.company_employees_id_seq
 
 
 --
--- Name: company_employees_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.company_employees_id_seq1
@@ -687,14 +687,14 @@ CREATE SEQUENCE public.company_employees_id_seq1
 
 
 --
--- Name: company_employees_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.company_employees_id_seq1 OWNED BY public.company_employees.id;
 
 
 --
--- Name: company_followers; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.company_followers (
@@ -710,7 +710,7 @@ CREATE TABLE public.company_followers (
 
 
 --
--- Name: company_followers_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.company_followers_id_seq
@@ -722,7 +722,7 @@ CREATE SEQUENCE public.company_followers_id_seq
 
 
 --
--- Name: company_followers_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.company_followers_id_seq1
@@ -734,14 +734,14 @@ CREATE SEQUENCE public.company_followers_id_seq1
 
 
 --
--- Name: company_followers_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.company_followers_id_seq1 OWNED BY public.company_followers.id;
 
 
 --
--- Name: company_industries; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.company_industries (
@@ -757,7 +757,7 @@ CREATE TABLE public.company_industries (
 
 
 --
--- Name: company_industries_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.company_industries_id_seq
@@ -769,7 +769,7 @@ CREATE SEQUENCE public.company_industries_id_seq
 
 
 --
--- Name: company_industries_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.company_industries_id_seq1
@@ -781,14 +781,14 @@ CREATE SEQUENCE public.company_industries_id_seq1
 
 
 --
--- Name: company_industries_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.company_industries_id_seq1 OWNED BY public.company_industries.id;
 
 
 --
--- Name: company_invitations; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.company_invitations (
@@ -812,35 +812,35 @@ CREATE TABLE public.company_invitations (
 
 
 --
--- Name: TABLE company_invitations; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON TABLE public.company_invitations IS 'Stores company employee invitation records with token-based acceptance system';
 
 
 --
--- Name: COLUMN company_invitations.token; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.company_invitations.token IS 'Unique invitation token valid for 7 days';
 
 
 --
--- Name: COLUMN company_invitations.status; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.company_invitations.status IS 'Invitation status: pending, accepted, rejected, or expired';
 
 
 --
--- Name: COLUMN company_invitations.expires_at; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.company_invitations.expires_at IS 'Token expiration timestamp (7 days from creation)';
 
 
 --
--- Name: company_invitations_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.company_invitations_id_seq
@@ -852,14 +852,14 @@ CREATE SEQUENCE public.company_invitations_id_seq
 
 
 --
--- Name: company_invitations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.company_invitations_id_seq OWNED BY public.company_invitations.id;
 
 
 --
--- Name: company_profiles; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.company_profiles (
@@ -892,7 +892,7 @@ CREATE TABLE public.company_profiles (
 
 
 --
--- Name: company_profiles_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.company_profiles_id_seq
@@ -904,7 +904,7 @@ CREATE SEQUENCE public.company_profiles_id_seq
 
 
 --
--- Name: company_profiles_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.company_profiles_id_seq1
@@ -916,14 +916,14 @@ CREATE SEQUENCE public.company_profiles_id_seq1
 
 
 --
--- Name: company_profiles_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.company_profiles_id_seq1 OWNED BY public.company_profiles.id;
 
 
 --
--- Name: company_reviews; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.company_reviews (
@@ -955,7 +955,7 @@ CREATE TABLE public.company_reviews (
 
 
 --
--- Name: company_reviews_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.company_reviews_id_seq
@@ -967,7 +967,7 @@ CREATE SEQUENCE public.company_reviews_id_seq
 
 
 --
--- Name: company_reviews_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.company_reviews_id_seq1
@@ -979,14 +979,14 @@ CREATE SEQUENCE public.company_reviews_id_seq1
 
 
 --
--- Name: company_reviews_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.company_reviews_id_seq1 OWNED BY public.company_reviews.id;
 
 
 --
--- Name: company_sizes; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.company_sizes (
@@ -1003,35 +1003,35 @@ CREATE TABLE public.company_sizes (
 
 
 --
--- Name: TABLE company_sizes; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON TABLE public.company_sizes IS 'Master data for company size categories';
 
 
 --
--- Name: COLUMN company_sizes.label; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.company_sizes.label IS 'Display label (e.g., "1 - 10 karyawan")';
 
 
 --
--- Name: COLUMN company_sizes.min_employees; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.company_sizes.min_employees IS 'Minimum number of employees in this range';
 
 
 --
--- Name: COLUMN company_sizes.max_employees; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.company_sizes.max_employees IS 'Maximum number of employees (NULL for unlimited)';
 
 
 --
--- Name: company_sizes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.company_sizes_id_seq
@@ -1043,14 +1043,14 @@ CREATE SEQUENCE public.company_sizes_id_seq
 
 
 --
--- Name: company_sizes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.company_sizes_id_seq OWNED BY public.company_sizes.id;
 
 
 --
--- Name: company_verifications; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.company_verifications (
@@ -1076,21 +1076,21 @@ CREATE TABLE public.company_verifications (
 
 
 --
--- Name: COLUMN company_verifications.npwp_number; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.company_verifications.npwp_number IS 'Nomor NPWP Perusahaan (Required for verification)';
 
 
 --
--- Name: COLUMN company_verifications.nib_number; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.company_verifications.nib_number IS 'Nomor Induk Berusaha 13 digit (Optional)';
 
 
 --
--- Name: company_verifications_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.company_verifications_id_seq
@@ -1102,7 +1102,7 @@ CREATE SEQUENCE public.company_verifications_id_seq
 
 
 --
--- Name: company_verifications_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.company_verifications_id_seq1
@@ -1114,14 +1114,14 @@ CREATE SEQUENCE public.company_verifications_id_seq1
 
 
 --
--- Name: company_verifications_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.company_verifications_id_seq1 OWNED BY public.company_verifications.id;
 
 
 --
--- Name: device_tokens; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.device_tokens (
@@ -1142,56 +1142,56 @@ CREATE TABLE public.device_tokens (
 
 
 --
--- Name: TABLE device_tokens; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON TABLE public.device_tokens IS 'Stores FCM device registration tokens for push notifications';
 
 
 --
--- Name: COLUMN device_tokens.token; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.device_tokens.token IS 'FCM registration token (max 4096 chars per Firebase docs)';
 
 
 --
--- Name: COLUMN device_tokens.platform; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.device_tokens.platform IS 'Device platform: android, ios, or web';
 
 
 --
--- Name: COLUMN device_tokens.device_info; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.device_tokens.device_info IS 'Device metadata stored as JSON (model, OS version, app version)';
 
 
 --
--- Name: COLUMN device_tokens.last_used_at; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.device_tokens.last_used_at IS 'Last time token was used to send a notification';
 
 
 --
--- Name: COLUMN device_tokens.failure_count; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.device_tokens.failure_count IS 'Number of consecutive failures (auto-deactivate after threshold)';
 
 
 --
--- Name: COLUMN device_tokens.failure_reason; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.device_tokens.failure_reason IS 'Reason for last failure (from FCM error response)';
 
 
 --
--- Name: device_tokens_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.device_tokens_id_seq
@@ -1203,14 +1203,14 @@ CREATE SEQUENCE public.device_tokens_id_seq
 
 
 --
--- Name: device_tokens_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.device_tokens_id_seq OWNED BY public.device_tokens.id;
 
 
 --
--- Name: districts; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.districts (
@@ -1227,28 +1227,28 @@ CREATE TABLE public.districts (
 
 
 --
--- Name: TABLE districts; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON TABLE public.districts IS 'Master data for Indonesian districts (Kecamatan)';
 
 
 --
--- Name: COLUMN districts.code; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.districts.code IS 'District code from BPS (Badan Pusat Statistik)';
 
 
 --
--- Name: COLUMN districts.postal_code; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.districts.postal_code IS 'Postal code for this district';
 
 
 --
--- Name: districts_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.districts_id_seq
@@ -1260,14 +1260,14 @@ CREATE SEQUENCE public.districts_id_seq
 
 
 --
--- Name: districts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.districts_id_seq OWNED BY public.districts.id;
 
 
 --
--- Name: education_levels; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.education_levels (
@@ -1283,14 +1283,14 @@ CREATE TABLE public.education_levels (
 
 
 --
--- Name: TABLE education_levels; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON TABLE public.education_levels IS 'Master data for education levels (SMA, D3, S1, S2, S3)';
 
 
 --
--- Name: education_levels_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.education_levels_id_seq
@@ -1302,14 +1302,14 @@ CREATE SEQUENCE public.education_levels_id_seq
 
 
 --
--- Name: education_levels_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.education_levels_id_seq OWNED BY public.education_levels.id;
 
 
 --
--- Name: email_logs; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.email_logs (
@@ -1331,14 +1331,14 @@ CREATE TABLE public.email_logs (
 
 
 --
--- Name: TABLE email_logs; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON TABLE public.email_logs IS 'Logs of all emails sent by the system';
 
 
 --
--- Name: email_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.email_logs_id_seq
@@ -1350,14 +1350,14 @@ CREATE SEQUENCE public.email_logs_id_seq
 
 
 --
--- Name: email_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.email_logs_id_seq OWNED BY public.email_logs.id;
 
 
 --
--- Name: employer_users; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.employer_users (
@@ -1381,7 +1381,7 @@ CREATE TABLE public.employer_users (
 
 
 --
--- Name: employer_users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.employer_users_id_seq
@@ -1393,7 +1393,7 @@ CREATE SEQUENCE public.employer_users_id_seq
 
 
 --
--- Name: employer_users_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.employer_users_id_seq1
@@ -1405,14 +1405,14 @@ CREATE SEQUENCE public.employer_users_id_seq1
 
 
 --
--- Name: employer_users_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.employer_users_id_seq1 OWNED BY public.employer_users.id;
 
 
 --
--- Name: experience_levels; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.experience_levels (
@@ -1430,28 +1430,28 @@ CREATE TABLE public.experience_levels (
 
 
 --
--- Name: TABLE experience_levels; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON TABLE public.experience_levels IS 'Master data for experience levels (Fresh Graduate, 1-3 years, 3-5 years, etc.)';
 
 
 --
--- Name: COLUMN experience_levels.min_years; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.experience_levels.min_years IS 'Minimum years of experience';
 
 
 --
--- Name: COLUMN experience_levels.max_years; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.experience_levels.max_years IS 'Maximum years of experience (NULL = unlimited)';
 
 
 --
--- Name: experience_levels_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.experience_levels_id_seq
@@ -1463,14 +1463,14 @@ CREATE SEQUENCE public.experience_levels_id_seq
 
 
 --
--- Name: experience_levels_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.experience_levels_id_seq OWNED BY public.experience_levels.id;
 
 
 --
--- Name: gender_preferences; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.gender_preferences (
@@ -1486,14 +1486,14 @@ CREATE TABLE public.gender_preferences (
 
 
 --
--- Name: TABLE gender_preferences; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON TABLE public.gender_preferences IS 'Master data for gender preferences (Male, Female, Any)';
 
 
 --
--- Name: gender_preferences_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.gender_preferences_id_seq
@@ -1505,14 +1505,14 @@ CREATE SEQUENCE public.gender_preferences_id_seq
 
 
 --
--- Name: gender_preferences_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.gender_preferences_id_seq OWNED BY public.gender_preferences.id;
 
 
 --
--- Name: industries; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.industries (
@@ -1530,28 +1530,28 @@ CREATE TABLE public.industries (
 
 
 --
--- Name: TABLE industries; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON TABLE public.industries IS 'Master data for company industries';
 
 
 --
--- Name: COLUMN industries.slug; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.industries.slug IS 'URL-friendly version of industry name';
 
 
 --
--- Name: COLUMN industries.display_order; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.industries.display_order IS 'Order for displaying in UI dropdowns';
 
 
 --
--- Name: industries_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.industries_id_seq
@@ -1563,14 +1563,14 @@ CREATE SEQUENCE public.industries_id_seq
 
 
 --
--- Name: industries_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.industries_id_seq OWNED BY public.industries.id;
 
 
 --
--- Name: interviews; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.interviews (
@@ -1599,7 +1599,7 @@ CREATE TABLE public.interviews (
 
 
 --
--- Name: interviews_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.interviews_id_seq
@@ -1611,7 +1611,7 @@ CREATE SEQUENCE public.interviews_id_seq
 
 
 --
--- Name: interviews_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.interviews_id_seq1
@@ -1623,14 +1623,14 @@ CREATE SEQUENCE public.interviews_id_seq1
 
 
 --
--- Name: interviews_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.interviews_id_seq1 OWNED BY public.interviews.id;
 
 
 --
--- Name: job_application_stages; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.job_application_stages (
@@ -1650,7 +1650,7 @@ CREATE TABLE public.job_application_stages (
 
 
 --
--- Name: job_application_stages_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.job_application_stages_id_seq
@@ -1662,7 +1662,7 @@ CREATE SEQUENCE public.job_application_stages_id_seq
 
 
 --
--- Name: job_application_stages_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.job_application_stages_id_seq1
@@ -1674,14 +1674,14 @@ CREATE SEQUENCE public.job_application_stages_id_seq1
 
 
 --
--- Name: job_application_stages_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.job_application_stages_id_seq1 OWNED BY public.job_application_stages.id;
 
 
 --
--- Name: job_applications; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.job_applications (
@@ -1704,7 +1704,7 @@ CREATE TABLE public.job_applications (
 
 
 --
--- Name: job_applications_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.job_applications_id_seq
@@ -1716,7 +1716,7 @@ CREATE SEQUENCE public.job_applications_id_seq
 
 
 --
--- Name: job_applications_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.job_applications_id_seq1
@@ -1728,14 +1728,14 @@ CREATE SEQUENCE public.job_applications_id_seq1
 
 
 --
--- Name: job_applications_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.job_applications_id_seq1 OWNED BY public.job_applications.id;
 
 
 --
--- Name: job_benefits; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.job_benefits (
@@ -1751,7 +1751,7 @@ CREATE TABLE public.job_benefits (
 
 
 --
--- Name: job_benefits_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.job_benefits_id_seq
@@ -1763,7 +1763,7 @@ CREATE SEQUENCE public.job_benefits_id_seq
 
 
 --
--- Name: job_benefits_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.job_benefits_id_seq1
@@ -1775,14 +1775,14 @@ CREATE SEQUENCE public.job_benefits_id_seq1
 
 
 --
--- Name: job_benefits_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.job_benefits_id_seq1 OWNED BY public.job_benefits.id;
 
 
 --
--- Name: job_categories; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.job_categories (
@@ -1798,7 +1798,7 @@ CREATE TABLE public.job_categories (
 
 
 --
--- Name: job_categories_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.job_categories_id_seq
@@ -1810,7 +1810,7 @@ CREATE SEQUENCE public.job_categories_id_seq
 
 
 --
--- Name: job_categories_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.job_categories_id_seq1
@@ -1822,14 +1822,14 @@ CREATE SEQUENCE public.job_categories_id_seq1
 
 
 --
--- Name: job_categories_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.job_categories_id_seq1 OWNED BY public.job_categories.id;
 
 
 --
--- Name: job_locations; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.job_locations (
@@ -1854,7 +1854,7 @@ CREATE TABLE public.job_locations (
 
 
 --
--- Name: job_locations_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.job_locations_id_seq
@@ -1866,7 +1866,7 @@ CREATE SEQUENCE public.job_locations_id_seq
 
 
 --
--- Name: job_locations_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.job_locations_id_seq1
@@ -1878,14 +1878,14 @@ CREATE SEQUENCE public.job_locations_id_seq1
 
 
 --
--- Name: job_locations_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.job_locations_id_seq1 OWNED BY public.job_locations.id;
 
 
 --
--- Name: job_requirements; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.job_requirements (
@@ -1907,7 +1907,7 @@ CREATE TABLE public.job_requirements (
 
 
 --
--- Name: job_requirements_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.job_requirements_id_seq
@@ -1919,7 +1919,7 @@ CREATE SEQUENCE public.job_requirements_id_seq
 
 
 --
--- Name: job_requirements_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.job_requirements_id_seq1
@@ -1931,14 +1931,14 @@ CREATE SEQUENCE public.job_requirements_id_seq1
 
 
 --
--- Name: job_requirements_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.job_requirements_id_seq1 OWNED BY public.job_requirements.id;
 
 
 --
--- Name: job_skills; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.job_skills (
@@ -1954,7 +1954,7 @@ CREATE TABLE public.job_skills (
 
 
 --
--- Name: job_skills_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.job_skills_id_seq
@@ -1966,7 +1966,7 @@ CREATE SEQUENCE public.job_skills_id_seq
 
 
 --
--- Name: job_skills_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.job_skills_id_seq1
@@ -1978,14 +1978,14 @@ CREATE SEQUENCE public.job_skills_id_seq1
 
 
 --
--- Name: job_skills_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.job_skills_id_seq1 OWNED BY public.job_skills.id;
 
 
 --
--- Name: job_subcategories; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.job_subcategories (
@@ -2001,7 +2001,7 @@ CREATE TABLE public.job_subcategories (
 
 
 --
--- Name: job_subcategories_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.job_subcategories_id_seq
@@ -2013,7 +2013,7 @@ CREATE SEQUENCE public.job_subcategories_id_seq
 
 
 --
--- Name: job_subcategories_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.job_subcategories_id_seq1
@@ -2025,14 +2025,14 @@ CREATE SEQUENCE public.job_subcategories_id_seq1
 
 
 --
--- Name: job_subcategories_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.job_subcategories_id_seq1 OWNED BY public.job_subcategories.id;
 
 
 --
--- Name: job_titles; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.job_titles (
@@ -2050,35 +2050,35 @@ CREATE TABLE public.job_titles (
 
 
 --
--- Name: TABLE job_titles; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON TABLE public.job_titles IS 'Master data for job titles (e.g., Software Engineer, Data Analyst)';
 
 
 --
--- Name: COLUMN job_titles.recommended_category_id; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.job_titles.recommended_category_id IS 'Recommended job category for this title';
 
 
 --
--- Name: COLUMN job_titles.popularity_score; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.job_titles.popularity_score IS 'Popularity score for ranking (higher = more popular)';
 
 
 --
--- Name: COLUMN job_titles.search_count; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.job_titles.search_count IS 'Number of times searched by users';
 
 
 --
--- Name: job_titles_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.job_titles_id_seq
@@ -2090,14 +2090,14 @@ CREATE SEQUENCE public.job_titles_id_seq
 
 
 --
--- Name: job_titles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.job_titles_id_seq OWNED BY public.job_titles.id;
 
 
 --
--- Name: job_types; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.job_types (
@@ -2113,21 +2113,21 @@ CREATE TABLE public.job_types (
 
 
 --
--- Name: TABLE job_types; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON TABLE public.job_types IS 'Master data for job types (Full-Time, Part-Time, Internship, Freelance, Contract)';
 
 
 --
--- Name: COLUMN job_types.code; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.job_types.code IS 'Unique code for programmatic reference';
 
 
 --
--- Name: job_types_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.job_types_id_seq
@@ -2139,14 +2139,14 @@ CREATE SEQUENCE public.job_types_id_seq
 
 
 --
--- Name: job_types_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.job_types_id_seq OWNED BY public.job_types.id;
 
 
 --
--- Name: jobs; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.jobs (
@@ -2197,77 +2197,77 @@ CREATE TABLE public.jobs (
 
 
 --
--- Name: COLUMN jobs.job_title_id; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.jobs.job_title_id IS 'FK to job_titles master data - standardized job title';
 
 
 --
--- Name: COLUMN jobs.job_type_id; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.jobs.job_type_id IS 'FK to job_types master data (full_time, part_time, contract, internship, freelance)';
 
 
 --
--- Name: COLUMN jobs.work_policy_id; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.jobs.work_policy_id IS 'FK to work_policies master data (onsite, remote, hybrid)';
 
 
 --
--- Name: COLUMN jobs.education_level_id; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.jobs.education_level_id IS 'FK to education_levels master data (minimum education requirement)';
 
 
 --
--- Name: COLUMN jobs.experience_level_id; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.jobs.experience_level_id IS 'FK to experience_levels master data (entry, junior, mid, senior, expert, lead)';
 
 
 --
--- Name: COLUMN jobs.gender_preference_id; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.jobs.gender_preference_id IS 'FK to gender_preferences master data (male, female, any)';
 
 
 --
--- Name: COLUMN jobs.min_age; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.jobs.min_age IS 'Minimum age requirement for job applicants (17-100)';
 
 
 --
--- Name: COLUMN jobs.max_age; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.jobs.max_age IS 'Maximum age requirement for job applicants (17-100)';
 
 
 --
--- Name: COLUMN jobs.salary_display; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.jobs.salary_display IS 'How salary should be displayed: range (show min-max), starting_from (show min only), up_to (show max only), hidden (hide salary)';
 
 
 --
--- Name: COLUMN jobs.company_address_id; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.jobs.company_address_id IS 'FK to company_addresses table (to be added when company_addresses table is created). For now, this can reference companies.id as a temporary measure.';
 
 
 --
--- Name: jobs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.jobs_id_seq
@@ -2279,7 +2279,7 @@ CREATE SEQUENCE public.jobs_id_seq
 
 
 --
--- Name: jobs_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.jobs_id_seq1
@@ -2291,14 +2291,14 @@ CREATE SEQUENCE public.jobs_id_seq1
 
 
 --
--- Name: jobs_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.jobs_id_seq1 OWNED BY public.jobs.id;
 
 
 --
--- Name: notification_preferences; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.notification_preferences (
@@ -2320,14 +2320,14 @@ CREATE TABLE public.notification_preferences (
 
 
 --
--- Name: TABLE notification_preferences; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON TABLE public.notification_preferences IS 'Stores user notification preferences and settings';
 
 
 --
--- Name: notification_preferences_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.notification_preferences_id_seq
@@ -2339,14 +2339,14 @@ CREATE SEQUENCE public.notification_preferences_id_seq
 
 
 --
--- Name: notification_preferences_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.notification_preferences_id_seq OWNED BY public.notification_preferences.id;
 
 
 --
--- Name: notifications; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.notifications (
@@ -2375,56 +2375,56 @@ CREATE TABLE public.notifications (
 
 
 --
--- Name: TABLE notifications; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON TABLE public.notifications IS 'Stores all user notifications';
 
 
 --
--- Name: COLUMN notifications.type; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.notifications.type IS 'Type of notification: job_application, interview, status_update, etc.';
 
 
 --
--- Name: COLUMN notifications.data; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.notifications.data IS 'Additional metadata stored as JSON';
 
 
 --
--- Name: COLUMN notifications.priority; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.notifications.priority IS 'Priority level: low, normal, high, urgent';
 
 
 --
--- Name: COLUMN notifications.category; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.notifications.category IS 'Category: application, job, account, system';
 
 
 --
--- Name: COLUMN notifications.related_type; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.notifications.related_type IS 'Type of related entity: job, application, interview, etc.';
 
 
 --
--- Name: COLUMN notifications.channel; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.notifications.channel IS 'Delivery channel: in_app, email, push, sms';
 
 
 --
--- Name: notifications_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.notifications_id_seq
@@ -2436,14 +2436,14 @@ CREATE SEQUENCE public.notifications_id_seq
 
 
 --
--- Name: notifications_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.notifications_id_seq OWNED BY public.notifications.id;
 
 
 --
--- Name: oauth_providers; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.oauth_providers (
@@ -2465,35 +2465,35 @@ CREATE TABLE public.oauth_providers (
 
 
 --
--- Name: TABLE oauth_providers; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON TABLE public.oauth_providers IS 'Stores OAuth provider connections for social login';
 
 
 --
--- Name: COLUMN oauth_providers.provider; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.oauth_providers.provider IS 'OAuth provider name (google, facebook, etc.)';
 
 
 --
--- Name: COLUMN oauth_providers.provider_user_id; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.oauth_providers.provider_user_id IS 'User ID from the OAuth provider';
 
 
 --
--- Name: COLUMN oauth_providers.raw_data; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.oauth_providers.raw_data IS 'Full OAuth user profile data';
 
 
 --
--- Name: oauth_providers_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.oauth_providers_id_seq
@@ -2505,14 +2505,14 @@ CREATE SEQUENCE public.oauth_providers_id_seq
 
 
 --
--- Name: oauth_providers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.oauth_providers_id_seq OWNED BY public.oauth_providers.id;
 
 
 --
--- Name: otp_codes; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.otp_codes (
@@ -2530,63 +2530,63 @@ CREATE TABLE public.otp_codes (
 
 
 --
--- Name: TABLE otp_codes; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON TABLE public.otp_codes IS 'Stores OTP verification codes for user authentication';
 
 
 --
--- Name: COLUMN otp_codes.user_id; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.otp_codes.user_id IS 'Reference to users table';
 
 
 --
--- Name: COLUMN otp_codes.otp_hash; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.otp_codes.otp_hash IS 'SHA256 hash of OTP code (never store plaintext)';
 
 
 --
--- Name: COLUMN otp_codes.type; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.otp_codes.type IS 'Purpose of OTP: email_verification, password_reset';
 
 
 --
--- Name: COLUMN otp_codes.expired_at; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.otp_codes.expired_at IS 'When the OTP code expires (typically 5 minutes)';
 
 
 --
--- Name: COLUMN otp_codes.is_used; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.otp_codes.is_used IS 'Whether OTP has been successfully used';
 
 
 --
--- Name: COLUMN otp_codes.used_at; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.otp_codes.used_at IS 'Timestamp when OTP was used';
 
 
 --
--- Name: COLUMN otp_codes.attempts; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.otp_codes.attempts IS 'Number of failed verification attempts';
 
 
 --
--- Name: otp_codes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.otp_codes_id_seq
@@ -2598,14 +2598,14 @@ CREATE SEQUENCE public.otp_codes_id_seq
 
 
 --
--- Name: otp_codes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.otp_codes_id_seq OWNED BY public.otp_codes.id;
 
 
 --
--- Name: provinces; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.provinces (
@@ -2620,21 +2620,21 @@ CREATE TABLE public.provinces (
 
 
 --
--- Name: TABLE provinces; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON TABLE public.provinces IS 'Master data for Indonesian provinces';
 
 
 --
--- Name: COLUMN provinces.code; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.provinces.code IS 'Province code from BPS (Badan Pusat Statistik)';
 
 
 --
--- Name: provinces_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.provinces_id_seq
@@ -2646,14 +2646,14 @@ CREATE SEQUENCE public.provinces_id_seq
 
 
 --
--- Name: provinces_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.provinces_id_seq OWNED BY public.provinces.id;
 
 
 --
--- Name: push_notification_logs; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.push_notification_logs (
@@ -2675,49 +2675,49 @@ CREATE TABLE public.push_notification_logs (
 
 
 --
--- Name: TABLE push_notification_logs; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON TABLE public.push_notification_logs IS 'Tracks push notification delivery for analytics and debugging';
 
 
 --
--- Name: COLUMN push_notification_logs.notification_id; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.push_notification_logs.notification_id IS 'Optional reference to notifications table if it exists';
 
 
 --
--- Name: COLUMN push_notification_logs.fcm_message_id; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.push_notification_logs.fcm_message_id IS 'Unique message ID returned by Firebase';
 
 
 --
--- Name: COLUMN push_notification_logs.status; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.push_notification_logs.status IS 'Delivery status: pending, sent, delivered, failed, clicked';
 
 
 --
--- Name: COLUMN push_notification_logs.error_code; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.push_notification_logs.error_code IS 'FCM error code (e.g., InvalidRegistration, NotRegistered)';
 
 
 --
--- Name: COLUMN push_notification_logs.fcm_response; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.push_notification_logs.fcm_response IS 'Full response from FCM API (for debugging)';
 
 
 --
--- Name: push_notification_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.push_notification_logs_id_seq
@@ -2729,14 +2729,14 @@ CREATE SEQUENCE public.push_notification_logs_id_seq
 
 
 --
--- Name: push_notification_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.push_notification_logs_id_seq OWNED BY public.push_notification_logs.id;
 
 
 --
--- Name: refresh_tokens; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.refresh_tokens (
@@ -2759,98 +2759,98 @@ CREATE TABLE public.refresh_tokens (
 
 
 --
--- Name: TABLE refresh_tokens; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON TABLE public.refresh_tokens IS 'Stores refresh tokens for persistent device sessions (Remember Me)';
 
 
 --
--- Name: COLUMN refresh_tokens.user_id; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.refresh_tokens.user_id IS 'Reference to users table';
 
 
 --
--- Name: COLUMN refresh_tokens.token_hash; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.refresh_tokens.token_hash IS 'SHA256 hash of refresh token (never store plaintext)';
 
 
 --
--- Name: COLUMN refresh_tokens.device_name; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.refresh_tokens.device_name IS 'User-friendly device name (e.g., "iPhone 13", "Chrome on Windows")';
 
 
 --
--- Name: COLUMN refresh_tokens.device_type; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.refresh_tokens.device_type IS 'Type of device: mobile, desktop, tablet, unknown';
 
 
 --
--- Name: COLUMN refresh_tokens.device_id; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.refresh_tokens.device_id IS 'Unique identifier for device (fingerprint)';
 
 
 --
--- Name: COLUMN refresh_tokens.user_agent; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.refresh_tokens.user_agent IS 'Full user agent string for device identification';
 
 
 --
--- Name: COLUMN refresh_tokens.ip_address; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.refresh_tokens.ip_address IS 'IP address when token was created/last used';
 
 
 --
--- Name: COLUMN refresh_tokens.last_used_at; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.refresh_tokens.last_used_at IS 'Last time this token was used to refresh access token';
 
 
 --
--- Name: COLUMN refresh_tokens.expires_at; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.refresh_tokens.expires_at IS 'When refresh token expires (typically 30 days)';
 
 
 --
--- Name: COLUMN refresh_tokens.revoked; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.refresh_tokens.revoked IS 'Whether token has been manually revoked';
 
 
 --
--- Name: COLUMN refresh_tokens.revoked_at; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.refresh_tokens.revoked_at IS 'Timestamp when token was revoked';
 
 
 --
--- Name: COLUMN refresh_tokens.revoked_reason; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.refresh_tokens.revoked_reason IS 'Reason for revocation (logout, security, suspicious activity)';
 
 
 --
--- Name: refresh_tokens_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.refresh_tokens_id_seq
@@ -2862,14 +2862,14 @@ CREATE SEQUENCE public.refresh_tokens_id_seq
 
 
 --
--- Name: refresh_tokens_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.refresh_tokens_id_seq OWNED BY public.refresh_tokens.id;
 
 
 --
--- Name: skills_master; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.skills_master (
@@ -2893,7 +2893,7 @@ CREATE TABLE public.skills_master (
 
 
 --
--- Name: skills_master_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.skills_master_id_seq
@@ -2905,7 +2905,7 @@ CREATE SEQUENCE public.skills_master_id_seq
 
 
 --
--- Name: skills_master_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.skills_master_id_seq1
@@ -2917,14 +2917,14 @@ CREATE SEQUENCE public.skills_master_id_seq1
 
 
 --
--- Name: skills_master_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.skills_master_id_seq1 OWNED BY public.skills_master.id;
 
 
 --
--- Name: user_certifications; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.user_certifications (
@@ -2947,7 +2947,7 @@ CREATE TABLE public.user_certifications (
 
 
 --
--- Name: user_certifications_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.user_certifications_id_seq
@@ -2959,7 +2959,7 @@ CREATE SEQUENCE public.user_certifications_id_seq
 
 
 --
--- Name: user_certifications_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.user_certifications_id_seq1
@@ -2971,14 +2971,14 @@ CREATE SEQUENCE public.user_certifications_id_seq1
 
 
 --
--- Name: user_certifications_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.user_certifications_id_seq1 OWNED BY public.user_certifications.id;
 
 
 --
--- Name: user_documents; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.user_documents (
@@ -3003,7 +3003,7 @@ CREATE TABLE public.user_documents (
 
 
 --
--- Name: user_documents_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.user_documents_id_seq
@@ -3015,7 +3015,7 @@ CREATE SEQUENCE public.user_documents_id_seq
 
 
 --
--- Name: user_documents_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.user_documents_id_seq1
@@ -3027,14 +3027,14 @@ CREATE SEQUENCE public.user_documents_id_seq1
 
 
 --
--- Name: user_documents_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.user_documents_id_seq1 OWNED BY public.user_documents.id;
 
 
 --
--- Name: user_educations; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.user_educations (
@@ -3059,7 +3059,7 @@ CREATE TABLE public.user_educations (
 
 
 --
--- Name: user_educations_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.user_educations_id_seq
@@ -3071,7 +3071,7 @@ CREATE SEQUENCE public.user_educations_id_seq
 
 
 --
--- Name: user_educations_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.user_educations_id_seq1
@@ -3083,14 +3083,14 @@ CREATE SEQUENCE public.user_educations_id_seq1
 
 
 --
--- Name: user_educations_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.user_educations_id_seq1 OWNED BY public.user_educations.id;
 
 
 --
--- Name: user_experiences; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.user_experiences (
@@ -3115,7 +3115,7 @@ CREATE TABLE public.user_experiences (
 
 
 --
--- Name: user_experiences_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.user_experiences_id_seq
@@ -3127,7 +3127,7 @@ CREATE SEQUENCE public.user_experiences_id_seq
 
 
 --
--- Name: user_experiences_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.user_experiences_id_seq1
@@ -3139,14 +3139,14 @@ CREATE SEQUENCE public.user_experiences_id_seq1
 
 
 --
--- Name: user_experiences_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.user_experiences_id_seq1 OWNED BY public.user_experiences.id;
 
 
 --
--- Name: user_languages; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.user_languages (
@@ -3167,7 +3167,7 @@ CREATE TABLE public.user_languages (
 
 
 --
--- Name: user_languages_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.user_languages_id_seq
@@ -3179,7 +3179,7 @@ CREATE SEQUENCE public.user_languages_id_seq
 
 
 --
--- Name: user_languages_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.user_languages_id_seq1
@@ -3191,14 +3191,14 @@ CREATE SEQUENCE public.user_languages_id_seq1
 
 
 --
--- Name: user_languages_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.user_languages_id_seq1 OWNED BY public.user_languages.id;
 
 
 --
--- Name: user_preferences; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.user_preferences (
@@ -3226,7 +3226,7 @@ CREATE TABLE public.user_preferences (
 
 
 --
--- Name: user_preferences_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.user_preferences_id_seq
@@ -3238,7 +3238,7 @@ CREATE SEQUENCE public.user_preferences_id_seq
 
 
 --
--- Name: user_preferences_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.user_preferences_id_seq1
@@ -3250,14 +3250,14 @@ CREATE SEQUENCE public.user_preferences_id_seq1
 
 
 --
--- Name: user_preferences_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.user_preferences_id_seq1 OWNED BY public.user_preferences.id;
 
 
 --
--- Name: user_profiles; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.user_profiles (
@@ -3297,77 +3297,77 @@ CREATE TABLE public.user_profiles (
 
 
 --
--- Name: COLUMN user_profiles.nationality; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.user_profiles.nationality IS 'User nationality';
 
 
 --
--- Name: COLUMN user_profiles.address; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.user_profiles.address IS 'User full address';
 
 
 --
--- Name: COLUMN user_profiles.location_state; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.user_profiles.location_state IS 'User location state/province';
 
 
 --
--- Name: COLUMN user_profiles.postal_code; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.user_profiles.postal_code IS 'User postal/zip code';
 
 
 --
--- Name: COLUMN user_profiles.linkedin_url; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.user_profiles.linkedin_url IS 'User LinkedIn profile URL';
 
 
 --
--- Name: COLUMN user_profiles.portfolio_url; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.user_profiles.portfolio_url IS 'User portfolio/website URL';
 
 
 --
--- Name: COLUMN user_profiles.github_url; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.user_profiles.github_url IS 'User GitHub profile URL';
 
 
 --
--- Name: COLUMN user_profiles.province_id; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.user_profiles.province_id IS 'Foreign key to provinces master table (replaces location_state)';
 
 
 --
--- Name: COLUMN user_profiles.city_id; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.user_profiles.city_id IS 'Foreign key to cities master table (replaces location_city)';
 
 
 --
--- Name: COLUMN user_profiles.district_id; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.user_profiles.district_id IS 'Foreign key to districts master table (more granular location)';
 
 
 --
--- Name: user_profiles_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.user_profiles_id_seq
@@ -3379,7 +3379,7 @@ CREATE SEQUENCE public.user_profiles_id_seq
 
 
 --
--- Name: user_profiles_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.user_profiles_id_seq1
@@ -3391,14 +3391,14 @@ CREATE SEQUENCE public.user_profiles_id_seq1
 
 
 --
--- Name: user_profiles_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.user_profiles_id_seq1 OWNED BY public.user_profiles.id;
 
 
 --
--- Name: user_projects; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.user_projects (
@@ -3428,7 +3428,7 @@ CREATE TABLE public.user_projects (
 
 
 --
--- Name: user_projects_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.user_projects_id_seq
@@ -3440,7 +3440,7 @@ CREATE SEQUENCE public.user_projects_id_seq
 
 
 --
--- Name: user_projects_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.user_projects_id_seq1
@@ -3452,14 +3452,14 @@ CREATE SEQUENCE public.user_projects_id_seq1
 
 
 --
--- Name: user_projects_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.user_projects_id_seq1 OWNED BY public.user_projects.id;
 
 
 --
--- Name: user_skills; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.user_skills (
@@ -3478,7 +3478,7 @@ CREATE TABLE public.user_skills (
 
 
 --
--- Name: user_skills_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.user_skills_id_seq
@@ -3490,7 +3490,7 @@ CREATE SEQUENCE public.user_skills_id_seq
 
 
 --
--- Name: user_skills_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.user_skills_id_seq1
@@ -3502,14 +3502,14 @@ CREATE SEQUENCE public.user_skills_id_seq1
 
 
 --
--- Name: user_skills_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.user_skills_id_seq1 OWNED BY public.user_skills.id;
 
 
 --
--- Name: users; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.users (
@@ -3532,21 +3532,21 @@ CREATE TABLE public.users (
 
 
 --
--- Name: COLUMN users.has_company; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.users.has_company IS 'Flag indicating if user has created a company';
 
 
 --
--- Name: COLUMN users.company_id; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.users.company_id IS 'Foreign key to the company created by this user';
 
 
 --
--- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.users_id_seq
@@ -3558,7 +3558,7 @@ CREATE SEQUENCE public.users_id_seq
 
 
 --
--- Name: users_id_seq1; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.users_id_seq1
@@ -3570,14 +3570,14 @@ CREATE SEQUENCE public.users_id_seq1
 
 
 --
--- Name: users_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.users_id_seq1 OWNED BY public.users.id;
 
 
 --
--- Name: work_policies; Type: TABLE; Schema: public; Owner: -
+
 --
 
 CREATE TABLE public.work_policies (
@@ -3594,21 +3594,21 @@ CREATE TABLE public.work_policies (
 
 
 --
--- Name: TABLE work_policies; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON TABLE public.work_policies IS 'Master data for work policies (On-site, Remote, Hybrid)';
 
 
 --
--- Name: COLUMN work_policies.icon_url; Type: COMMENT; Schema: public; Owner: -
+
 --
 
 COMMENT ON COLUMN public.work_policies.icon_url IS 'URL to icon representing this work policy';
 
 
 --
--- Name: work_policies_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+
 --
 
 CREATE SEQUENCE public.work_policies_id_seq
@@ -3620,406 +3620,406 @@ CREATE SEQUENCE public.work_policies_id_seq
 
 
 --
--- Name: work_policies_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+
 --
 
 ALTER SEQUENCE public.work_policies_id_seq OWNED BY public.work_policies.id;
 
 
 --
--- Name: admin_roles id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.admin_roles ALTER COLUMN id SET DEFAULT nextval('public.admin_roles_id_seq1'::regclass);
 
 
 --
--- Name: admin_users id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.admin_users ALTER COLUMN id SET DEFAULT nextval('public.admin_users_id_seq1'::regclass);
 
 
 --
--- Name: application_documents id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.application_documents ALTER COLUMN id SET DEFAULT nextval('public.application_documents_id_seq1'::regclass);
 
 
 --
--- Name: application_notes id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.application_notes ALTER COLUMN id SET DEFAULT nextval('public.application_notes_id_seq1'::regclass);
 
 
 --
--- Name: benefits_master id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.benefits_master ALTER COLUMN id SET DEFAULT nextval('public.benefits_master_id_seq1'::regclass);
 
 
 --
--- Name: cities id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.cities ALTER COLUMN id SET DEFAULT nextval('public.cities_id_seq'::regclass);
 
 
 --
--- Name: companies id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.companies ALTER COLUMN id SET DEFAULT nextval('public.companies_id_seq1'::regclass);
 
 
 --
--- Name: company_addresses id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_addresses ALTER COLUMN id SET DEFAULT nextval('public.company_addresses_id_seq'::regclass);
 
 
 --
--- Name: company_documents id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_documents ALTER COLUMN id SET DEFAULT nextval('public.company_documents_id_seq1'::regclass);
 
 
 --
--- Name: company_employees id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_employees ALTER COLUMN id SET DEFAULT nextval('public.company_employees_id_seq1'::regclass);
 
 
 --
--- Name: company_followers id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_followers ALTER COLUMN id SET DEFAULT nextval('public.company_followers_id_seq1'::regclass);
 
 
 --
--- Name: company_industries id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_industries ALTER COLUMN id SET DEFAULT nextval('public.company_industries_id_seq1'::regclass);
 
 
 --
--- Name: company_invitations id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_invitations ALTER COLUMN id SET DEFAULT nextval('public.company_invitations_id_seq'::regclass);
 
 
 --
--- Name: company_profiles id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_profiles ALTER COLUMN id SET DEFAULT nextval('public.company_profiles_id_seq1'::regclass);
 
 
 --
--- Name: company_reviews id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_reviews ALTER COLUMN id SET DEFAULT nextval('public.company_reviews_id_seq1'::regclass);
 
 
 --
--- Name: company_sizes id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_sizes ALTER COLUMN id SET DEFAULT nextval('public.company_sizes_id_seq'::regclass);
 
 
 --
--- Name: company_verifications id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_verifications ALTER COLUMN id SET DEFAULT nextval('public.company_verifications_id_seq1'::regclass);
 
 
 --
--- Name: device_tokens id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.device_tokens ALTER COLUMN id SET DEFAULT nextval('public.device_tokens_id_seq'::regclass);
 
 
 --
--- Name: districts id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.districts ALTER COLUMN id SET DEFAULT nextval('public.districts_id_seq'::regclass);
 
 
 --
--- Name: education_levels id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.education_levels ALTER COLUMN id SET DEFAULT nextval('public.education_levels_id_seq'::regclass);
 
 
 --
--- Name: email_logs id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.email_logs ALTER COLUMN id SET DEFAULT nextval('public.email_logs_id_seq'::regclass);
 
 
 --
--- Name: employer_users id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.employer_users ALTER COLUMN id SET DEFAULT nextval('public.employer_users_id_seq1'::regclass);
 
 
 --
--- Name: experience_levels id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.experience_levels ALTER COLUMN id SET DEFAULT nextval('public.experience_levels_id_seq'::regclass);
 
 
 --
--- Name: gender_preferences id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.gender_preferences ALTER COLUMN id SET DEFAULT nextval('public.gender_preferences_id_seq'::regclass);
 
 
 --
--- Name: industries id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.industries ALTER COLUMN id SET DEFAULT nextval('public.industries_id_seq'::regclass);
 
 
 --
--- Name: interviews id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.interviews ALTER COLUMN id SET DEFAULT nextval('public.interviews_id_seq1'::regclass);
 
 
 --
--- Name: job_application_stages id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_application_stages ALTER COLUMN id SET DEFAULT nextval('public.job_application_stages_id_seq1'::regclass);
 
 
 --
--- Name: job_applications id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_applications ALTER COLUMN id SET DEFAULT nextval('public.job_applications_id_seq1'::regclass);
 
 
 --
--- Name: job_benefits id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_benefits ALTER COLUMN id SET DEFAULT nextval('public.job_benefits_id_seq1'::regclass);
 
 
 --
--- Name: job_categories id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_categories ALTER COLUMN id SET DEFAULT nextval('public.job_categories_id_seq1'::regclass);
 
 
 --
--- Name: job_locations id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_locations ALTER COLUMN id SET DEFAULT nextval('public.job_locations_id_seq1'::regclass);
 
 
 --
--- Name: job_requirements id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_requirements ALTER COLUMN id SET DEFAULT nextval('public.job_requirements_id_seq1'::regclass);
 
 
 --
--- Name: job_skills id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_skills ALTER COLUMN id SET DEFAULT nextval('public.job_skills_id_seq1'::regclass);
 
 
 --
--- Name: job_subcategories id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_subcategories ALTER COLUMN id SET DEFAULT nextval('public.job_subcategories_id_seq1'::regclass);
 
 
 --
--- Name: job_titles id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_titles ALTER COLUMN id SET DEFAULT nextval('public.job_titles_id_seq'::regclass);
 
 
 --
--- Name: job_types id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_types ALTER COLUMN id SET DEFAULT nextval('public.job_types_id_seq'::regclass);
 
 
 --
--- Name: jobs id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.jobs ALTER COLUMN id SET DEFAULT nextval('public.jobs_id_seq1'::regclass);
 
 
 --
--- Name: notification_preferences id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.notification_preferences ALTER COLUMN id SET DEFAULT nextval('public.notification_preferences_id_seq'::regclass);
 
 
 --
--- Name: notifications id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.notifications ALTER COLUMN id SET DEFAULT nextval('public.notifications_id_seq'::regclass);
 
 
 --
--- Name: oauth_providers id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.oauth_providers ALTER COLUMN id SET DEFAULT nextval('public.oauth_providers_id_seq'::regclass);
 
 
 --
--- Name: otp_codes id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.otp_codes ALTER COLUMN id SET DEFAULT nextval('public.otp_codes_id_seq'::regclass);
 
 
 --
--- Name: provinces id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.provinces ALTER COLUMN id SET DEFAULT nextval('public.provinces_id_seq'::regclass);
 
 
 --
--- Name: push_notification_logs id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.push_notification_logs ALTER COLUMN id SET DEFAULT nextval('public.push_notification_logs_id_seq'::regclass);
 
 
 --
--- Name: refresh_tokens id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.refresh_tokens ALTER COLUMN id SET DEFAULT nextval('public.refresh_tokens_id_seq'::regclass);
 
 
 --
--- Name: skills_master id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.skills_master ALTER COLUMN id SET DEFAULT nextval('public.skills_master_id_seq1'::regclass);
 
 
 --
--- Name: user_certifications id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_certifications ALTER COLUMN id SET DEFAULT nextval('public.user_certifications_id_seq1'::regclass);
 
 
 --
--- Name: user_documents id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_documents ALTER COLUMN id SET DEFAULT nextval('public.user_documents_id_seq1'::regclass);
 
 
 --
--- Name: user_educations id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_educations ALTER COLUMN id SET DEFAULT nextval('public.user_educations_id_seq1'::regclass);
 
 
 --
--- Name: user_experiences id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_experiences ALTER COLUMN id SET DEFAULT nextval('public.user_experiences_id_seq1'::regclass);
 
 
 --
--- Name: user_languages id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_languages ALTER COLUMN id SET DEFAULT nextval('public.user_languages_id_seq1'::regclass);
 
 
 --
--- Name: user_preferences id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_preferences ALTER COLUMN id SET DEFAULT nextval('public.user_preferences_id_seq1'::regclass);
 
 
 --
--- Name: user_profiles id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_profiles ALTER COLUMN id SET DEFAULT nextval('public.user_profiles_id_seq1'::regclass);
 
 
 --
--- Name: user_projects id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_projects ALTER COLUMN id SET DEFAULT nextval('public.user_projects_id_seq1'::regclass);
 
 
 --
--- Name: user_skills id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_skills ALTER COLUMN id SET DEFAULT nextval('public.user_skills_id_seq1'::regclass);
 
 
 --
--- Name: users id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq1'::regclass);
 
 
 --
--- Name: work_policies id; Type: DEFAULT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.work_policies ALTER COLUMN id SET DEFAULT nextval('public.work_policies_id_seq'::regclass);
 
 
 --
--- Name: admin_roles admin_roles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.admin_roles
@@ -4027,7 +4027,7 @@ ALTER TABLE ONLY public.admin_roles
 
 
 --
--- Name: admin_roles admin_roles_role_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.admin_roles
@@ -4035,7 +4035,7 @@ ALTER TABLE ONLY public.admin_roles
 
 
 --
--- Name: admin_users admin_users_email_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.admin_users
@@ -4043,7 +4043,7 @@ ALTER TABLE ONLY public.admin_users
 
 
 --
--- Name: admin_users admin_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.admin_users
@@ -4051,7 +4051,7 @@ ALTER TABLE ONLY public.admin_users
 
 
 --
--- Name: application_documents application_documents_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.application_documents
@@ -4059,7 +4059,7 @@ ALTER TABLE ONLY public.application_documents
 
 
 --
--- Name: application_notes application_notes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.application_notes
@@ -4067,7 +4067,7 @@ ALTER TABLE ONLY public.application_notes
 
 
 --
--- Name: benefits_master benefits_master_code_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.benefits_master
@@ -4075,7 +4075,7 @@ ALTER TABLE ONLY public.benefits_master
 
 
 --
--- Name: benefits_master benefits_master_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.benefits_master
@@ -4083,7 +4083,7 @@ ALTER TABLE ONLY public.benefits_master
 
 
 --
--- Name: benefits_master benefits_master_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.benefits_master
@@ -4091,7 +4091,7 @@ ALTER TABLE ONLY public.benefits_master
 
 
 --
--- Name: cities cities_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.cities
@@ -4099,7 +4099,7 @@ ALTER TABLE ONLY public.cities
 
 
 --
--- Name: companies companies_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.companies
@@ -4107,7 +4107,7 @@ ALTER TABLE ONLY public.companies
 
 
 --
--- Name: companies companies_slug_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.companies
@@ -4115,7 +4115,7 @@ ALTER TABLE ONLY public.companies
 
 
 --
--- Name: company_addresses company_addresses_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_addresses
@@ -4123,7 +4123,7 @@ ALTER TABLE ONLY public.company_addresses
 
 
 --
--- Name: company_documents company_documents_company_id_document_type_document_number_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_documents
@@ -4131,7 +4131,7 @@ ALTER TABLE ONLY public.company_documents
 
 
 --
--- Name: company_documents company_documents_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_documents
@@ -4139,7 +4139,7 @@ ALTER TABLE ONLY public.company_documents
 
 
 --
--- Name: company_employees company_employees_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_employees
@@ -4147,7 +4147,7 @@ ALTER TABLE ONLY public.company_employees
 
 
 --
--- Name: company_followers company_followers_company_id_user_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_followers
@@ -4155,7 +4155,7 @@ ALTER TABLE ONLY public.company_followers
 
 
 --
--- Name: company_followers company_followers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_followers
@@ -4163,7 +4163,7 @@ ALTER TABLE ONLY public.company_followers
 
 
 --
--- Name: company_industries company_industries_code_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_industries
@@ -4171,7 +4171,7 @@ ALTER TABLE ONLY public.company_industries
 
 
 --
--- Name: company_industries company_industries_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_industries
@@ -4179,7 +4179,7 @@ ALTER TABLE ONLY public.company_industries
 
 
 --
--- Name: company_industries company_industries_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_industries
@@ -4187,7 +4187,7 @@ ALTER TABLE ONLY public.company_industries
 
 
 --
--- Name: company_invitations company_invitations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_invitations
@@ -4195,7 +4195,7 @@ ALTER TABLE ONLY public.company_invitations
 
 
 --
--- Name: company_invitations company_invitations_token_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_invitations
@@ -4203,7 +4203,7 @@ ALTER TABLE ONLY public.company_invitations
 
 
 --
--- Name: company_profiles company_profiles_company_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_profiles
@@ -4211,7 +4211,7 @@ ALTER TABLE ONLY public.company_profiles
 
 
 --
--- Name: company_profiles company_profiles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_profiles
@@ -4219,7 +4219,7 @@ ALTER TABLE ONLY public.company_profiles
 
 
 --
--- Name: company_reviews company_reviews_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_reviews
@@ -4227,7 +4227,7 @@ ALTER TABLE ONLY public.company_reviews
 
 
 --
--- Name: company_sizes company_sizes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_sizes
@@ -4235,7 +4235,7 @@ ALTER TABLE ONLY public.company_sizes
 
 
 --
--- Name: company_verifications company_verifications_company_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_verifications
@@ -4243,7 +4243,7 @@ ALTER TABLE ONLY public.company_verifications
 
 
 --
--- Name: company_verifications company_verifications_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_verifications
@@ -4251,7 +4251,7 @@ ALTER TABLE ONLY public.company_verifications
 
 
 --
--- Name: device_tokens device_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.device_tokens
@@ -4259,7 +4259,7 @@ ALTER TABLE ONLY public.device_tokens
 
 
 --
--- Name: districts districts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.districts
@@ -4267,7 +4267,7 @@ ALTER TABLE ONLY public.districts
 
 
 --
--- Name: education_levels education_levels_code_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.education_levels
@@ -4275,7 +4275,7 @@ ALTER TABLE ONLY public.education_levels
 
 
 --
--- Name: education_levels education_levels_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.education_levels
@@ -4283,7 +4283,7 @@ ALTER TABLE ONLY public.education_levels
 
 
 --
--- Name: education_levels education_levels_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.education_levels
@@ -4291,7 +4291,7 @@ ALTER TABLE ONLY public.education_levels
 
 
 --
--- Name: email_logs email_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.email_logs
@@ -4299,7 +4299,7 @@ ALTER TABLE ONLY public.email_logs
 
 
 --
--- Name: employer_users employer_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.employer_users
@@ -4307,7 +4307,7 @@ ALTER TABLE ONLY public.employer_users
 
 
 --
--- Name: employer_users employer_users_user_id_company_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.employer_users
@@ -4315,7 +4315,7 @@ ALTER TABLE ONLY public.employer_users
 
 
 --
--- Name: experience_levels experience_levels_code_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.experience_levels
@@ -4323,7 +4323,7 @@ ALTER TABLE ONLY public.experience_levels
 
 
 --
--- Name: experience_levels experience_levels_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.experience_levels
@@ -4331,7 +4331,7 @@ ALTER TABLE ONLY public.experience_levels
 
 
 --
--- Name: experience_levels experience_levels_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.experience_levels
@@ -4339,7 +4339,7 @@ ALTER TABLE ONLY public.experience_levels
 
 
 --
--- Name: gender_preferences gender_preferences_code_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.gender_preferences
@@ -4347,7 +4347,7 @@ ALTER TABLE ONLY public.gender_preferences
 
 
 --
--- Name: gender_preferences gender_preferences_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.gender_preferences
@@ -4355,7 +4355,7 @@ ALTER TABLE ONLY public.gender_preferences
 
 
 --
--- Name: gender_preferences gender_preferences_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.gender_preferences
@@ -4363,7 +4363,7 @@ ALTER TABLE ONLY public.gender_preferences
 
 
 --
--- Name: industries industries_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.industries
@@ -4371,7 +4371,7 @@ ALTER TABLE ONLY public.industries
 
 
 --
--- Name: industries industries_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.industries
@@ -4379,7 +4379,7 @@ ALTER TABLE ONLY public.industries
 
 
 --
--- Name: industries industries_slug_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.industries
@@ -4387,7 +4387,7 @@ ALTER TABLE ONLY public.industries
 
 
 --
--- Name: interviews interviews_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.interviews
@@ -4395,7 +4395,7 @@ ALTER TABLE ONLY public.interviews
 
 
 --
--- Name: job_application_stages job_application_stages_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_application_stages
@@ -4403,7 +4403,7 @@ ALTER TABLE ONLY public.job_application_stages
 
 
 --
--- Name: job_applications job_applications_job_id_user_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_applications
@@ -4411,7 +4411,7 @@ ALTER TABLE ONLY public.job_applications
 
 
 --
--- Name: job_applications job_applications_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_applications
@@ -4419,7 +4419,7 @@ ALTER TABLE ONLY public.job_applications
 
 
 --
--- Name: job_benefits job_benefits_job_id_benefit_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_benefits
@@ -4427,7 +4427,7 @@ ALTER TABLE ONLY public.job_benefits
 
 
 --
--- Name: job_benefits job_benefits_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_benefits
@@ -4435,7 +4435,7 @@ ALTER TABLE ONLY public.job_benefits
 
 
 --
--- Name: job_categories job_categories_code_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_categories
@@ -4443,7 +4443,7 @@ ALTER TABLE ONLY public.job_categories
 
 
 --
--- Name: job_categories job_categories_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_categories
@@ -4451,7 +4451,7 @@ ALTER TABLE ONLY public.job_categories
 
 
 --
--- Name: job_categories job_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_categories
@@ -4459,7 +4459,7 @@ ALTER TABLE ONLY public.job_categories
 
 
 --
--- Name: job_locations job_locations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_locations
@@ -4467,7 +4467,7 @@ ALTER TABLE ONLY public.job_locations
 
 
 --
--- Name: job_requirements job_requirements_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_requirements
@@ -4475,7 +4475,7 @@ ALTER TABLE ONLY public.job_requirements
 
 
 --
--- Name: job_skills job_skills_job_id_skill_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_skills
@@ -4483,7 +4483,7 @@ ALTER TABLE ONLY public.job_skills
 
 
 --
--- Name: job_skills job_skills_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_skills
@@ -4491,7 +4491,7 @@ ALTER TABLE ONLY public.job_skills
 
 
 --
--- Name: job_subcategories job_subcategories_code_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_subcategories
@@ -4499,7 +4499,7 @@ ALTER TABLE ONLY public.job_subcategories
 
 
 --
--- Name: job_subcategories job_subcategories_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_subcategories
@@ -4507,7 +4507,7 @@ ALTER TABLE ONLY public.job_subcategories
 
 
 --
--- Name: job_subcategories job_subcategories_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_subcategories
@@ -4515,7 +4515,7 @@ ALTER TABLE ONLY public.job_subcategories
 
 
 --
--- Name: job_titles job_titles_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_titles
@@ -4523,7 +4523,7 @@ ALTER TABLE ONLY public.job_titles
 
 
 --
--- Name: job_titles job_titles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_titles
@@ -4531,7 +4531,7 @@ ALTER TABLE ONLY public.job_titles
 
 
 --
--- Name: job_titles job_titles_slug_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_titles
@@ -4539,7 +4539,7 @@ ALTER TABLE ONLY public.job_titles
 
 
 --
--- Name: job_types job_types_code_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_types
@@ -4547,7 +4547,7 @@ ALTER TABLE ONLY public.job_types
 
 
 --
--- Name: job_types job_types_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_types
@@ -4555,7 +4555,7 @@ ALTER TABLE ONLY public.job_types
 
 
 --
--- Name: job_types job_types_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_types
@@ -4563,7 +4563,7 @@ ALTER TABLE ONLY public.job_types
 
 
 --
--- Name: jobs jobs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.jobs
@@ -4571,7 +4571,7 @@ ALTER TABLE ONLY public.jobs
 
 
 --
--- Name: jobs jobs_slug_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.jobs
@@ -4579,7 +4579,7 @@ ALTER TABLE ONLY public.jobs
 
 
 --
--- Name: notification_preferences notification_preferences_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.notification_preferences
@@ -4587,7 +4587,7 @@ ALTER TABLE ONLY public.notification_preferences
 
 
 --
--- Name: notification_preferences notification_preferences_user_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.notification_preferences
@@ -4595,7 +4595,7 @@ ALTER TABLE ONLY public.notification_preferences
 
 
 --
--- Name: notifications notifications_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.notifications
@@ -4603,7 +4603,7 @@ ALTER TABLE ONLY public.notifications
 
 
 --
--- Name: oauth_providers oauth_providers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.oauth_providers
@@ -4611,7 +4611,7 @@ ALTER TABLE ONLY public.oauth_providers
 
 
 --
--- Name: oauth_providers oauth_providers_provider_provider_user_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.oauth_providers
@@ -4619,7 +4619,7 @@ ALTER TABLE ONLY public.oauth_providers
 
 
 --
--- Name: otp_codes otp_codes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.otp_codes
@@ -4627,7 +4627,7 @@ ALTER TABLE ONLY public.otp_codes
 
 
 --
--- Name: provinces provinces_code_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.provinces
@@ -4635,7 +4635,7 @@ ALTER TABLE ONLY public.provinces
 
 
 --
--- Name: provinces provinces_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.provinces
@@ -4643,7 +4643,7 @@ ALTER TABLE ONLY public.provinces
 
 
 --
--- Name: push_notification_logs push_notification_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.push_notification_logs
@@ -4651,7 +4651,7 @@ ALTER TABLE ONLY public.push_notification_logs
 
 
 --
--- Name: refresh_tokens refresh_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.refresh_tokens
@@ -4659,7 +4659,7 @@ ALTER TABLE ONLY public.refresh_tokens
 
 
 --
--- Name: refresh_tokens refresh_tokens_token_hash_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.refresh_tokens
@@ -4667,7 +4667,7 @@ ALTER TABLE ONLY public.refresh_tokens
 
 
 --
--- Name: skills_master skills_master_code_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.skills_master
@@ -4675,7 +4675,7 @@ ALTER TABLE ONLY public.skills_master
 
 
 --
--- Name: skills_master skills_master_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.skills_master
@@ -4683,7 +4683,7 @@ ALTER TABLE ONLY public.skills_master
 
 
 --
--- Name: skills_master skills_master_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.skills_master
@@ -4691,7 +4691,7 @@ ALTER TABLE ONLY public.skills_master
 
 
 --
--- Name: device_tokens unique_user_token; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.device_tokens
@@ -4699,7 +4699,7 @@ ALTER TABLE ONLY public.device_tokens
 
 
 --
--- Name: user_certifications user_certifications_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_certifications
@@ -4707,7 +4707,7 @@ ALTER TABLE ONLY public.user_certifications
 
 
 --
--- Name: user_documents user_documents_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_documents
@@ -4715,7 +4715,7 @@ ALTER TABLE ONLY public.user_documents
 
 
 --
--- Name: user_educations user_educations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_educations
@@ -4723,7 +4723,7 @@ ALTER TABLE ONLY public.user_educations
 
 
 --
--- Name: user_experiences user_experiences_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_experiences
@@ -4731,7 +4731,7 @@ ALTER TABLE ONLY public.user_experiences
 
 
 --
--- Name: user_languages user_languages_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_languages
@@ -4739,7 +4739,7 @@ ALTER TABLE ONLY public.user_languages
 
 
 --
--- Name: user_preferences user_preferences_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_preferences
@@ -4747,7 +4747,7 @@ ALTER TABLE ONLY public.user_preferences
 
 
 --
--- Name: user_preferences user_preferences_user_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_preferences
@@ -4755,7 +4755,7 @@ ALTER TABLE ONLY public.user_preferences
 
 
 --
--- Name: user_profiles user_profiles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_profiles
@@ -4763,7 +4763,7 @@ ALTER TABLE ONLY public.user_profiles
 
 
 --
--- Name: user_profiles user_profiles_slug_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_profiles
@@ -4771,7 +4771,7 @@ ALTER TABLE ONLY public.user_profiles
 
 
 --
--- Name: user_projects user_projects_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_projects
@@ -4779,7 +4779,7 @@ ALTER TABLE ONLY public.user_projects
 
 
 --
--- Name: user_skills user_skills_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_skills
@@ -4787,7 +4787,7 @@ ALTER TABLE ONLY public.user_skills
 
 
 --
--- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.users
@@ -4795,7 +4795,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.users
@@ -4803,7 +4803,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: work_policies work_policies_code_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.work_policies
@@ -4811,7 +4811,7 @@ ALTER TABLE ONLY public.work_policies
 
 
 --
--- Name: work_policies work_policies_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.work_policies
@@ -4819,7 +4819,7 @@ ALTER TABLE ONLY public.work_policies
 
 
 --
--- Name: work_policies work_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.work_policies
@@ -4827,952 +4827,952 @@ ALTER TABLE ONLY public.work_policies
 
 
 --
--- Name: idx_admin_roles_access_level; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_admin_roles_access_level ON public.admin_roles USING btree (access_level);
 
 
 --
--- Name: idx_admin_users_status; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_admin_users_status ON public.admin_users USING btree (status);
 
 
 --
--- Name: idx_application_documents_verified; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_application_documents_verified ON public.application_documents USING btree (is_verified);
 
 
 --
--- Name: idx_application_notes_stage_id; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_application_notes_stage_id ON public.application_notes USING btree (stage_id);
 
 
 --
--- Name: idx_benefits_master_popularity; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_benefits_master_popularity ON public.benefits_master USING btree (popularity_score DESC);
 
 
 --
--- Name: idx_cities_code; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_cities_code ON public.cities USING btree (code) WHERE (code IS NOT NULL);
 
 
 --
--- Name: idx_cities_name; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_cities_name ON public.cities USING btree (name);
 
 
 --
--- Name: idx_cities_province; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_cities_province ON public.cities USING btree (province_id, is_active, deleted_at) WHERE (deleted_at IS NULL);
 
 
 --
--- Name: idx_cities_type; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_cities_type ON public.cities USING btree (type);
 
 
 --
--- Name: idx_companies_city; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_companies_city ON public.companies USING btree (city_id);
 
 
 --
--- Name: idx_companies_district; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_companies_district ON public.companies USING btree (district_id);
 
 
 --
--- Name: idx_companies_industry; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_companies_industry ON public.companies USING btree (industry_id);
 
 
 --
--- Name: idx_companies_province; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_companies_province ON public.companies USING btree (province_id);
 
 
 --
--- Name: idx_companies_size; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_companies_size ON public.companies USING btree (company_size_id);
 
 
 --
--- Name: idx_companies_verified; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_companies_verified ON public.companies USING btree (verified);
 
 
 --
--- Name: idx_company_addresses_company_id; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_company_addresses_company_id ON public.company_addresses USING btree (company_id);
 
 
 --
--- Name: idx_company_addresses_deleted_at; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_company_addresses_deleted_at ON public.company_addresses USING btree (deleted_at);
 
 
 --
--- Name: idx_company_documents_expiry; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_company_documents_expiry ON public.company_documents USING btree (expiry_date);
 
 
 --
--- Name: idx_company_employees_type; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_company_employees_type ON public.company_employees USING btree (employment_type);
 
 
 --
--- Name: idx_company_followers_active; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_company_followers_active ON public.company_followers USING btree (is_active);
 
 
 --
--- Name: idx_company_industries_active; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_company_industries_active ON public.company_industries USING btree (is_active);
 
 
 --
--- Name: idx_company_invitations_company_id; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_company_invitations_company_id ON public.company_invitations USING btree (company_id);
 
 
 --
--- Name: idx_company_invitations_email; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_company_invitations_email ON public.company_invitations USING btree (email);
 
 
 --
--- Name: idx_company_invitations_expires_at; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_company_invitations_expires_at ON public.company_invitations USING btree (expires_at);
 
 
 --
--- Name: idx_company_invitations_status; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_company_invitations_status ON public.company_invitations USING btree (status);
 
 
 --
--- Name: idx_company_invitations_token; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_company_invitations_token ON public.company_invitations USING btree (token);
 
 
 --
--- Name: idx_company_profiles_status; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_company_profiles_status ON public.company_profiles USING btree (status);
 
 
 --
--- Name: idx_company_reviews_status; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_company_reviews_status ON public.company_reviews USING btree (status);
 
 
 --
--- Name: idx_company_sizes_active; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_company_sizes_active ON public.company_sizes USING btree (is_active, deleted_at) WHERE (deleted_at IS NULL);
 
 
 --
--- Name: idx_company_sizes_display_order; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_company_sizes_display_order ON public.company_sizes USING btree (display_order);
 
 
 --
--- Name: idx_company_verifications_expiry; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_company_verifications_expiry ON public.company_verifications USING btree (verification_expiry);
 
 
 --
--- Name: idx_device_tokens_failure; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_device_tokens_failure ON public.device_tokens USING btree (failure_count, last_failure_at) WHERE (failure_count > 0);
 
 
 --
--- Name: idx_device_tokens_inactive; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_device_tokens_inactive ON public.device_tokens USING btree (is_active, last_used_at);
 
 
 --
--- Name: idx_device_tokens_platform; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_device_tokens_platform ON public.device_tokens USING btree (platform, is_active);
 
 
 --
--- Name: idx_device_tokens_token; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_device_tokens_token ON public.device_tokens USING btree (token) WHERE (is_active = true);
 
 
 --
--- Name: idx_device_tokens_user_id; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_device_tokens_user_id ON public.device_tokens USING btree (user_id) WHERE (is_active = true);
 
 
 --
--- Name: idx_device_tokens_user_platform; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_device_tokens_user_platform ON public.device_tokens USING btree (user_id, platform) WHERE (is_active = true);
 
 
 --
--- Name: idx_districts_city; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_districts_city ON public.districts USING btree (city_id, is_active, deleted_at) WHERE (deleted_at IS NULL);
 
 
 --
--- Name: idx_districts_code; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_districts_code ON public.districts USING btree (code) WHERE (code IS NOT NULL);
 
 
 --
--- Name: idx_districts_name; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_districts_name ON public.districts USING btree (name);
 
 
 --
--- Name: idx_districts_postal_code; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_districts_postal_code ON public.districts USING btree (postal_code) WHERE (postal_code IS NOT NULL);
 
 
 --
--- Name: idx_education_levels_code; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_education_levels_code ON public.education_levels USING btree (code);
 
 
 --
--- Name: idx_education_levels_display_order; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_education_levels_display_order ON public.education_levels USING btree ("order");
 
 
 --
--- Name: idx_email_logs_created_at; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_email_logs_created_at ON public.email_logs USING btree (created_at);
 
 
 --
--- Name: idx_email_logs_recipient; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_email_logs_recipient ON public.email_logs USING btree (recipient);
 
 
 --
--- Name: idx_email_logs_status; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_email_logs_status ON public.email_logs USING btree (status);
 
 
 --
--- Name: idx_email_logs_template; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_email_logs_template ON public.email_logs USING btree (template);
 
 
 --
--- Name: idx_employer_users_active; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_employer_users_active ON public.employer_users USING btree (is_active);
 
 
 --
--- Name: idx_experience_levels_code; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_experience_levels_code ON public.experience_levels USING btree (code);
 
 
 --
--- Name: idx_experience_levels_display_order; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_experience_levels_display_order ON public.experience_levels USING btree ("order");
 
 
 --
--- Name: idx_experience_levels_min_years; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_experience_levels_min_years ON public.experience_levels USING btree (min_years);
 
 
 --
--- Name: idx_gender_preferences_code; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_gender_preferences_code ON public.gender_preferences USING btree (code);
 
 
 --
--- Name: idx_gender_preferences_display_order; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_gender_preferences_display_order ON public.gender_preferences USING btree ("order");
 
 
 --
--- Name: idx_industries_active; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_industries_active ON public.industries USING btree (is_active, deleted_at) WHERE (deleted_at IS NULL);
 
 
 --
--- Name: idx_industries_display_order; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_industries_display_order ON public.industries USING btree (display_order);
 
 
 --
--- Name: idx_industries_slug; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_industries_slug ON public.industries USING btree (slug);
 
 
 --
--- Name: idx_interviews_date; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_interviews_date ON public.interviews USING btree (scheduled_at);
 
 
 --
--- Name: idx_job_application_stages_started_at; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_job_application_stages_started_at ON public.job_application_stages USING btree (started_at);
 
 
 --
--- Name: idx_job_applications_company_id; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_job_applications_company_id ON public.job_applications USING btree (company_id);
 
 
 --
--- Name: idx_job_benefits_highlight; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_job_benefits_highlight ON public.job_benefits USING btree (is_highlight);
 
 
 --
--- Name: idx_job_categories_active; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_job_categories_active ON public.job_categories USING btree (is_active);
 
 
 --
--- Name: idx_job_locations_geo; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_job_locations_geo ON public.job_locations USING gist (point((longitude)::double precision, (latitude)::double precision));
 
 
 --
--- Name: idx_job_requirements_skill_id; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_job_requirements_skill_id ON public.job_requirements USING btree (skill_id);
 
 
 --
--- Name: idx_job_skills_importance; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_job_skills_importance ON public.job_skills USING btree (importance_level);
 
 
 --
--- Name: idx_job_subcategories_active; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_job_subcategories_active ON public.job_subcategories USING btree (is_active);
 
 
 --
--- Name: idx_job_titles_is_active; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_job_titles_is_active ON public.job_titles USING btree (is_active);
 
 
 --
--- Name: idx_job_titles_name; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_job_titles_name ON public.job_titles USING btree (name);
 
 
 --
--- Name: idx_job_titles_popularity; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_job_titles_popularity ON public.job_titles USING btree (popularity_score DESC);
 
 
 --
--- Name: idx_job_titles_search_count; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_job_titles_search_count ON public.job_titles USING btree (search_count DESC);
 
 
 --
--- Name: idx_job_titles_slug; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_job_titles_slug ON public.job_titles USING btree (normalized_name);
 
 
 --
--- Name: idx_job_types_code; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_job_types_code ON public.job_types USING btree (code);
 
 
 --
--- Name: idx_job_types_display_order; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_job_types_display_order ON public.job_types USING btree ("order");
 
 
 --
--- Name: idx_jobs_age_range; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_jobs_age_range ON public.jobs USING btree (min_age, max_age) WHERE ((min_age IS NOT NULL) OR (max_age IS NOT NULL));
 
 
 --
--- Name: idx_jobs_company_address; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_jobs_company_address ON public.jobs USING btree (company_address_id) WHERE (company_address_id IS NOT NULL);
 
 
 --
--- Name: idx_jobs_education_level_id; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_jobs_education_level_id ON public.jobs USING btree (education_level_id);
 
 
 --
--- Name: idx_jobs_experience_level_id; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_jobs_experience_level_id ON public.jobs USING btree (experience_level_id);
 
 
 --
--- Name: idx_jobs_gender_preference_id; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_jobs_gender_preference_id ON public.jobs USING btree (gender_preference_id);
 
 
 --
--- Name: idx_jobs_job_title_id; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_jobs_job_title_id ON public.jobs USING btree (job_title_id);
 
 
 --
--- Name: idx_jobs_job_type_id; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_jobs_job_type_id ON public.jobs USING btree (job_type_id);
 
 
 --
--- Name: idx_jobs_status; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_jobs_status ON public.jobs USING btree (status);
 
 
 --
--- Name: idx_jobs_work_policy_id; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_jobs_work_policy_id ON public.jobs USING btree (work_policy_id);
 
 
 --
--- Name: idx_notification_preferences_user_id; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE UNIQUE INDEX idx_notification_preferences_user_id ON public.notification_preferences USING btree (user_id);
 
 
 --
--- Name: idx_notifications_category; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_notifications_category ON public.notifications USING btree (category);
 
 
 --
--- Name: idx_notifications_created_at; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_notifications_created_at ON public.notifications USING btree (created_at);
 
 
 --
--- Name: idx_notifications_is_read; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_notifications_is_read ON public.notifications USING btree (is_read);
 
 
 --
--- Name: idx_notifications_related_id; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_notifications_related_id ON public.notifications USING btree (related_id);
 
 
 --
--- Name: idx_notifications_sender_id; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_notifications_sender_id ON public.notifications USING btree (sender_id);
 
 
 --
--- Name: idx_notifications_type; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_notifications_type ON public.notifications USING btree (type);
 
 
 --
--- Name: idx_notifications_user_category; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_notifications_user_category ON public.notifications USING btree (user_id, category);
 
 
 --
--- Name: idx_notifications_user_id; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_notifications_user_id ON public.notifications USING btree (user_id);
 
 
 --
--- Name: idx_notifications_user_read; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_notifications_user_read ON public.notifications USING btree (user_id, is_read);
 
 
 --
--- Name: idx_oauth_providers_email; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_oauth_providers_email ON public.oauth_providers USING btree (email);
 
 
 --
--- Name: idx_oauth_providers_provider; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_oauth_providers_provider ON public.oauth_providers USING btree (provider);
 
 
 --
--- Name: idx_oauth_providers_user_id; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_oauth_providers_user_id ON public.oauth_providers USING btree (user_id);
 
 
 --
--- Name: idx_otp_codes_expired_at; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_otp_codes_expired_at ON public.otp_codes USING btree (expired_at);
 
 
 --
--- Name: idx_otp_codes_is_used; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_otp_codes_is_used ON public.otp_codes USING btree (is_used);
 
 
 --
--- Name: idx_otp_codes_type; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_otp_codes_type ON public.otp_codes USING btree (type);
 
 
 --
--- Name: idx_otp_codes_user_id; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_otp_codes_user_id ON public.otp_codes USING btree (user_id);
 
 
 --
--- Name: idx_otp_codes_user_type; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_otp_codes_user_type ON public.otp_codes USING btree (user_id, type);
 
 
 --
--- Name: idx_provinces_active; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_provinces_active ON public.provinces USING btree (is_active, deleted_at) WHERE (deleted_at IS NULL);
 
 
 --
--- Name: idx_provinces_code; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_provinces_code ON public.provinces USING btree (code) WHERE (code IS NOT NULL);
 
 
 --
--- Name: idx_provinces_name; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_provinces_name ON public.provinces USING btree (name);
 
 
 --
--- Name: idx_push_logs_device_token_id; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_push_logs_device_token_id ON public.push_notification_logs USING btree (device_token_id, created_at DESC) WHERE (device_token_id IS NOT NULL);
 
 
 --
--- Name: idx_push_logs_failed; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_push_logs_failed ON public.push_notification_logs USING btree (user_id, status, created_at DESC) WHERE ((status)::text = 'failed'::text);
 
 
 --
--- Name: idx_push_logs_fcm_message_id; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_push_logs_fcm_message_id ON public.push_notification_logs USING btree (fcm_message_id) WHERE (fcm_message_id IS NOT NULL);
 
 
 --
--- Name: idx_push_logs_notification_id; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_push_logs_notification_id ON public.push_notification_logs USING btree (notification_id) WHERE (notification_id IS NOT NULL);
 
 
 --
--- Name: idx_push_logs_status; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_push_logs_status ON public.push_notification_logs USING btree (status, created_at DESC);
 
 
 --
--- Name: idx_push_logs_user_id; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_push_logs_user_id ON public.push_notification_logs USING btree (user_id, created_at DESC);
 
 
 --
--- Name: idx_refresh_tokens_device_id; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_refresh_tokens_device_id ON public.refresh_tokens USING btree (device_id);
 
 
 --
--- Name: idx_refresh_tokens_expires_at; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_refresh_tokens_expires_at ON public.refresh_tokens USING btree (expires_at);
 
 
 --
--- Name: idx_refresh_tokens_revoked; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_refresh_tokens_revoked ON public.refresh_tokens USING btree (revoked);
 
 
 --
--- Name: idx_refresh_tokens_token_hash; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_refresh_tokens_token_hash ON public.refresh_tokens USING btree (token_hash);
 
 
 --
--- Name: idx_refresh_tokens_user_device; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_refresh_tokens_user_device ON public.refresh_tokens USING btree (user_id, device_id);
 
 
 --
--- Name: idx_refresh_tokens_user_id; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_refresh_tokens_user_id ON public.refresh_tokens USING btree (user_id);
 
 
 --
--- Name: idx_skills_master_popularity; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_skills_master_popularity ON public.skills_master USING btree (popularity_score DESC);
 
 
 --
--- Name: idx_user_certifications_verified; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_user_certifications_verified ON public.user_certifications USING btree (verified);
 
 
 --
--- Name: idx_user_educations_degree; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_user_educations_degree ON public.user_educations USING btree (degree_level);
 
 
 --
--- Name: idx_user_experiences_employment_type; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_user_experiences_employment_type ON public.user_experiences USING btree (employment_type);
 
 
 --
--- Name: idx_user_languages_verified; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_user_languages_verified ON public.user_languages USING btree (verified);
 
 
 --
--- Name: idx_user_preferences_jobtype; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_user_preferences_jobtype ON public.user_preferences USING btree (preferred_job_type);
 
 
 --
--- Name: idx_user_profiles_city; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_user_profiles_city ON public.user_profiles USING btree (city_id);
 
 
 --
--- Name: idx_user_profiles_district; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_user_profiles_district ON public.user_profiles USING btree (district_id);
 
 
 --
--- Name: idx_user_profiles_experience_level; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_user_profiles_experience_level ON public.user_profiles USING btree (experience_level);
 
 
 --
--- Name: idx_user_profiles_location_state; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_user_profiles_location_state ON public.user_profiles USING btree (location_state);
 
 
 --
--- Name: idx_user_profiles_nationality; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_user_profiles_nationality ON public.user_profiles USING btree (nationality);
 
 
 --
--- Name: idx_user_profiles_province; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_user_profiles_province ON public.user_profiles USING btree (province_id);
 
 
 --
--- Name: idx_user_projects_visibility; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_user_projects_visibility ON public.user_projects USING btree (visibility);
 
 
 --
--- Name: idx_user_skills_level; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_user_skills_level ON public.user_skills USING btree (skill_level);
 
 
 --
--- Name: idx_users_company; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_users_company ON public.users USING btree (company_id);
 
 
 --
--- Name: idx_users_created_at; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_users_created_at ON public.users USING btree (created_at DESC);
 
 
 --
--- Name: idx_users_has_company; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_users_has_company ON public.users USING btree (has_company) WHERE (has_company = true);
 
 
 --
--- Name: idx_work_policies_code; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_work_policies_code ON public.work_policies USING btree (code);
 
 
 --
--- Name: idx_work_policies_display_order; Type: INDEX; Schema: public; Owner: -
+
 --
 
 CREATE INDEX idx_work_policies_display_order ON public.work_policies USING btree ("order");
 
 
 --
--- Name: device_tokens trigger_device_tokens_updated_at; Type: TRIGGER; Schema: public; Owner: -
+
 --
 
 CREATE TRIGGER trigger_device_tokens_updated_at BEFORE UPDATE ON public.device_tokens FOR EACH ROW EXECUTE FUNCTION public.update_device_tokens_updated_at();
 
 
 --
--- Name: company_invitations trigger_update_company_invitations_updated_at; Type: TRIGGER; Schema: public; Owner: -
+
 --
 
 CREATE TRIGGER trigger_update_company_invitations_updated_at BEFORE UPDATE ON public.company_invitations FOR EACH ROW EXECUTE FUNCTION public.update_company_invitations_updated_at();
 
 
 --
--- Name: admin_users admin_users_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.admin_users
@@ -5780,7 +5780,7 @@ ALTER TABLE ONLY public.admin_users
 
 
 --
--- Name: admin_users admin_users_role_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.admin_users
@@ -5788,7 +5788,7 @@ ALTER TABLE ONLY public.admin_users
 
 
 --
--- Name: application_documents application_documents_application_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.application_documents
@@ -5796,7 +5796,7 @@ ALTER TABLE ONLY public.application_documents
 
 
 --
--- Name: application_documents application_documents_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.application_documents
@@ -5804,7 +5804,7 @@ ALTER TABLE ONLY public.application_documents
 
 
 --
--- Name: application_documents application_documents_verified_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.application_documents
@@ -5812,7 +5812,7 @@ ALTER TABLE ONLY public.application_documents
 
 
 --
--- Name: application_notes application_notes_application_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.application_notes
@@ -5820,7 +5820,7 @@ ALTER TABLE ONLY public.application_notes
 
 
 --
--- Name: application_notes application_notes_author_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.application_notes
@@ -5828,7 +5828,7 @@ ALTER TABLE ONLY public.application_notes
 
 
 --
--- Name: application_notes application_notes_stage_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.application_notes
@@ -5836,7 +5836,7 @@ ALTER TABLE ONLY public.application_notes
 
 
 --
--- Name: companies companies_verified_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.companies
@@ -5844,7 +5844,7 @@ ALTER TABLE ONLY public.companies
 
 
 --
--- Name: company_addresses company_addresses_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_addresses
@@ -5852,7 +5852,7 @@ ALTER TABLE ONLY public.company_addresses
 
 
 --
--- Name: company_documents company_documents_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_documents
@@ -5860,7 +5860,7 @@ ALTER TABLE ONLY public.company_documents
 
 
 --
--- Name: company_documents company_documents_uploaded_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_documents
@@ -5868,7 +5868,7 @@ ALTER TABLE ONLY public.company_documents
 
 
 --
--- Name: company_documents company_documents_verified_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_documents
@@ -5876,7 +5876,7 @@ ALTER TABLE ONLY public.company_documents
 
 
 --
--- Name: company_employees company_employees_added_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_employees
@@ -5884,7 +5884,7 @@ ALTER TABLE ONLY public.company_employees
 
 
 --
--- Name: company_employees company_employees_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_employees
@@ -5892,7 +5892,7 @@ ALTER TABLE ONLY public.company_employees
 
 
 --
--- Name: company_employees company_employees_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_employees
@@ -5900,7 +5900,7 @@ ALTER TABLE ONLY public.company_employees
 
 
 --
--- Name: company_employees company_employees_verified_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_employees
@@ -5908,7 +5908,7 @@ ALTER TABLE ONLY public.company_employees
 
 
 --
--- Name: company_followers company_followers_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_followers
@@ -5916,7 +5916,7 @@ ALTER TABLE ONLY public.company_followers
 
 
 --
--- Name: company_followers company_followers_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_followers
@@ -5924,7 +5924,7 @@ ALTER TABLE ONLY public.company_followers
 
 
 --
--- Name: company_industries company_industries_parent_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_industries
@@ -5932,7 +5932,7 @@ ALTER TABLE ONLY public.company_industries
 
 
 --
--- Name: company_invitations company_invitations_accepted_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_invitations
@@ -5940,7 +5940,7 @@ ALTER TABLE ONLY public.company_invitations
 
 
 --
--- Name: company_invitations company_invitations_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_invitations
@@ -5948,7 +5948,7 @@ ALTER TABLE ONLY public.company_invitations
 
 
 --
--- Name: company_invitations company_invitations_invited_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_invitations
@@ -5956,7 +5956,7 @@ ALTER TABLE ONLY public.company_invitations
 
 
 --
--- Name: company_profiles company_profiles_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_profiles
@@ -5964,7 +5964,7 @@ ALTER TABLE ONLY public.company_profiles
 
 
 --
--- Name: company_profiles company_profiles_verified_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_profiles
@@ -5972,7 +5972,7 @@ ALTER TABLE ONLY public.company_profiles
 
 
 --
--- Name: company_reviews company_reviews_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_reviews
@@ -5980,7 +5980,7 @@ ALTER TABLE ONLY public.company_reviews
 
 
 --
--- Name: company_reviews company_reviews_moderated_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_reviews
@@ -5988,7 +5988,7 @@ ALTER TABLE ONLY public.company_reviews
 
 
 --
--- Name: company_reviews company_reviews_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_reviews
@@ -5996,7 +5996,7 @@ ALTER TABLE ONLY public.company_reviews
 
 
 --
--- Name: company_verifications company_verifications_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_verifications
@@ -6004,7 +6004,7 @@ ALTER TABLE ONLY public.company_verifications
 
 
 --
--- Name: company_verifications company_verifications_requested_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_verifications
@@ -6012,7 +6012,7 @@ ALTER TABLE ONLY public.company_verifications
 
 
 --
--- Name: company_verifications company_verifications_reviewed_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.company_verifications
@@ -6020,7 +6020,7 @@ ALTER TABLE ONLY public.company_verifications
 
 
 --
--- Name: employer_users employer_users_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.employer_users
@@ -6028,7 +6028,7 @@ ALTER TABLE ONLY public.employer_users
 
 
 --
--- Name: employer_users employer_users_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.employer_users
@@ -6036,7 +6036,7 @@ ALTER TABLE ONLY public.employer_users
 
 
 --
--- Name: employer_users employer_users_verified_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.employer_users
@@ -6044,7 +6044,7 @@ ALTER TABLE ONLY public.employer_users
 
 
 --
--- Name: cities fk_cities_province; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.cities
@@ -6052,7 +6052,7 @@ ALTER TABLE ONLY public.cities
 
 
 --
--- Name: companies fk_companies_city; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.companies
@@ -6060,7 +6060,7 @@ ALTER TABLE ONLY public.companies
 
 
 --
--- Name: companies fk_companies_company_size; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.companies
@@ -6068,7 +6068,7 @@ ALTER TABLE ONLY public.companies
 
 
 --
--- Name: companies fk_companies_district; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.companies
@@ -6076,7 +6076,7 @@ ALTER TABLE ONLY public.companies
 
 
 --
--- Name: companies fk_companies_industry; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.companies
@@ -6084,7 +6084,7 @@ ALTER TABLE ONLY public.companies
 
 
 --
--- Name: companies fk_companies_province; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.companies
@@ -6092,7 +6092,7 @@ ALTER TABLE ONLY public.companies
 
 
 --
--- Name: device_tokens fk_device_tokens_user; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.device_tokens
@@ -6100,7 +6100,7 @@ ALTER TABLE ONLY public.device_tokens
 
 
 --
--- Name: districts fk_districts_city; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.districts
@@ -6108,7 +6108,7 @@ ALTER TABLE ONLY public.districts
 
 
 --
--- Name: jobs fk_jobs_education_level; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.jobs
@@ -6116,7 +6116,7 @@ ALTER TABLE ONLY public.jobs
 
 
 --
--- Name: jobs fk_jobs_experience_level; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.jobs
@@ -6124,7 +6124,7 @@ ALTER TABLE ONLY public.jobs
 
 
 --
--- Name: jobs fk_jobs_gender_preference; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.jobs
@@ -6132,7 +6132,7 @@ ALTER TABLE ONLY public.jobs
 
 
 --
--- Name: jobs fk_jobs_job_subcategory_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.jobs
@@ -6140,7 +6140,7 @@ ALTER TABLE ONLY public.jobs
 
 
 --
--- Name: jobs fk_jobs_job_title; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.jobs
@@ -6148,7 +6148,7 @@ ALTER TABLE ONLY public.jobs
 
 
 --
--- Name: jobs fk_jobs_job_type; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.jobs
@@ -6156,7 +6156,7 @@ ALTER TABLE ONLY public.jobs
 
 
 --
--- Name: jobs fk_jobs_work_policy; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.jobs
@@ -6164,7 +6164,7 @@ ALTER TABLE ONLY public.jobs
 
 
 --
--- Name: otp_codes fk_otp_codes_user_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.otp_codes
@@ -6172,7 +6172,7 @@ ALTER TABLE ONLY public.otp_codes
 
 
 --
--- Name: push_notification_logs fk_push_logs_device_token; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.push_notification_logs
@@ -6180,7 +6180,7 @@ ALTER TABLE ONLY public.push_notification_logs
 
 
 --
--- Name: push_notification_logs fk_push_logs_notification; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.push_notification_logs
@@ -6188,7 +6188,7 @@ ALTER TABLE ONLY public.push_notification_logs
 
 
 --
--- Name: push_notification_logs fk_push_logs_user; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.push_notification_logs
@@ -6196,7 +6196,7 @@ ALTER TABLE ONLY public.push_notification_logs
 
 
 --
--- Name: refresh_tokens fk_refresh_tokens_user_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.refresh_tokens
@@ -6204,7 +6204,7 @@ ALTER TABLE ONLY public.refresh_tokens
 
 
 --
--- Name: user_profiles fk_user_profiles_city; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_profiles
@@ -6212,7 +6212,7 @@ ALTER TABLE ONLY public.user_profiles
 
 
 --
--- Name: user_profiles fk_user_profiles_district; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_profiles
@@ -6220,7 +6220,7 @@ ALTER TABLE ONLY public.user_profiles
 
 
 --
--- Name: user_profiles fk_user_profiles_province; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_profiles
@@ -6228,7 +6228,7 @@ ALTER TABLE ONLY public.user_profiles
 
 
 --
--- Name: users fk_users_company; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.users
@@ -6236,7 +6236,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: interviews interviews_application_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.interviews
@@ -6244,7 +6244,7 @@ ALTER TABLE ONLY public.interviews
 
 
 --
--- Name: interviews interviews_interviewer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.interviews
@@ -6252,7 +6252,7 @@ ALTER TABLE ONLY public.interviews
 
 
 --
--- Name: interviews interviews_stage_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.interviews
@@ -6260,7 +6260,7 @@ ALTER TABLE ONLY public.interviews
 
 
 --
--- Name: job_application_stages job_application_stages_application_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_application_stages
@@ -6268,7 +6268,7 @@ ALTER TABLE ONLY public.job_application_stages
 
 
 --
--- Name: job_application_stages job_application_stages_handled_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_application_stages
@@ -6276,7 +6276,7 @@ ALTER TABLE ONLY public.job_application_stages
 
 
 --
--- Name: job_applications job_applications_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_applications
@@ -6284,7 +6284,7 @@ ALTER TABLE ONLY public.job_applications
 
 
 --
--- Name: job_applications job_applications_job_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_applications
@@ -6292,7 +6292,7 @@ ALTER TABLE ONLY public.job_applications
 
 
 --
--- Name: job_applications job_applications_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_applications
@@ -6300,7 +6300,7 @@ ALTER TABLE ONLY public.job_applications
 
 
 --
--- Name: job_benefits job_benefits_benefit_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_benefits
@@ -6308,7 +6308,7 @@ ALTER TABLE ONLY public.job_benefits
 
 
 --
--- Name: job_benefits job_benefits_job_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_benefits
@@ -6316,7 +6316,7 @@ ALTER TABLE ONLY public.job_benefits
 
 
 --
--- Name: job_categories job_categories_parent_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_categories
@@ -6324,7 +6324,7 @@ ALTER TABLE ONLY public.job_categories
 
 
 --
--- Name: job_locations job_locations_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_locations
@@ -6332,7 +6332,7 @@ ALTER TABLE ONLY public.job_locations
 
 
 --
--- Name: job_locations job_locations_job_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_locations
@@ -6340,7 +6340,7 @@ ALTER TABLE ONLY public.job_locations
 
 
 --
--- Name: job_requirements job_requirements_job_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_requirements
@@ -6348,7 +6348,7 @@ ALTER TABLE ONLY public.job_requirements
 
 
 --
--- Name: job_requirements job_requirements_skill_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_requirements
@@ -6356,7 +6356,7 @@ ALTER TABLE ONLY public.job_requirements
 
 
 --
--- Name: job_skills job_skills_job_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_skills
@@ -6364,7 +6364,7 @@ ALTER TABLE ONLY public.job_skills
 
 
 --
--- Name: job_skills job_skills_skill_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_skills
@@ -6372,7 +6372,7 @@ ALTER TABLE ONLY public.job_skills
 
 
 --
--- Name: job_subcategories job_subcategories_category_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_subcategories
@@ -6380,7 +6380,7 @@ ALTER TABLE ONLY public.job_subcategories
 
 
 --
--- Name: job_titles job_titles_recommended_category_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.job_titles
@@ -6388,7 +6388,7 @@ ALTER TABLE ONLY public.job_titles
 
 
 --
--- Name: jobs jobs_category_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.jobs
@@ -6396,7 +6396,7 @@ ALTER TABLE ONLY public.jobs
 
 
 --
--- Name: jobs jobs_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.jobs
@@ -6404,7 +6404,7 @@ ALTER TABLE ONLY public.jobs
 
 
 --
--- Name: jobs jobs_employer_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.jobs
@@ -6412,7 +6412,7 @@ ALTER TABLE ONLY public.jobs
 
 
 --
--- Name: notification_preferences notification_preferences_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.notification_preferences
@@ -6420,7 +6420,7 @@ ALTER TABLE ONLY public.notification_preferences
 
 
 --
--- Name: notifications notifications_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.notifications
@@ -6428,7 +6428,7 @@ ALTER TABLE ONLY public.notifications
 
 
 --
--- Name: oauth_providers oauth_providers_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.oauth_providers
@@ -6436,7 +6436,7 @@ ALTER TABLE ONLY public.oauth_providers
 
 
 --
--- Name: skills_master skills_master_category_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.skills_master
@@ -6444,7 +6444,7 @@ ALTER TABLE ONLY public.skills_master
 
 
 --
--- Name: skills_master skills_master_parent_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.skills_master
@@ -6452,7 +6452,7 @@ ALTER TABLE ONLY public.skills_master
 
 
 --
--- Name: user_certifications user_certifications_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_certifications
@@ -6460,7 +6460,7 @@ ALTER TABLE ONLY public.user_certifications
 
 
 --
--- Name: user_documents user_documents_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_documents
@@ -6468,7 +6468,7 @@ ALTER TABLE ONLY public.user_documents
 
 
 --
--- Name: user_documents user_documents_verified_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_documents
@@ -6476,7 +6476,7 @@ ALTER TABLE ONLY public.user_documents
 
 
 --
--- Name: user_educations user_educations_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_educations
@@ -6484,7 +6484,7 @@ ALTER TABLE ONLY public.user_educations
 
 
 --
--- Name: user_experiences user_experiences_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_experiences
@@ -6492,7 +6492,7 @@ ALTER TABLE ONLY public.user_experiences
 
 
 --
--- Name: user_languages user_languages_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_languages
@@ -6500,7 +6500,7 @@ ALTER TABLE ONLY public.user_languages
 
 
 --
--- Name: user_preferences user_preferences_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_preferences
@@ -6508,7 +6508,7 @@ ALTER TABLE ONLY public.user_preferences
 
 
 --
--- Name: user_profiles user_profiles_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_profiles
@@ -6516,7 +6516,7 @@ ALTER TABLE ONLY public.user_profiles
 
 
 --
--- Name: user_projects user_projects_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_projects
@@ -6524,7 +6524,7 @@ ALTER TABLE ONLY public.user_projects
 
 
 --
--- Name: user_skills user_skills_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+
 --
 
 ALTER TABLE ONLY public.user_skills
@@ -6532,7 +6532,7 @@ ALTER TABLE ONLY public.user_skills
 
 
 --
--- Name: Chat Feature Tables
+
 --
 
 -- Create conversations table
