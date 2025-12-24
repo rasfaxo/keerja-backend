@@ -82,7 +82,7 @@ grant_privileges() {
         GRANT CONNECT ON DATABASE $database TO $username;
         
         -- Grant usage on public schema
-        GRANT USAGE ON SCHEMA public TO $username;
+        GRANT ALL ON SCHEMA public TO $username;
         
         -- Grant all privileges on all tables (current and future)
         GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO $username;

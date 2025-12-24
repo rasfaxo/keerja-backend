@@ -262,7 +262,7 @@ services:
       FCM_CREDENTIALS_FILE: /app/config/firebase-service-account.json
     volumes:
       - ./config:/app/config:ro
-    command: ["migrate"]
+    entrypoint: ["/app/migrate_tool", "-dir=up"]
     depends_on:
       postgres:
         condition: service_healthy
@@ -294,7 +294,7 @@ services:
       FCM_CREDENTIALS_FILE: /app/config/firebase-service-account.json
     volumes:
       - ./config/firebase-service-account.json:/app/config/firebase-service-account.json
-    command: ["migrate"]
+    entrypoint: ["/app/migrate_tool", "-dir=up"]
     depends_on:
       postgres:
         condition: service_healthy
@@ -326,7 +326,7 @@ services:
       FCM_CREDENTIALS_FILE: /app/config/firebase-service-account.json
     volumes:
       - ./config/firebase-service-account.json:/app/config/firebase-service-account.json
-    command: ["seed"]
+    entrypoint: ["/app/seeder"]
     depends_on:
       postgres:
         condition: service_healthy
@@ -358,7 +358,7 @@ services:
       FCM_CREDENTIALS_FILE: /app/config/firebase-service-account.json
     volumes:
       - ./config/firebase-service-account.json:/app/config/firebase-service-account.json
-    command: ["seed"]
+    entrypoint: ["/app/seeder"]
     depends_on:
       postgres:
         condition: service_healthy
