@@ -550,7 +550,7 @@ DROP SEQUENCE IF EXISTS public.admin_roles_id_seq;
 DROP TABLE IF EXISTS public.admin_roles;
 DROP FUNCTION IF EXISTS public.update_device_tokens_updated_at();
 DROP FUNCTION IF EXISTS public.update_company_invitations_updated_at();
-DROP EXTENSION IF EXISTS pgcrypto;
+-- DROP EXTENSION IF EXISTS pgcrypto;
 --
 -- Name: pgcrypto; Type: EXTENSION; Schema: -; Owner: -
 --
