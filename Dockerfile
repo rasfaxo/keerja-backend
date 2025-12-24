@@ -3,73 +3,64 @@
 # ================================
 FROM golang:1.25-alpine AS builder
 
-# Build arguments
 ARG APP_VERSION=1.0.0
 ARG BUILD_TIME
 ARG GIT_COMMIT
 
-# Install build dependencies
 RUN apk add --no-cache git make ca-certificates tzdata
-
-# Create non-root user for security
 RUN adduser -D -g '' appuser
-
-# Set working directory
 WORKDIR /app
-
-# Copy go mod files first (for better caching)
 COPY go.mod go.sum ./
-
-# Download dependencies (cached if go.mod/go.sum unchanged)
 RUN go mod download && go mod verify
-
-# Copy source code
 COPY . .
 
-# Build the application with optimizations
+# 1. Build Main API Server
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -ldflags="-w -s -X main.Version=${APP_VERSION} -X main.BuildTime=${BUILD_TIME} -X main.GitCommit=${GIT_COMMIT}" \
     -a -installsuffix cgo \
     -o /app/main ./cmd/main.go
+
+# 2. Build Migration Tool 
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+    -ldflags="-w -s" \
+    -a -installsuffix cgo \
+    -o /app/migrate_tool ./cmd/migrate/main.go
+
+# 3. Build Seeder Tool
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+    -ldflags="-w -s" \
+    -a -installsuffix cgo \
+    -o /app/seeder ./cmd/seeder/main.go
 
 # ================================
 # STAGE 2: Production
 # ================================
 FROM alpine:3.19 AS production
 
-# Install runtime dependencies
 RUN apk --no-cache add ca-certificates tzdata curl
-
-# Set timezone
 ENV TZ=Asia/Jakarta
-
-# Create non-root user
 RUN adduser -D -g '' appuser
-
-# Set working directory
 WORKDIR /app
 
-# Copy binary from builder
+# Copy binary dari builder
 COPY --from=builder /app/main .
+COPY --from=builder /app/migrate_tool .
+COPY --from=builder /app/seeder .
 
-# Copy config directory if needed (e.g., firebase credentials)
+# Copy config & migrations
 COPY --from=builder /app/config ./config
+COPY --from=builder /app/database/migrations ./database/migrations
 
-# Create necessary directories with proper permissions
 RUN mkdir -p /app/logs /app/uploads && \
     chown -R appuser:appuser /app
 
-# Switch to non-root user
 USER appuser
-
-# Expose port
 EXPOSE 8080
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8080/health/live || exit 1
 
-# Run the application
+# Default entrypoint 
 ENTRYPOINT ["./main"]
 
 # ================================
