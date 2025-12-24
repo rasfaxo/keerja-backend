@@ -224,8 +224,8 @@ jobs:
             set -e
             cd ${{ env.DEPLOY_PATH }}
             echo "Running migrations for STAGING (one-shot)..."
-            # Build image for migrate-staging if needed
-            docker compose -f ${{ env.COMPOSE_FILE }} build migrate-staging
+            # Build image for migrate-staging WITHOUT cache to ensure latest code
+            docker compose -f ${{ env.COMPOSE_FILE }} build --no-cache migrate-staging
             # Run migrate container once and exit
             docker compose -f ${{ env.COMPOSE_FILE }} run --rm migrate-staging
             echo "Migrations completed"
