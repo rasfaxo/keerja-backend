@@ -1,10 +1,13 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
+	"sort"
 	"syscall"
 	"time"
 
@@ -30,9 +33,87 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
+// runMigrations executes all .up.sql files in database/migrations directory
+func runMigrations() {
+	log.Println("Running database migrations...")
+
+	cfg := config.LoadConfig()
+	migrationsPath := "database/migrations"
+
+	// Open DB using standard library
+	db, err := sql.Open("postgres", cfg.GetDSN())
+	if err != nil {
+		log.Fatalf("Failed to open database: %v", err)
+	}
+	defer db.Close()
+
+	if err := db.Ping(); err != nil {
+		log.Fatalf("Failed to ping database: %v", err)
+	}
+
+	entries, err := os.ReadDir(migrationsPath)
+	if err != nil {
+		log.Fatalf("Failed to read migrations directory: %v", err)
+	}
+
+	var targets []string
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		if len(name) > 7 && name[len(name)-7:] == ".up.sql" {
+			targets = append(targets, filepath.Join(migrationsPath, name))
+		}
+	}
+
+	sort.Strings(targets)
+
+	for _, target := range targets {
+		log.Printf("Applying migration: %s", filepath.Base(target))
+		content, err := os.ReadFile(target)
+		if err != nil {
+			log.Fatalf("Failed to read migration file %s: %v", target, err)
+		}
+
+		if _, err := db.Exec(string(content)); err != nil {
+			log.Fatalf("Failed to execute migration %s: %v", target, err)
+		}
+	}
+
+	log.Printf("Successfully applied %d migrations", len(targets))
+}
+
 func main() {
+	// Check for CLI commands
+	if len(os.Args) > 1 {
+		command := os.Args[1]
+
+		switch command {
+		case "migrate":
+			// Load environment variables
+			if err := godotenv.Load(); err != nil {
+				log.Println("Warning: .env file not found, using system environment variables")
+			}
+			runMigrations()
+			os.Exit(0)
+
+		case "seed":
+			log.Println("Seeding not implemented in this binary")
+			log.Println("Use the separate seeder binary: ./seeder")
+			os.Exit(1)
+
+		default:
+			log.Printf("Unknown command: %s", command)
+			log.Println("Available commands: migrate, seed")
+			os.Exit(1)
+		}
+	}
+
+	// Default: run server
 	// Load environment variables
 	if err := godotenv.Load(); err != nil {
 		log.Println("Warning: .env file not found, using system environment variables")
