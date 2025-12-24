@@ -6600,6 +6600,17 @@ CREATE INDEX IF NOT EXISTS idx_messages_created_at ON public.messages USING btre
 CREATE INDEX IF NOT EXISTS idx_messages_deleted_at ON public.messages USING btree (deleted_at);
 CREATE INDEX IF NOT EXISTS idx_messages_conversation_created ON public.messages USING btree (conversation_id, created_at DESC);
 
+-- ================================================================
+-- GRANT PERMISSIONS 
+-- ================================================================
+
+GRANT ALL PRIVILEGES ON SCHEMA public TO "bekerja";
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO "bekerja";
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO "bekerja";
+GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO "bekerja";
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO "bekerja";
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO "bekerja";
 
 --
 -- PostgreSQL database dump complete
