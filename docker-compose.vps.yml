@@ -261,8 +261,8 @@ services:
       DB_PASSWORD: ${STAGING_DB_PASSWORD}
       FCM_CREDENTIALS_FILE: /app/config/firebase-service-account.json
     volumes:
-      - ./config/firebase-service-account.json:/app/config/firebase-service-account.json
-    command: ["migrate"]
+      - ./config:/app/config:ro
+    command: ["./main", "migrate"]
     depends_on:
       postgres:
         condition: service_healthy
