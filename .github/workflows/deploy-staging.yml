@@ -223,8 +223,11 @@ jobs:
           ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
             set -e
             cd ${{ env.DEPLOY_PATH }}
-            echo "Running migrations for STAGING..."
-            docker compose -f ${{ env.COMPOSE_FILE }} --profile migrate-staging up --build
+            echo "Running migrations for STAGING (one-shot)..."
+            # Build image for migrate-staging if needed
+            docker compose -f ${{ env.COMPOSE_FILE }} build migrate-staging
+            # Run migrate container once and exit
+            docker compose -f ${{ env.COMPOSE_FILE }} run --rm migrate-staging
             echo "Migrations completed"
           EOF
 
