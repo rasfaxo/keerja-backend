@@ -253,12 +253,12 @@ services:
     env_file:
       - .env.staging
     environment:
-      DATABASE_URL: postgresql://${STAGING_DB_USER:-bekerja}:${STAGING_DB_PASSWORD}@postgres:5432/keerja_staging?sslmode=disable
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/keerja_staging?sslmode=disable
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: keerja_staging
-      DB_USER: ${STAGING_DB_USER:-bekerja}
-      DB_PASSWORD: ${STAGING_DB_PASSWORD}
+      DB_USER: postgres
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
       FCM_CREDENTIALS_FILE: /app/config/firebase-service-account.json
     volumes:
       - ./config:/app/config:ro
