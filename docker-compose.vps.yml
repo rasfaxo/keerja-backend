@@ -262,7 +262,7 @@ services:
       FCM_CREDENTIALS_FILE: /app/config/firebase-service-account.json
     volumes:
       - ./config:/app/config:ro
-    command: ["./main", "migrate"]
+    command: ["migrate"]
     depends_on:
       postgres:
         condition: service_healthy
