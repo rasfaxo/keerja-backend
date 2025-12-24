@@ -37,6 +37,11 @@ create_database() {
         -- Grant privileges to postgres user
         GRANT ALL PRIVILEGES ON DATABASE $database TO $POSTGRES_USER;
 EOSQL
+
+    echo "  - Activating extensions for $database..."
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$database" <<-EOSQL
+        CREATE EXTENSION IF NOT EXISTS pgcrypto;
+EOSQL
     
     echo "✓ Database $database created/verified"
 }
