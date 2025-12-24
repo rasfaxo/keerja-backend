@@ -17,23 +17,13 @@ SET row_security = off;
 -- ================================================================
 --  NUCLEAR OPTION: RESET TOTAL (Development Only)
 -- ================================================================
--- Hapus Schema Public lama (beserta isinya)
 DROP SCHEMA IF EXISTS public CASCADE;
-
--- Buat Schema Public baru yang bersih
 CREATE SCHEMA public;
-
--- Restore permission standar
 GRANT ALL ON SCHEMA public TO postgres;
 GRANT ALL ON SCHEMA public TO public;
 SET search_path TO public;
-
--- Aktifkan Extension 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 -- ================================================================
---
--- Name: update_company_invitations_updated_at(); Type: FUNCTION; Schema: public; Owner: -
---
 
 CREATE FUNCTION public.update_company_invitations_updated_at() RETURNS trigger
     LANGUAGE plpgsql
@@ -49,10 +39,6 @@ END;
 
 $$;
 
-
---
--- Name: update_device_tokens_updated_at(); Type: FUNCTION; Schema: public; Owner: -
---
 
 CREATE FUNCTION public.update_device_tokens_updated_at() RETURNS trigger
     LANGUAGE plpgsql
@@ -73,9 +59,6 @@ SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
---
--- Name: admin_roles; Type: TABLE; Schema: public; Owner: -
---
 
 CREATE TABLE public.admin_roles (
     id bigint NOT NULL,
@@ -89,10 +72,6 @@ CREATE TABLE public.admin_roles (
     CONSTRAINT admin_roles_access_level_check CHECK (((access_level >= 1) AND (access_level <= 10)))
 );
 
-
---
--- Name: admin_roles_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
 
 CREATE SEQUENCE public.admin_roles_id_seq
     START WITH 1
