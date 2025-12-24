@@ -3,30 +3,7 @@
 # ============================================================
 # GitHub Actions workflow for automatic STAGING deployment
 #
-# TRIGGERS:
-#   - Push to main branch
-#
-# ACTIONS:
-#   1. SSH to VPS
-#   2. Pull latest code
-#   3. Build Docker image
-#   4. Run database migrations
-#   5. Deploy STAGING container
-#   6. Health check
-#   7. Notify via commit status
-#
-# REQUIRED GITHUB SECRETS:
-#   - VPS_HOST: 145.79.8.227
-#   - VPS_USER: root (or deploy user)
-#   - SSH_PRIVATE_KEY: SSH private key for VPS access
-#   - STAGING_DB_PASSWORD: PostgreSQL password for staging
-#   - REDIS_PASSWORD: Redis password
-#   - POSTGRES_PASSWORD: PostgreSQL admin password
-#
-# INTEGRATION:
-#   - Works with docker-compose.vps.yml
-#   - Uses existing Dockerfile (production target)
-#   - Runs migrations automatically
+# UPDATED: Added Auto-Seeding step after migration
 # ============================================================
 
 name: Deploy to STAGING
@@ -228,8 +205,27 @@ jobs:
             docker compose -f ${{ env.COMPOSE_FILE }} build --no-cache migrate-staging
             # Run migrate container once and exit
             docker compose -f ${{ env.COMPOSE_FILE }} run --rm migrate-staging
-            echo "Migrations completed"
+            echo "migrations completed"
           EOF
+
+      # ===> JALANKAN SEEDER OTOMATIS <===
+      - name: Seed Database (STAGING)
+        if: ${{ github.event.inputs.skip_migrations != 'true' }}
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+            set -e
+            cd ${{ env.DEPLOY_PATH }}
+            echo "Seeding database with dummy data..."
+            
+            # Build seeder image
+            docker compose -f ${{ env.COMPOSE_FILE }} build --no-cache seed-staging
+            
+            # Run seeder container once and exit
+            docker compose -f ${{ env.COMPOSE_FILE }} --profile seed-staging run --rm seed-staging
+            
+            echo "Seeding completed successfully"
+          EOF
+      # =================================================
 
       - name: Build and deploy STAGING
         run: |
