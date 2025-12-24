@@ -26,6 +26,7 @@ CREATE SCHEMA public;
 -- Restore permission standar
 GRANT ALL ON SCHEMA public TO postgres;
 GRANT ALL ON SCHEMA public TO public;
+SET search_path TO public;
 
 -- Aktifkan Extension 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
